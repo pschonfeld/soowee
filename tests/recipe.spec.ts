@@ -214,6 +214,8 @@ test.describe('interactions', () => {
     await expect(page.locator('.step p', { hasText: 'Pour in' })).toContainText('Pour in 360\u00a0ml red wine');
     await expect(page.locator('[data-line]', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
     await expect(page.locator('.hero [data-yield]')).toHaveText('12–15 servings');
+    // The approximate weight of a counted ingredient scales with it.
+    await expect(page.locator('.ingredient', { hasText: 'onion' })).toContainText('onion (about 225 g)');
     // One ingredient split across steps: 80 g Pecorino in the list, 50 g for the layers and 30 g for the top.
     await expect(page.locator('.ingredient', { hasText: 'Pecorino Romano' }).locator('[data-qty]')).toHaveText('120');
     await expect(page.locator('.step p', { hasText: 'Grate' })).toContainText('Grate 120\u00a0g Pecorino Romano and set 45\u00a0g aside');
@@ -261,6 +263,18 @@ test.describe('interactions', () => {
     expect(ld.totalTime).toBe('PT8H30M');
   });
 
+  test('a weight range on a counted ingredient scales at both ends', async ({ page }) => {
+    await page.goto('/tiramisu/');
+    const savoiardi = page.locator('.ingredient', { hasText: 'Savoiardi' });
+    await expect(savoiardi).toContainText('36Savoiardi biscuits (about 300–360 g), ladyfingers');
+    await page.getByRole('button', { name: 'Scale up' }).click();
+    await expect(savoiardi).toContainText('54Savoiardi biscuits (about 450–540 g)');
+    // The cook-mode ingredient panel scales the same spans.
+    await expect(page.locator('.cook__ingredient', { hasText: 'Savoiardi' })).toContainText('(about 450–540 g)');
+    const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    expect(ld.recipeIngredient).toContain('36 Savoiardi biscuits (about 300–360 g), ladyfingers, half for each layer');
+  });
+
   test('preheating is the first, highlighted line of its step', async ({ page }) => {
     const step = page.locator('.step', { hasText: 'Make the béchamel' });
     await expect(step.locator('p').first()).toHaveClass(/heat/);
@@ -275,7 +289,7 @@ test.describe('interactions', () => {
 
   test('ingredient names lead, qualifiers follow', async ({ page }) => {
     const names = await page.locator('.ingredient > span:nth-of-type(2)').allInnerTexts();
-    expect(names).toContain('onion, medium, about 150 g, diced into small cubes');
+    expect(names).toContain('onion (about 150 g), medium, diced into small cubes');
     expect(names).toContain('g butter, unsalted');
     expect(names.some((n) => /^(medium|dry|whole|unsalted|fresh|shredded|grated)\b/i.test(n.replace(/^(g|ml|L|tbsp|tsp) /, '')))).toBe(false);
   });

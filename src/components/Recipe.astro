@@ -46,11 +46,18 @@ const timeParts = showActive
 const chillMinutes = totalChillMinutes(r.steps);
 const chillTime = chillMinutes > 0 ? formatMinutes(chillMinutes) : undefined;
 
-type Ingredient = { qty?: number; unit?: string; name: string; note?: string };
+type Ingredient = { qty?: number; unit?: string; name: string; about?: { qty: number; max?: number; unit: string }; note?: string };
 /** "g flour" / "onion": the unit (if any) and name, as shown after the quantity. */
 const ingredientLabel = (i: Ingredient) => [i.unit, i.name].filter(Boolean).join(' ');
+const aboutText = (i: Ingredient) =>
+  i.about &&
+  `(about ${formatQty(i.about.qty, i.about.unit)}${i.about.max ? `–${formatQty(i.about.max, i.about.unit)}` : ''} ${i.about.unit})`;
 const ingredientText = (i: Ingredient) =>
-  [i.qty !== undefined && formatQty(i.qty, i.unit), i.unit, i.note ? `${i.name}, ${i.note}` : i.name]
+  [
+    i.qty !== undefined && formatQty(i.qty, i.unit),
+    i.unit,
+    i.name + (i.about ? ` ${aboutText(i)}` : '') + (i.note ? `, ${i.note}` : ''),
+  ]
     .filter(Boolean)
     .join(' ');
 
@@ -254,6 +261,21 @@ const icons = {
                             </span>
                             <span>
                               {ingredientLabel(item)}
+                              {item.about && (
+                                <span class="ingredient__note">
+                                  {' (about '}
+                                  <span data-qty={item.about.qty} data-unit={item.about.unit}>
+                                    {formatQty(item.about.qty, item.about.unit)}
+                                  </span>
+                                  {item.about.max && '–'}
+                                  {item.about.max && (
+                                    <span data-qty={item.about.max} data-unit={item.about.unit}>
+                                      {formatQty(item.about.max, item.about.unit)}
+                                    </span>
+                                  )}
+                                  {` ${item.about.unit})`}
+                                </span>
+                              )}
                               {item.note && <span class="ingredient__note">, {item.note}</span>}
                             </span>
                             <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
@@ -413,6 +435,21 @@ const icons = {
                     </b>
                     <span>
                       {ingredientLabel(item)}
+                      {item.about && (
+                        <span class="ingredient__note">
+                          {' (about '}
+                          <span data-qty={item.about.qty} data-unit={item.about.unit}>
+                            {formatQty(item.about.qty, item.about.unit)}
+                          </span>
+                          {item.about.max && '–'}
+                          {item.about.max && (
+                            <span data-qty={item.about.max} data-unit={item.about.unit}>
+                              {formatQty(item.about.max, item.about.unit)}
+                            </span>
+                          )}
+                          {` ${item.about.unit})`}
+                        </span>
+                      )}
                       {item.note && <span class="ingredient__note">, {item.note}</span>}
                     </span>
                   </li>

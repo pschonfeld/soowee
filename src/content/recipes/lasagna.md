@@ -33,9 +33,9 @@ ingredients:
       - { qty: 2, unit: tbsp, name: extra virgin olive oil }
       - { qty: 500, unit: g, name: ground beef, note: "about 15–20 % fat" }
       - { qty: 500, unit: g, name: ground pork, note: "about 20 % fat, from the shoulder if ground to order" }
-      - { qty: 1, name: onion, note: "medium, about 150 g, diced into small cubes" }
-      - { qty: 1, name: carrot, note: "about 100 g, diced into small cubes" }
-      - { qty: 1, name: celery stick, note: "about 60 g, diced into small cubes" }
+      - { qty: 1, name: onion, about: { qty: 150, unit: g }, note: "medium, diced into small cubes" }
+      - { qty: 1, name: carrot, about: { qty: 100, unit: g }, note: "diced into small cubes" }
+      - { qty: 1, name: celery stick, about: { qty: 60, unit: g }, note: "diced into small cubes" }
       - { qty: 240, unit: ml, name: red wine, note: dry }
       - { qty: 1.4, unit: L, name: passata, note: "unsalted, 100% tomato, ideally San Marzano" }
       - { qty: 240, unit: ml, name: water }

@@ -51,7 +51,7 @@ Inline markup in step text:
 
 A step may also have `heat: Preheat your oven to **180 °C**.` – shown first and highlighted, so the oven or oil is on before it is needed.
 
-Ingredients: `name` is what you shop for (`onion`, `butter`, `extra virgin olive oil`); size, cut or kind go in `note` (`medium, diced into small cubes`) and are shown after the name in a lighter tone.
+Ingredients: `name` is what you shop for (`onion`, `butter`, `extra virgin olive oil`); size, cut or kind go in `note` (`medium, diced into small cubes`) and are shown after the name in a lighter tone. For things counted in pieces, `about: { qty: 150, unit: g }` adds an approximate weight ("1 onion (about 150 g)") that scales with the recipe, which a note would not.
 
 Optional fields: `cuisine`, `byline`, `source`, `imageCredit`, `equipment`, `tint` (hero colour override; by default it is derived from the photo).
 

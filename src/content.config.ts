@@ -24,6 +24,14 @@ const ingredient = z.object({
   unit: z.enum(UNITS).optional(),
   /** What you shop for, name first: "onion", "butter", "mozzarella fior di latte". */
   name: z.string(),
+  /**
+   * Approximate weight or volume for things counted in pieces: "1 onion (about 150 g)", "36 Savoiardi (about 300 g)".
+   * Kept out of `note` so it scales with the recipe.
+   */
+  about: z
+    .object({ qty: z.number().positive(), max: z.number().positive().optional(), unit: z.enum(UNITS) })
+    .refine((a) => a.max === undefined || a.max > a.qty, { message: '`about.max` must be larger than `about.qty`' })
+    .optional(),
   /** Size, cut or kind, shown after the name in a lighter tone: "medium, diced into small cubes". */
   note: z.string().optional(),
 });
