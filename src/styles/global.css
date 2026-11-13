@@ -263,8 +263,9 @@ a.story:hover,
 .hero__media {
   height: var(--media-h);
   /* Fully faded before the title starts, so text only ever sits on the checked backdrop. */
-  /* Eased (smootherstep) so the photo melts into its blurred copy without a visible band. */
-  --fade: linear-gradient(rgb(0 0 0 / 1) calc(25% + (75% - 5rem) * 0), rgb(0 0 0 / 0.984) calc(25% + (75% - 5rem) * 0.125), rgb(0 0 0 / 0.896) calc(25% + (75% - 5rem) * 0.25), rgb(0 0 0 / 0.725) calc(25% + (75% - 5rem) * 0.375), rgb(0 0 0 / 0.5) calc(25% + (75% - 5rem) * 0.5), rgb(0 0 0 / 0.275) calc(25% + (75% - 5rem) * 0.625), rgb(0 0 0 / 0.104) calc(25% + (75% - 5rem) * 0.75), rgb(0 0 0 / 0.016) calc(25% + (75% - 5rem) * 0.875), rgb(0 0 0 / 0) calc(25% + (75% - 5rem) * 1));
+  /* Eased fade over the same distance a linear one would use: the ends blend in without a visible band,
+     while most of the photo stays sharp. Fully transparent 5rem above the bottom, where the title starts. */
+  --fade: linear-gradient(rgb(0 0 0 / 1) calc(45% + (55% - 5rem) * 0), rgb(0 0 0 / 0.962) calc(45% + (55% - 5rem) * 0.125), rgb(0 0 0 / 0.854) calc(45% + (55% - 5rem) * 0.25), rgb(0 0 0 / 0.691) calc(45% + (55% - 5rem) * 0.375), rgb(0 0 0 / 0.5) calc(45% + (55% - 5rem) * 0.5), rgb(0 0 0 / 0.309) calc(45% + (55% - 5rem) * 0.625), rgb(0 0 0 / 0.146) calc(45% + (55% - 5rem) * 0.75), rgb(0 0 0 / 0.038) calc(45% + (55% - 5rem) * 0.875), rgb(0 0 0 / 0) calc(45% + (55% - 5rem) * 1));
   -webkit-mask-image: var(--fade);
   mask-image: var(--fade);
 }
@@ -435,7 +436,7 @@ a.story:hover,
   }
 
   .hero__backdrop::after {
-    background: linear-gradient(to right, rgb(0 0 0 / calc(var(--scrim) * 1)) 52%, rgb(0 0 0 / calc(var(--scrim) * 0.984)) 56.5%, rgb(0 0 0 / calc(var(--scrim) * 0.896)) 61%, rgb(0 0 0 / calc(var(--scrim) * 0.725)) 65.5%, rgb(0 0 0 / calc(var(--scrim) * 0.5)) 70%, rgb(0 0 0 / calc(var(--scrim) * 0.275)) 74.5%, rgb(0 0 0 / calc(var(--scrim) * 0.104)) 79%, rgb(0 0 0 / calc(var(--scrim) * 0.016)) 83.5%, rgb(0 0 0 / calc(var(--scrim) * 0)) 88%);
+    background: linear-gradient(to right, rgb(0 0 0 / calc(var(--scrim) * 1)) 52%, rgb(0 0 0 / calc(var(--scrim) * 0.962)) 55.5%, rgb(0 0 0 / calc(var(--scrim) * 0.854)) 59%, rgb(0 0 0 / calc(var(--scrim) * 0.691)) 62.5%, rgb(0 0 0 / calc(var(--scrim) * 0.5)) 66%, rgb(0 0 0 / calc(var(--scrim) * 0.309)) 69.5%, rgb(0 0 0 / calc(var(--scrim) * 0.146)) 73%, rgb(0 0 0 / calc(var(--scrim) * 0.038)) 76.5%, rgb(0 0 0 / calc(var(--scrim) * 0)) 80%);
   }
 
   .hero__media {
@@ -444,7 +445,8 @@ a.story:hover,
     height: auto;
     z-index: 0;
     /* Invisible until past the text column (≈ 52% of the hero), then fades in. */
-    --fade: linear-gradient(90deg, rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0.016) 24.75%, rgb(0 0 0 / 0.104) 31.50%, rgb(0 0 0 / 0.275) 38.25%, rgb(0 0 0 / 0.5) 45%, rgb(0 0 0 / 0.725) 51.75%, rgb(0 0 0 / 0.896) 58.50%, rgb(0 0 0 / 0.984) 65.25%, rgb(0 0 0 / 1) 72%);
+    /* Transparent until past the text column (18% of the photo box), opaque by 50%. */
+    --fade: linear-gradient(90deg, rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0.038) 22%, rgb(0 0 0 / 0.146) 26%, rgb(0 0 0 / 0.309) 30%, rgb(0 0 0 / 0.5) 34%, rgb(0 0 0 / 0.691) 38%, rgb(0 0 0 / 0.854) 42%, rgb(0 0 0 / 0.962) 46%, rgb(0 0 0 / 1) 50%);
   }
 
   .hero__body {
