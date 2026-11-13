@@ -1,4 +1,8 @@
+import type { ImageMetadata } from 'astro';
 import sharp from 'sharp';
+
+/** Astro adds `fsPath` to local images' metadata at build time, but its public type does not declare it. */
+export type LocalImage = ImageMetadata & { fsPath?: string };
 
 /**
  * Derives the hero backdrop from the recipe photo: its dominant hue,
@@ -43,7 +47,7 @@ function fromRgb(r: number, g: number, b: number): Tint {
   return { base: hslToHex(h, sat, 0.25), deep: hslToHex(h, sat, 0.16) };
 }
 
-export async function tintFor(image: { fsPath?: string }, override?: string): Promise<Tint> {
+export async function tintFor(image: LocalImage, override?: string): Promise<Tint> {
   if (override) {
     const n = parseInt(override.slice(1), 16);
     return fromRgb(n >> 16, (n >> 8) & 255, n & 255);

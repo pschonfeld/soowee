@@ -4,7 +4,7 @@ import { Image, Picture } from 'astro:assets';
 import '../styles/global.css';
 import Wordmark from '../assets/brand/soowee-wordmark.svg';
 import { formatMinutes, formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
-import { plainText, renderInline, waitSeconds } from '../lib/inline';
+import { plainText, renderInline, totalWaitMinutes } from '../lib/inline';
 import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
 
@@ -26,16 +26,14 @@ const pageStyle = [
   .filter(Boolean)
   .join(';');
 
+const SourceTag = r.source?.url ? 'a' : 'div';
+
 const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
 const totalTime = formatMinutes(r.time.total);
 // Hands-off time comes from the {wait:…} timers in the steps; the rest of the total is active work.
-const waitMinutes = Math.round(
-  r.steps.flatMap((s) => s.text).reduce((sum, p) => sum + (typeof p === 'string' ? waitSeconds(p) : 0), 0) / 60,
-);
+// (content.config.ts guarantees this leaves a positive active time.)
+const waitMinutes = totalWaitMinutes(r.steps);
 const activeMinutes = r.time.total - waitMinutes;
-if (activeMinutes <= 0) {
-  throw new Error(`${entry.id}: {wait:…} timers add up to ${waitMinutes} min, but time.total is ${r.time.total} min`);
-}
 const showActive = waitMinutes > 0;
 const timeParts = showActive
   ? [`${formatMinutes(activeMinutes)} active`, `${formatMinutes(waitMinutes)} hands-off`]
@@ -44,17 +42,25 @@ const timeParts = showActive
       r.time.cook !== undefined && `Cook ${formatMinutes(r.time.cook)}`,
     ].filter(Boolean);
 
-const ingredientText = (i: { qty?: number; unit?: string; name: string; note?: string }) =>
+type Ingredient = { qty?: number; unit?: string; name: string; note?: string };
+/** "g flour" / "onion": the unit (if any) and name, as shown after the quantity. */
+const ingredientLabel = (i: Ingredient) => [i.unit, i.name].filter(Boolean).join(' ');
+const ingredientText = (i: Ingredient) =>
   [i.qty !== undefined && formatQty(i.qty, i.unit), i.unit, i.note ? `${i.name}, ${i.note}` : i.name]
     .filter(Boolean)
     .join(' ');
+
+// Absolute URLs need the production origin (`site`); without it they are left out instead of pointing at localhost.
+const origin = Astro.site;
+const canonical = origin && new URL(Astro.url.pathname, origin).href;
+const imageUrl = origin && new URL(r.image.src, origin).href;
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Recipe',
   name: r.title,
   description: r.description,
-  image: new URL(r.image.src, Astro.url).href,
+  image: imageUrl,
   recipeCuisine: r.cuisine,
   recipeYield: yieldText,
   prepTime: r.time.prep !== undefined ? isoDuration(r.time.prep) : undefined,
@@ -96,10 +102,14 @@ const icons = {
     <meta name="theme-color" content={backdrop?.edge ?? tint.base} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {canonical && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="soowee" />
     <meta property="og:title" content={r.title} />
     <meta property="og:description" content={r.description} />
-    <meta property="og:image" content={new URL(r.image.src, Astro.url).href} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+    <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
     <script is:inline>
       try {
         const theme = localStorage.getItem('soowee:theme');
@@ -161,24 +171,20 @@ const icons = {
             </dl>
 
             {
-              r.source &&
-                (() => {
-                  const Tag = r.source.url ? 'a' : 'div';
-                  return (
-                    <Tag class="story" href={r.source.url} rel={r.source.url && 'noopener'}>
-                      <Image src={r.image} alt="" width={88} height={88} fit="cover" loading="eager" />
-                      <span class="story__text">
-                        <span class="story__label">{r.source.label}</span>
-                        <span class="story__title">{r.source.title}</span>
-                      </span>
-                      {r.source.url && (
-                        <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
-                          <path d={icons.chevron} />
-                        </svg>
-                      )}
-                    </Tag>
-                  );
-                })()
+              r.source && (
+                <SourceTag class="story" href={r.source.url} rel={r.source.url && 'noopener'}>
+                  <Image src={r.image} alt="" width={88} height={88} fit="cover" loading="eager" />
+                  <span class="story__text">
+                    <span class="story__label">{r.source.label}</span>
+                    <span class="story__title">{r.source.title}</span>
+                  </span>
+                  {r.source.url && (
+                    <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
+                      <path d={icons.chevron} />
+                    </svg>
+                  )}
+                </SourceTag>
+              )
             }
 
             <div class="actions">
@@ -232,7 +238,7 @@ const icons = {
                               {item.qty !== undefined && formatQty(item.qty, item.unit)}
                             </span>
                             <span>
-                              {[item.unit, item.name].filter(Boolean).join(' ')}
+                              {ingredientLabel(item)}
                               {item.note && <span class="ingredient__note">, {item.note}</span>}
                             </span>
                             <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
@@ -390,7 +396,7 @@ const icons = {
                       {item.qty !== undefined && formatQty(item.qty, item.unit)}
                     </b>
                     <span>
-                      {[item.unit, item.name].filter(Boolean).join(' ')}
+                      {ingredientLabel(item)}
                       {item.note && <span class="ingredient__note">, {item.note}</span>}
                     </span>
                   </li>

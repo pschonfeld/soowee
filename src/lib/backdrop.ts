@@ -1,4 +1,5 @@
 import sharp from 'sharp';
+import type { LocalImage } from './tint';
 
 /**
  * Hero and cook-mode backdrop, after Apple's background extension effect:
@@ -62,7 +63,7 @@ function scrimFor(brightest: [number, number, number], styles: [number, number, 
   throw new Error('Backdrop is too bright for white text even under a 90% scrim');
 }
 
-export async function backdropFor(image: { fsPath?: string }): Promise<Backdrop | undefined> {
+export async function backdropFor(image: LocalImage): Promise<Backdrop | undefined> {
   if (!image.fsPath) return undefined;
 
   const blurred = sharp(image.fsPath)

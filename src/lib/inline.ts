@@ -76,6 +76,14 @@ export function waitSeconds(source: string): number {
   return [...source.matchAll(WAIT)].reduce((sum, [, value]) => sum + parseTimer(value).seconds, 0);
 }
 
+/** Hands-off minutes across all steps (tips are not scanned), rounded as shown on the page. */
+export function totalWaitMinutes(steps: { text: (string | { tip: string })[] }[]): number {
+  const seconds = steps
+    .flatMap((s) => s.text)
+    .reduce((sum, p) => sum + (typeof p === 'string' ? waitSeconds(p) : 0), 0);
+  return Math.round(seconds / 60);
+}
+
 export function plainText(source: string): string {
   return source
     .replace(AMOUNT, (_, qty: string, unit: string) => amount(qty, unit, false))

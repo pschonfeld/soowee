@@ -2,6 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { UNITS } from './lib/format';
+import { totalWaitMinutes } from './lib/inline';
 
 /**
  * A recipe is one Markdown file: structured data in the frontmatter
@@ -79,7 +80,18 @@ const recipes = defineCollection({
           }),
         )
         .min(1),
-    }),
+    })
+      // Reported against the recipe file at validation time, not while rendering the page.
+      .superRefine((r, ctx) => {
+        const wait = totalWaitMinutes(r.steps);
+        if (r.time.total - wait <= 0) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['time', 'total'],
+            message: `{wait:…} timers add up to ${wait} min, but time.total is ${r.time.total} min`,
+          });
+        }
+      }),
 });
 
 export const collections = { recipes };

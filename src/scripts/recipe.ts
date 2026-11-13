@@ -99,7 +99,7 @@ const saveLabel = $('[data-save-label]')!;
 function readSaved(): string[] {
   try {
     const saved: unknown = JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]');
-    return Array.isArray(saved) ? saved : [];
+    return Array.isArray(saved) ? saved.filter((s): s is string => typeof s === 'string') : [];
   } catch {
     return [];
   }
