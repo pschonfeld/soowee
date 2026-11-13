@@ -29,7 +29,7 @@ function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   return [(h * 60 + 360) % 360, s, l];
 }
 
-function hslToHex(h: number, s: number, l: number): string {
+export function hslToHex(h: number, s: number, l: number): string {
   const a = s * Math.min(l, 1 - l);
   const channel = (n: number) => {
     const k = (n + h / 30) % 12;
@@ -47,21 +47,12 @@ function fromRgb(r: number, g: number, b: number): Tint {
   return { base: hslToHex(h, sat, 0.25), deep: hslToHex(h, sat, 0.16) };
 }
 
-export async function tintFor(image: LocalImage, override?: string): Promise<Tint> {
-  if (override) {
-    const n = parseInt(override.slice(1), 16);
-    return fromRgb(n >> 16, (n >> 8) & 255, n & 255);
-  }
-  if (!image.fsPath) return FALLBACK;
-
-  // Average hue of the photo, weighted towards vivid pixels, so the backdrop
-  // picks up the food rather than a grey plate or a dark table.
-  const { data } = await sharp(image.fsPath)
-    .resize(64, 64, { fit: 'cover' })
-    .removeAlpha()
-    .toColourspace('srgb')
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+/**
+ * The photo's dominant hue and saturation, weighted towards vivid pixels so it picks up
+ * the food rather than a grey plate or a dark table. `data` is raw interleaved RGB bytes
+ * (alpha already removed); shared by tintFor and the hero's accent-colour pick in backdrop.ts.
+ */
+export function weightedHueSat(data: Uint8Array): { hue: number; sat: number } | undefined {
   let x = 0;
   let y = 0;
   let satSum = 0;
@@ -74,8 +65,26 @@ export async function tintFor(image: LocalImage, override?: string): Promise<Tin
     satSum += s * weight;
     weightSum += weight;
   }
-  if (weightSum < 1) return FALLBACK;
+  if (weightSum < 1) return undefined;
   const hue = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
   const sat = Math.min(0.7, Math.max(0.42, satSum / weightSum));
-  return { base: hslToHex(hue, sat, 0.25), deep: hslToHex(hue, sat, 0.16) };
+  return { hue, sat };
+}
+
+export async function tintFor(image: LocalImage, override?: string): Promise<Tint> {
+  if (override) {
+    const n = parseInt(override.slice(1), 16);
+    return fromRgb(n >> 16, (n >> 8) & 255, n & 255);
+  }
+  if (!image.fsPath) return FALLBACK;
+
+  const { data } = await sharp(image.fsPath)
+    .resize(64, 64, { fit: 'cover' })
+    .removeAlpha()
+    .toColourspace('srgb')
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const hueSat = weightedHueSat(data);
+  if (!hueSat) return FALLBACK;
+  return { base: hslToHex(hueSat.hue, hueSat.sat, 0.25), deep: hslToHex(hueSat.hue, hueSat.sat, 0.16) };
 }

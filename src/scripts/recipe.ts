@@ -143,18 +143,35 @@ $('[data-share]')!.addEventListener('click', async () => {
   }
 });
 
-/* ── Timers ── */
+/* ── Timers: a floating Dynamic-Island-style capsule, one per running timer ── */
+const PAUSE_ICON = '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.500 4.5v9M11.5 4.5v9"/></svg>';
+const PLAY_ICON =
+  '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.300 4.300 13.200 9 6.300 13.700Z"/></svg>';
+const DISMISS_ICON =
+  '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="m4.500 4.500 9 9m0-9-9 9"/></svg>';
+/** How often a finished-but-undismissed timer repeats its alert. */
+const ALARM_REPEAT_MS = 2500;
+
 interface Timer {
+  /** Absolute finish time; meaningful only while running (pausedRemaining === null). */
   end: number;
+  /** Milliseconds left, frozen while paused; null means running. */
+  pausedRemaining: number | null;
+  name: string;
+  label: string;
   chip: HTMLElement;
   clock: HTMLElement;
-  label: string;
+  pauseButton: HTMLButtonElement;
   done: boolean;
+  /** setInterval id for the repeating alarm after it finishes; 0 = silent. */
+  alarm: number;
 }
 
 const tray = $('[data-timers]')!;
 const timers = new Set<Timer>();
 let ticking = 0;
+const TIMERS_KEY = `soowee:timers:${article.dataset.recipe}`;
+const originalTitle = document.title;
 
 let audio: AudioContext | undefined;
 
@@ -182,60 +199,198 @@ function beep() {
       osc.start(ctx.currentTime + offset);
       osc.stop(ctx.currentTime + offset + 0.25);
     });
-    navigator.vibrate?.([200, 100, 200]);
+    navigator.vibrate?.([200, 100, 200]); // no-op on iOS Safari, which doesn't implement it
   } catch {
     /* Audio is a nicety; the visual + announced state is the contract. */
   }
 }
 
+/** Persists only running/paused timers; a reload restores them, a done one is just gone. */
+function persistTimers() {
+  try {
+    const rows = [...timers]
+      .filter((t) => !t.done)
+      .map((t) => ({
+        end: t.pausedRemaining === null ? t.end : null,
+        remaining: t.pausedRemaining,
+        name: t.name,
+        label: t.label,
+      }));
+    localStorage.setItem(TIMERS_KEY, JSON.stringify(rows));
+  } catch {
+    /* Private mode: timers simply don't survive a reload. */
+  }
+}
+
+function msLeft(timer: Timer): number {
+  return timer.pausedRemaining !== null ? timer.pausedRemaining : timer.end - Date.now();
+}
+
+function updateClock(timer: Timer) {
+  timer.clock.textContent = formatClock(Math.max(0, msLeft(timer)) / 1000);
+}
+
+/** Soonest running timer first, then paused, then done; keeps the capsule stack in a sensible order. */
+function reorderTray() {
+  const rank = (t: Timer) => (t.done ? 2 : t.pausedRemaining !== null ? 1 : 0);
+  for (const t of [...timers].sort((a, b) => rank(a) - rank(b) || msLeft(a) - msLeft(b))) tray.append(t.chip);
+}
+
+function updateTabTitle() {
+  const soonest = [...timers].filter((t) => !t.done && t.pausedRemaining === null).sort((a, b) => a.end - b.end)[0];
+  document.title = soonest ? `⏱ ${formatClock(Math.max(0, soonest.end - Date.now()) / 1000)} · ${originalTitle}` : originalTitle;
+}
+
+function removeTimer(timer: Timer) {
+  if (timer.alarm) clearInterval(timer.alarm);
+  timers.delete(timer);
+  timer.chip.remove();
+  persistTimers();
+  updateTabTitle();
+  // Keep keyboard focus somewhere sensible instead of dropping it to <body>.
+  (tray.querySelector('button') ?? (cook.open ? $('[data-cook-close]', cook) : cookOpen))?.focus();
+}
+
+function togglePause(timer: Timer) {
+  if (timer.done) return;
+  if (timer.pausedRemaining !== null) {
+    timer.end = Date.now() + timer.pausedRemaining;
+    timer.pausedRemaining = null;
+    timer.pauseButton.innerHTML = PAUSE_ICON;
+    timer.pauseButton.setAttribute('aria-label', `Pause timer: ${timer.label}`);
+    announce(`Timer resumed: ${timer.label}`);
+    ticking ||= window.setInterval(tick, 250);
+  } else {
+    timer.pausedRemaining = Math.max(0, timer.end - Date.now());
+    timer.pauseButton.innerHTML = PLAY_ICON;
+    timer.pauseButton.setAttribute('aria-label', `Resume timer: ${timer.label}`);
+    announce(`Timer paused: ${timer.label}`);
+  }
+  updateClock(timer);
+  reorderTray();
+  persistTimers();
+  updateTabTitle();
+}
+
+function finishTimer(timer: Timer, overdue: boolean) {
+  timer.done = true;
+  timer.pausedRemaining = null;
+  timer.chip.classList.add('is-done');
+  timer.pauseButton.hidden = true;
+  if (overdue) {
+    // Restored after the device was asleep or the tab was closed: state only, no replayed alarm.
+    const minutesAgo = Math.round((Date.now() - timer.end) / 60000);
+    timer.clock.textContent = minutesAgo > 0 ? `Done ${minutesAgo}m ago` : 'Done';
+  } else {
+    timer.clock.textContent = 'Done';
+    announce(`Timer finished: ${timer.label}`);
+    beep();
+    timer.alarm = window.setInterval(beep, ALARM_REPEAT_MS);
+  }
+  reorderTray();
+  persistTimers();
+  updateTabTitle();
+}
+
 function tick() {
   const now = Date.now();
+  let anyRunning = false;
   for (const timer of timers) {
-    if (timer.done) continue;
-    const left = (timer.end - now) / 1000;
+    if (timer.done || timer.pausedRemaining !== null) continue;
+    const left = timer.end - now;
     if (left > 0) {
-      timer.clock.textContent = formatClock(left);
+      anyRunning = true;
+      timer.clock.textContent = formatClock(left / 1000);
     } else {
-      timer.done = true;
-      timer.clock.textContent = 'Done';
-      timer.chip.classList.add('is-done');
-      announce(`Timer finished: ${timer.label}`);
-      beep();
+      finishTimer(timer, false);
     }
   }
-  if (![...timers].some((t) => !t.done)) {
+  updateTabTitle();
+  if (!anyRunning) {
     clearInterval(ticking);
     ticking = 0;
   }
 }
 
-/** `name` is shown on the chip; `label` (step + duration) is what assistive tech hears. */
-function startTimer(seconds: number, name: string, label: string) {
+/** Shared by a fresh start and a reload-restored timer. */
+function buildTimer(name: string, label: string, end: number, pausedRemaining: number | null, overdue: boolean): Timer {
   const chip = document.createElement('div');
   chip.className = 'timer-chip';
-  const title = document.createElement('span');
-  title.textContent = name;
+  chip.setAttribute('role', 'group');
+  chip.setAttribute('aria-label', label);
+
+  const pauseButton = document.createElement('button');
+  pauseButton.type = 'button';
+  pauseButton.className = 'timer-chip__control';
+  pauseButton.innerHTML = pausedRemaining !== null ? PLAY_ICON : PAUSE_ICON;
+  pauseButton.setAttribute('aria-label', `${pausedRemaining !== null ? 'Resume' : 'Pause'} timer: ${label}`);
+
+  const body = document.createElement('div');
+  body.className = 'timer-chip__body';
+  const nameEl = document.createElement('span');
+  nameEl.className = 'timer-chip__label';
+  nameEl.textContent = name;
   const clock = document.createElement('time');
-  clock.textContent = formatClock(seconds);
+  body.append(nameEl, clock);
+
   const dismiss = document.createElement('button');
   dismiss.type = 'button';
+  dismiss.className = 'timer-chip__control';
   dismiss.setAttribute('aria-label', `Dismiss timer: ${label}`);
-  dismiss.innerHTML =
-    '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="m4.500 4.500 9 9m0-9-9 9"/></svg>';
-  chip.append(title, clock, dismiss);
+  dismiss.innerHTML = DISMISS_ICON;
+
+  chip.append(pauseButton, body, dismiss);
   tray.append(chip);
 
-  const timer: Timer = { end: Date.now() + seconds * 1000, chip, clock, label, done: false };
+  const timer: Timer = { end, pausedRemaining, name, label, chip, clock, pauseButton, done: false, alarm: 0 };
   timers.add(timer);
-  dismiss.addEventListener('click', () => {
-    timers.delete(timer);
-    chip.remove();
-    // Keep keyboard focus somewhere sensible instead of dropping it to <body>.
-    (tray.querySelector('button') ?? (cook.open ? $('[data-cook-close]', cook) : cookOpen))?.focus();
+
+  pauseButton.addEventListener('click', () => togglePause(timer));
+  dismiss.addEventListener('click', () => removeTimer(timer));
+  // Silences a repeating alarm without losing the "done" chip; the dismiss button still removes it.
+  chip.addEventListener('click', () => {
+    if (timer.done && timer.alarm) {
+      clearInterval(timer.alarm);
+      timer.alarm = 0;
+    }
   });
+
+  if (overdue) finishTimer(timer, true);
+  else updateClock(timer);
+  return timer;
+}
+
+function startTimer(seconds: number, name: string, label: string) {
+  buildTimer(name, label, Date.now() + seconds * 1000, null, false);
   ticking ||= window.setInterval(tick, 250);
   announce(`Timer started: ${label}`);
+  persistTimers();
+  updateTabTitle();
 }
+
+function restoreTimers() {
+  let saved: unknown;
+  try {
+    saved = JSON.parse(localStorage.getItem(TIMERS_KEY) ?? '[]');
+  } catch {
+    return;
+  }
+  if (!Array.isArray(saved)) return;
+  let anyRunning = false;
+  for (const row of saved as Record<string, unknown>[]) {
+    if (typeof row?.name !== 'string' || typeof row?.label !== 'string') continue;
+    const end = typeof row.end === 'number' ? row.end : null;
+    const remaining = typeof row.remaining === 'number' ? row.remaining : null;
+    if (end === null && remaining === null) continue;
+    const overdue = end !== null && end <= Date.now();
+    buildTimer(row.name, row.label, end ?? Date.now(), remaining, overdue);
+    if (!overdue && remaining === null) anyRunning = true;
+  }
+  if (anyRunning) ticking ||= window.setInterval(tick, 250);
+  updateTabTitle();
+}
+
+restoreTimers();
 
 document.addEventListener('click', (event) => {
   const button = (event.target as Element).closest<HTMLElement>('.timer');
@@ -251,12 +406,17 @@ const cook = $<HTMLDialogElement>('#cook')!;
 const cookOpen = $('[data-cook-open]')!;
 const tabs = $$<HTMLButtonElement>('[role="tab"]', cook);
 const directions = $('#panel-directions')!;
+/** Scroll/click anchors: the heat line and each paragraph of a step (not its tips or label). */
 const lines = $$('[data-line]', cook);
+/** Everything that dims with its step: lines, tips and the step label. */
+const stepEls = $$<HTMLElement>('[data-step]', cook);
+const stepLabels = $$<HTMLElement>('[data-step-label]', cook);
+const stepNumbers = [...new Set(lines.map((l) => Number(l.dataset.step)))].sort((a, b) => a - b);
 const navButtons = $$<HTMLButtonElement>('[data-cook-nav]', cook);
 const background = [$('main')!, $('.footer')!, $('.skip')!];
-/** Distance from the top of the panel to the active line; mirrors scroll-margin-top in CSS. */
+/** Distance from the top of the panel to the active step; mirrors scroll-margin-top in CSS. */
 const READING_OFFSET = 72;
-let activeLine = 0;
+let activeStepIndex = 0;
 let followScrollAfter = 0;
 let wakeLock: WakeLockSentinel | null = null;
 let scrollFrame = 0;
@@ -271,19 +431,22 @@ async function keepAwake() {
   }
 }
 
+/** Highlights the whole step (its label, lines and tips together), as Apple does, not one line at a time. */
 function setActive(index: number, scroll = true) {
-  if (!lines.length) return;
-  activeLine = Math.min(lines.length - 1, Math.max(0, index));
-  lines.forEach((line, i) => {
-    line.classList.toggle('is-active', i === activeLine);
-    if (i === activeLine) line.setAttribute('aria-current', 'step');
-    else line.removeAttribute('aria-current');
-  });
-  navButtons[0].disabled = activeLine === 0;
-  navButtons[1].disabled = activeLine === lines.length - 1;
+  if (!stepNumbers.length) return;
+  activeStepIndex = Math.min(stepNumbers.length - 1, Math.max(0, index));
+  const activeStep = stepNumbers[activeStepIndex];
+  for (const el of stepEls) el.classList.toggle('is-active', Number(el.dataset.step) === activeStep);
+  for (const label of stepLabels) {
+    if (Number(label.dataset.step) === activeStep) label.setAttribute('aria-current', 'step');
+    else label.removeAttribute('aria-current');
+  }
+  navButtons[0].disabled = activeStepIndex === 0;
+  navButtons[1].disabled = activeStepIndex === stepNumbers.length - 1;
   if (scroll) {
-    followScrollAfter = performance.now() + 700; // don't let our own smooth scroll re-pick the line
-    lines[activeLine].scrollIntoView({ block: 'start', behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+    followScrollAfter = performance.now() + 700; // don't let our own smooth scroll re-pick the step
+    const target = stepLabels.find((l) => Number(l.dataset.step) === activeStep);
+    target?.scrollIntoView({ block: 'start', behavior: reducedMotion.matches ? 'auto' : 'smooth' });
   }
 }
 
@@ -302,8 +465,9 @@ function openCook() {
   document.documentElement.classList.add('is-cooking');
   for (const el of background) el.inert = true;
   selectTab(tabs[1]);
-  setActive(activeLine, false);
-  lines[activeLine]?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  setActive(activeStepIndex, false);
+  const activeStep = stepNumbers[activeStepIndex];
+  stepLabels.find((l) => Number(l.dataset.step) === activeStep)?.scrollIntoView({ block: 'start', behavior: 'auto' });
   // Focus the title, not the Close button: Safari would draw a focus ring after a tap or click.
   // Tab from here reaches Close first, as before.
   $('#cook-title', cook)!.focus();
@@ -341,16 +505,18 @@ for (const tab of tabs) {
 }
 
 for (const button of navButtons) {
-  button.addEventListener('click', () => setActive(activeLine + Number(button.dataset.cookNav)));
+  button.addEventListener('click', () => setActive(activeStepIndex + Number(button.dataset.cookNav)));
 }
 
-lines.forEach((line, i) => {
+lines.forEach((line) => {
   line.addEventListener('click', (event) => {
-    if (!(event.target as Element).closest('.timer')) setActive(i);
+    if ((event.target as Element).closest('.timer')) return;
+    const index = stepNumbers.indexOf(Number(line.dataset.step));
+    if (index !== -1) setActive(index);
   });
 });
 
-/* Follow manual scrolling: the line nearest the reading position (just below the top) becomes active. */
+/* Follow manual scrolling: the step whose nearest line sits at the reading position becomes active. */
 directions.addEventListener(
   'scroll',
   () => {
@@ -358,13 +524,14 @@ directions.addEventListener(
     scrollFrame = requestAnimationFrame(() => {
       if (performance.now() < followScrollAfter) return;
       const anchor = directions.getBoundingClientRect().top + READING_OFFSET;
-      let best = activeLine;
+      let bestLine = 0;
       let distance = Infinity;
       lines.forEach((line, i) => {
         const d = Math.abs(line.getBoundingClientRect().top - anchor);
-        if (d < distance) [best, distance] = [i, d];
+        if (d < distance) [bestLine, distance] = [i, d];
       });
-      if (best !== activeLine) setActive(best, false);
+      const bestStep = stepNumbers.indexOf(Number(lines[bestLine].dataset.step));
+      if (bestStep !== -1 && bestStep !== activeStepIndex) setActive(bestStep, false);
     });
   },
   { passive: true },

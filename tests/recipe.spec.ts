@@ -248,7 +248,10 @@ test.describe('interactions', () => {
     await expect(step.locator('.heat')).toHaveText(
       'Preheat the oven to 180 °C, conventional top and bottom heat, with a rack in the lower-middle position.',
     );
-    await expect(page.locator('#panel-directions [data-step="4"]').first()).toContainText('Preheat the oven');
+    // [data-step="4"] also matches the step label and tips now that they carry it too, for step-level dimming.
+    await expect(page.locator('#panel-directions .cook__line[data-step="4"]').first()).toContainText(
+      'Preheat the oven',
+    );
   });
 
   test('ingredient names lead, qualifiers follow', async ({ page }) => {
@@ -309,11 +312,19 @@ test.describe('interactions', () => {
     await expect(page.locator('main')).toHaveJSProperty('inert', true);
 
     const lines = page.locator('[data-line]');
+    const stepLabels = page.locator('[data-step-label]');
+    // The whole step is highlighted together: step 1 has two lines, both active, not just the first.
     await expect(lines.nth(0)).toHaveClass(/is-active/);
-    await page.getByRole('button', { name: 'Next step' }).click();
     await expect(lines.nth(1)).toHaveClass(/is-active/);
-    await expect(lines.nth(1)).toBeInViewport();
+    await expect(stepLabels.nth(0)).toHaveClass(/is-active/);
+    await page.getByRole('button', { name: 'Next step' }).click();
+    // Step 2 starts at the third line; all of step 1 (both lines and its label) dims together.
+    await expect(lines.nth(2)).toHaveClass(/is-active/);
+    await expect(lines.nth(2)).toBeInViewport();
     await expect(lines.nth(0)).not.toHaveClass(/is-active/);
+    await expect(lines.nth(1)).not.toHaveClass(/is-active/);
+    await expect(stepLabels.nth(0)).not.toHaveClass(/is-active/);
+    await expect(stepLabels.nth(1)).toHaveClass(/is-active/);
 
     await page.getByRole('tab', { name: 'Ingredients' }).click();
     await expect(page.locator('#panel-ingredients')).toBeVisible();
@@ -355,6 +366,85 @@ test.describe('interactions', () => {
 
     await page.getByRole('button', { name: 'Dismiss timer: Step 2, 5–10 minutes' }).click();
     await expect(chip).toHaveCount(0);
+  });
+
+  test('a timer can be paused and resumed, and the tab title counts it down', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/lasagna/');
+    await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
+    const chip = page.locator('.timer-chip');
+    await expect(chip.locator('time')).toHaveText('1:00:00');
+    await expect(page).toHaveTitle(/^⏱ 1:00:00 · /);
+
+    await page.getByRole('button', { name: 'Pause timer: Step 2, 1 hour' }).click();
+    await page.clock.fastForward('10:00');
+    await expect(chip.locator('time')).toHaveText('1:00:00'); // frozen while paused
+    await expect(page).not.toHaveTitle(/^⏱/); // no countdown in the tab title while nothing is running
+
+    await page.getByRole('button', { name: 'Resume timer: Step 2, 1 hour' }).click();
+    await page.clock.fastForward('10:00');
+    await expect(chip.locator('time')).toHaveText('50:00');
+    await expect(page).toHaveTitle(/^⏱ 50:00 · /);
+  });
+
+  test('a finished timer repeats its alert until tapped, without being dismissed', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/lasagna/');
+    await page.getByRole('button', { name: 'Start timer: 1–2 minutes' }).first().click();
+    await page.clock.fastForward('02:01');
+
+    const chip = page.locator('.timer-chip');
+    await expect(chip).toHaveClass(/is-done/);
+    await expect(chip.locator('time')).toHaveText('Done');
+
+    await chip.locator('.timer-chip__label').click(); // tap the chip body, not a button
+    await expect(chip).toHaveCount(1); // silenced, not dismissed
+    await expect(chip.locator('time')).toHaveText('Done');
+
+    await page.getByRole('button', { name: /Dismiss timer/ }).click();
+    await expect(chip).toHaveCount(0);
+  });
+
+  test('a running timer survives a reload; an entry whose time already passed restores as overdue', async ({
+    page,
+  }) => {
+    await page.clock.install();
+    await page.goto('/lasagna/');
+    await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
+    await page.clock.fastForward('01:00');
+    await page.reload();
+    const stillRunning = page.locator('.timer-chip');
+    await expect(stillRunning).toHaveCount(1);
+    await expect(stillRunning.locator('time')).toHaveText('59:00');
+
+    // Simulate a timer whose end time passed while the tab was closed, not ticking live:
+    // reload must restore it already finished, not play its live chime.
+    await page.evaluate(() => {
+      const recipe = document.querySelector<HTMLElement>('[data-recipe]')!.dataset.recipe;
+      const end = Date.now() - 9 * 60 * 1000;
+      localStorage.setItem(
+        `soowee:timers:${recipe}`,
+        JSON.stringify([{ end, remaining: null, name: '1 hour', label: 'Step 2, 1 hour' }]),
+      );
+    });
+    await page.reload();
+    const overdue = page.locator('.timer-chip', { hasText: 'Done' });
+    await expect(overdue).toHaveCount(1);
+    await expect(overdue.locator('time')).toHaveText('Done 9m ago');
+  });
+
+  test('the timer capsule sits below the cook-mode header, never over the close button', async ({ page }) => {
+    await page.goto('/lasagna/');
+    await page.getByRole('button', { name: 'Cook', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    // `main` is inert while cook mode is open, but Playwright's role query still finds its (unclickable)
+    // buttons, so scope to the dialog rather than relying on DOM order via .first().
+    await dialog.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
+    const close = page.getByRole('button', { name: 'Close cook mode' });
+    const [closeBox, chipBox] = await Promise.all([close.boundingBox(), page.locator('.timer-chip').boundingBox()]);
+    expect(closeBox).toBeTruthy();
+    expect(chipBox).toBeTruthy();
+    expect(chipBox!.y).toBeGreaterThanOrEqual(closeBox!.y + closeBox!.height);
   });
 
   test('the whole page is reachable by keyboard in a sensible order', async ({ page, browserName }) => {

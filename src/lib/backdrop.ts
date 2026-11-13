@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import type { LocalImage } from './tint';
+import { hslToHex, weightedHueSat, type LocalImage } from './tint';
 
 /**
  * Hero and cook-mode backdrop, after Apple's background extension effect:
@@ -19,6 +19,8 @@ export interface Backdrop {
   scrim: number;
   /** Black overlay opacity in cook mode, where inactive lines are dimmed further. */
   cookScrim: number;
+  /** A light tint of the photo's own hue for the eyebrow/byline, when it reads at WCAG AA; otherwise unset. */
+  accent?: string;
 }
 
 const WIDTH = 200;
@@ -27,14 +29,14 @@ const BLUR_SIGMA = 12;
 /** Text styles on the backdrop: [white opacity, minimum contrast, glass fill under it]. */
 const HERO_TEXT: [number, number, number][] = [
   [1, 4.5, 0], // title, values
-  [0.78, 4.5, 0], // labels, byline
-  [1, 4.5, 0.14], // button and card labels on glass (--glass-fill)
-  [0.85, 4.5, 0.14], // card eyebrow on glass
+  [0.78, 4.5, 0], // labels, byline (and the eyebrow/byline accent-colour fallback)
+  [1, 4.5, 0.12], // button and card labels on glass (--glass-fill)
+  [0.85, 4.5, 0.12], // card eyebrow on glass
 ];
 const COOK_TEXT: [number, number, number][] = [
   ...HERO_TEXT,
-  [0.58, 3, 0], // inactive cook-mode lines: large text (≥ 26 px)
-  [0.58, 3, 0.2], // timer pill inside an inactive cook-mode line
+  [0.58, 3, 0], // inactive cook-mode steps: large text (≥ 26 px)
+  [0.58, 3, 0.2], // timer pill inside an inactive cook-mode step
 ];
 
 const toLinear = (c: number) => {
@@ -48,6 +50,11 @@ const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a
 
 /** Browsers composite in sRGB, so blending is done on the 0–255 channel values. */
 const over = (channel: number, white: number) => channel * (1 - white) + 255 * white;
+
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
 
 /** Smallest scrim (in steps of 0.05) under which every text style passes on the brightest backdrop pixel. */
 function scrimFor(brightest: [number, number, number], styles: [number, number, number][]): number {
@@ -79,6 +86,9 @@ export async function backdropFor(image: LocalImage): Promise<Backdrop | undefin
     blurred.clone().raw().toBuffer({ resolveWithObject: true }),
   ]);
 
+  // Same low-res sample used for the brightest pixel below, re-used instead of a second sharp pass.
+  const hueSat = weightedHueSat(data);
+
   // Brightest pixel the text could sit on, and the photo's top edge (where the mirror ends) for the edge colour.
   let brightest: [number, number, number] = [0, 0, 0];
   let brightestLum = -1;
@@ -94,10 +104,24 @@ export async function backdropFor(image: LocalImage): Promise<Backdrop | undefin
     .map((sum) => Math.round(sum / (edgeRows * info.width)).toString(16).padStart(2, '0'))
     .join('');
 
+  const scrim = scrimFor(brightest, HERO_TEXT);
+
+  // A light tint of the photo's hue, checked against the same scrim already picked for everything
+  // else: eyebrow/byline sit straight on the backdrop (no glass), so this is a plain-text contrast
+  // check against the worst-case (brightest) pixel, darkened by that scrim. Soft-fails to the
+  // existing var(--on-tint-secondary) white when the photo's hue can't clear 4.5:1 there.
+  let accent: string | undefined;
+  if (hueSat) {
+    const candidate = hslToHex(hueSat.hue, Math.min(0.55, hueSat.sat + 0.1), 0.84);
+    const darkened = brightest.map((c) => c * (1 - scrim)) as [number, number, number];
+    if (contrast(luminance(...hexToRgb(candidate)), luminance(...darkened)) >= 4.5) accent = candidate;
+  }
+
   return {
     image: `data:image/webp;base64,${file.toString('base64')}`,
     edge: `#${hex}`,
-    scrim: scrimFor(brightest, HERO_TEXT),
+    scrim,
     cookScrim: scrimFor(brightest, COOK_TEXT),
+    accent,
   };
 }

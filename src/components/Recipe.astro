@@ -22,6 +22,7 @@ const pageStyle = [
   `--tint-deep:${tint.deep}`,
   backdrop &&
     `--backdrop:url(${backdrop.image});--backdrop-edge:${backdrop.edge};--scrim:${backdrop.scrim};--cook-scrim:${backdrop.cookScrim}`,
+  backdrop?.accent && `--accent:${backdrop.accent}`,
 ]
   .filter(Boolean)
   .join(';');
@@ -89,6 +90,8 @@ const icons = {
   down: 'm4 6.500 5 5 5-5',
   heat: 'M9 2.200a1.800 1.800 0 0 0-1.800 1.800v6.200a3.300 3.300 0 1 0 3.600 0V4A1.800 1.800 0 0 0 9 2.200ZM9 7.200v5.600',
   bulb: 'M9 1.800a5 5 0 0 0-3 9c.5.400.800 1 .800 1.600v.4h4.400v-.4c0-.6.300-1.200.800-1.600a5 5 0 0 0-3-9ZM7.200 15.600h3.600',
+  pause: 'M6.500 4.5v9M11.5 4.5v9',
+  play: 'M6.300 4.300 13.200 9 6.300 13.700Z',
 };
 ---
 
@@ -413,7 +416,7 @@ const icons = {
         {
           r.steps.map((step, i) => (
             <>
-              <h3 class="cook__step-label">
+              <h3 class="cook__step-label" data-step-label data-step={i + 1}>
                 Step {i + 1} {step.title && <span>· {step.title}</span>}
               </h3>
               {step.heat && <p class="cook__line" data-line data-step={i + 1} set:html={renderInline(step.heat)} />}
@@ -421,7 +424,7 @@ const icons = {
                 typeof p === 'string' ? (
                   <p class="cook__line" data-line data-step={i + 1} set:html={renderInline(p)} />
                 ) : (
-                  <p class="cook__line cook__line--tip" set:html={`Tip: ${renderInline(p.tip)}`} />
+                  <p class="cook__line cook__line--tip" data-step={i + 1} set:html={`Tip: ${renderInline(p.tip)}`} />
                 ),
               )}
             </>
@@ -440,8 +443,10 @@ const icons = {
       </div>
     </dialog>
 
-    <div class="timers" role="region" aria-label="Timers" data-timers></div>
-    <p class="toast" role="status" data-toast></p>
+    <div class="hud">
+      <p class="toast" role="status" data-toast></p>
+      <div class="timers" role="region" aria-label="Timers" data-timers></div>
+    </div>
 
     <script>
       import '../scripts/recipe.ts';

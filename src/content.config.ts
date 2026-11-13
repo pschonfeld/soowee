@@ -72,12 +72,18 @@ const recipes = defineCollection({
       equipment: z.array(z.string()).default([]),
       steps: z
         .array(
-          z.object({
-            title: z.string().optional(),
-            /** Oven or oil to get hot: shown first and highlighted, so it is started in time. */
-            heat: z.string().optional(),
-            text: z.array(paragraph).min(1),
-          }),
+          z
+            .object({
+              title: z.string().optional(),
+              /** Oven or oil to get hot: shown first and highlighted, so it is started in time. */
+              heat: z.string().optional(),
+              text: z.array(paragraph).min(1),
+            })
+            // Cook mode scrolls/highlights by step using its non-tip lines (`heat` plus string `text`
+            // entries) as anchors; a step made only of `tip:` paragraphs would have none to land on.
+            .refine((step) => step.heat !== undefined || step.text.some((p) => typeof p === 'string'), {
+              message: 'A step needs a `heat` line or at least one non-tip `text` entry to anchor cook mode on',
+            }),
         )
         .min(1),
     })
