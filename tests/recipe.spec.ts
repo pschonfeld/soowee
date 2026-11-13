@@ -4,6 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 const RECIPES = [
   { path: '/lasagna/', title: 'Lasagna', ingredients: 21, steps: 5 },
   { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 21, steps: 7 },
+  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 9, steps: 5 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -120,7 +121,7 @@ test('mirrored backdrop meets the photo at its edge and text stays off the sharp
   }
 });
 
-for (const path of ['/lasagna/', '/fish-and-chips/']) {
+for (const { path } of RECIPES) {
   test(`reflows without sideways scrolling at 320px with 200% text (${path})`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
