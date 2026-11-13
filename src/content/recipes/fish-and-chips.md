@@ -53,7 +53,7 @@ ingredients:
       - { qty: 1, name: lemon, note: "cut into wedges" }
       - { qty: 4, unit: tbsp, name: malt vinegar }
 equipment:
-  - Heavy-bottomed pot, at least 6 L and about 24 cm wide
+  - Heavy-bottomed pot, 5 L
   - Large pot for boiling
   - Probe or frying thermometer
   - Spider or slotted spoon
