@@ -17,8 +17,6 @@ yield:
   min: 4
   unit: servings
 time:
-  prep: 40
-  cook: 55
   total: 95
 ingredients:
   - group: For the chips
@@ -65,13 +63,13 @@ steps:
   - title: Cut and soak the chips
     text:
       - "Cut the **potatoes** into 1.5 cm batons, as even as you can so they cook at the same rate."
-      - "Rinse under cold running water until it runs mostly clear, then cover with fresh cold water and soak for {wait:30m}."
+      - "Rinse under cold running water until it runs mostly clear, then cover with fresh cold water and soak for {soak:30m}."
       - tip: "Put the **lager beer** and **sparkling water** in the fridge now. They need to be properly cold for the batter."
   - title: Parboil the chips
     heat: Bring the **water** and {30 g} **fine sea salt** to a boil in the large pot and set the oven to **90 °C**.
     text:
       - "Drain the soaked **potatoes**, add them to the boiling water and return to a gentle simmer. Cook for {timer:6-8m}, until a knife slides in with a little resistance and the edges look rough and fuzzy. They should not be starting to fall apart."
-      - "Lift the chips out with a spider onto a wire rack set over a tray, spread in a single layer, and keep the cooking water. Leave to steam-dry for {wait:10m}."
+      - "Lift the chips out with a spider onto a wire rack set over a tray, spread in a single layer, and keep the cooking water. Leave to steam-dry for {dry:10m}."
   - title: Make the pea purée
     text:
       - "Set the heavy pot with the **oil** over medium-high heat now, so it reaches 190 °C by the time the chips are dry."

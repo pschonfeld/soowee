@@ -74,8 +74,6 @@ classDiagram
   }
   class Time {
     total* minutes
-    prep minutes
-    cook minutes
   }
   class IngredientGroup {
     group string
@@ -209,14 +207,16 @@ Allowed in `heat`, step paragraphs and tips. Raw HTML is escaped, not rendered.
 |---|---|---|---|---|
 | `**mascarpone**` | Ingredient mention | Bold | | |
 | `{750 g}`, `{2 tbsp}`, `{6}` | Amount used at this point (not the ingredient total) | `750 g` | yes | |
-| `{timer:20m}`, `{timer:5-10m}` | Something to check on | Tappable timer, label `5–10 minutes`; a range rings at its lower bound | | Active time |
-| `{wait:1h}` | Hands-off time: simmering, baking, resting | Tappable timer, like `{timer:}` | | Hands-off time |
-| `{chill:8h}` | Minimum time in the fridge before serving | Plain text `8 hours`, not a timer | | Chilling, outside the total |
+| `{timer:20m}`, `{timer:5-10m}` | Something the cook does or checks on | Tappable timer, label `5–10 minutes`; a range rings at its lower bound | | Active time |
+| `{simmer:1h}`, `{bake:30m}`, `{rest:15-20m}` … | Hands-off time: the dish works on its own. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Tappable timer, like `{timer:}` | | Total time, not active time |
+| `{chill:8h}`, `{freeze:6h}` | Minimum time in the fridge or freezer after the dish is finished | Plain text `8 hours`, not a timer | | Outside the total |
 | `tip: …` | A callout between paragraphs | Bulb icon; “Tip:” for screen readers | | |
 
-Durations are written as `45s`, `20m`, `1h`, `1h30m` or a range `5-10m`. The label is generated (“1 hour 30 minutes”), so durations read the same everywhere; write the sentence around it: “bake for {timer:10m} more”. Amount units must be from the unit list; an unknown unit fails the build.
+Durations are written as `45s`, `20m`, `1h`, `1h30m` or a range `5-10m`. The label is generated (“1 hour 30 minutes”), so durations read the same everywhere; write the sentence around it: “bake for {bake:10m} more”. Amount units must be from the unit list, and a token that is not in the lists (`{wait:1h}`, `{steam:5m}`) fails the build instead of being printed raw.
 
-Only step paragraphs count towards time: a `{wait:}` or `{chill:}` inside `heat` or a tip is shown but not counted.
+Use `{timer:}` when the cook is busy (stirring, frying, whisking) and a hands-off verb when they are free to do something else. A bake the cook has to watch closely is still `{bake:}`; the difference is only whether the time counts as work.
+
+Only step paragraphs count towards time: a duration inside `heat` or a tip is shown, and validated, but not counted.
 
 ## Time
 
@@ -224,40 +224,96 @@ All times are whole minutes.
 
 | Field under `time` | Required | Meaning |
 |---|---|---|
-| `total` | yes | Start to finish, **including** `{wait:}` time and **excluding** `{chill:}` time |
-| `prep` | no | In the Directions header only, and only when the recipe has no `{wait:}` timers (never in the hero); always in JSON-LD as `prepTime` |
-| `cook` | no | Same as `prep`; JSON-LD `cookTime` |
+| `total` | yes | Start to finish, **including** hands-off time (`{simmer:}`, `{bake:}` …) and **excluding** `{chill:}` and `{freeze:}` |
 
-Not checked: that `prep + cook` equals `total`.
+`total` is the only time written by hand. Everything else is derived from the duration tokens in the step paragraphs, so the page cannot show times that contradict the method. There is no separate prep or cook time: it would be a second, unchecked source for the same thing.
 
-The rest is derived:
+### Terms
+
+One vocabulary on every recipe:
+
+| Term | Where | Meaning |
+|---|---|---|
+| **Total time** | Hero | `time.total`: start to finish, until the dish is ready or goes into the fridge |
+| **Active** | Hero | The part of the total the cook is busy: total minus hands-off time. Shown only when the recipe has hands-off time, otherwise it would equal the total |
+| **Chill**, **Freeze** | Hero, as `+8 hr` | Time after the dish is finished. The `+` says it comes on top of the total |
+| “of work” | Directions sentence | The same number as Active, in plain words |
+
+“Active” is a label next to a number; in a sentence it reads like jargon, so the Directions header says “of work” instead.
+
+### Hands-off verbs
+
+Each verb is a timer that counts as hands-off time. The word in the second column is used in the Directions sentence. To add one, add it to `HANDS_OFF` in [`src/lib/inline.ts`](../src/lib/inline.ts) and a row here (a test checks both).
+
+| Token | In the sentence | Use for |
+|---|---|---|
+| `{simmer:}` | simmering | A sauce, stew or ragù cooking on its own |
+| `{bake:}` | baking | Anything in the oven that is not a roast: lasagna, bread, cakes |
+| `{roast:}` | roasting | Meat and vegetables in the oven |
+| `{rest:}` | resting | Meat, a baked dish or dough left to settle before the next step or before slicing |
+| `{rise:}` | rising | Yeast dough |
+| `{cool:}` | cooling | Cooling at room temperature before the next step: a cake before icing |
+| `{dry:}` | drying | Steam-drying, air-drying: parboiled chips on a rack |
+| `{drain:}` | draining | Liquid running off: mozzarella, yoghurt, salted vegetables |
+| `{soak:}` | soaking | In water, as part of the method: potatoes, short soaks |
+| `{marinate:}` | marinating | In a marinade, as part of the method |
+
+Time after the dish is finished, outside the total:
+
+| Token | Hero | In the sentence | Use for |
+|---|---|---|---|
+| `{chill:}` | Chill | in the fridge | Setting: tiramisu, panna cotta, terrines |
+| `{freeze:}` | Freeze | in the freezer | Ice cream, semifreddo |
+
+`{chill:}` is for a dish that is done and only has to set. Cooling a component before the next step is `{cool:}`, and resting a lasagna before slicing is `{rest:}`: both are part of the total.
+
+### How the times are derived
 
 ```mermaid
 flowchart TD
-  total["time.total<br/>written by hand"] --> active
-  wait["Sum of {wait:} in step paragraphs<br/>hands-off"] --> active["Active = total − hands-off"]
-  chill["Sum of {chill:} in step paragraphs"] --> chillOut["Chill, shown on its own"]
-  total --> ld["JSON-LD totalTime = total + chill"]
-  chill --> ld
-  active --> hero
-  chillOut --> hero["Hero: Total time · Active · Chill · Yield"]
-  active --> sub["Directions header"]
-  chillOut --> sub
+  total["time.total<br/>written by hand"] --> active["Active = total − hands-off"]
+  off["Hands-off verbs in step paragraphs<br/>{simmer:} {bake:} {rest:} …"] --> handsoff["Hands-off minutes<br/>+ verbs in order of first use"]
+  handsoff --> active
+  after["{chill:} {freeze:} in step paragraphs"] --> afterOut["Minutes per kind"]
+  active --> hero["Hero<br/>Total time · Active · Chill · Freeze · Yield"]
+  afterOut --> hero
+  total --> hero
+  total --> sentence["Directions sentence"]
+  active --> sentence
+  handsoff --> sentence
+  afterOut --> sentence
+  total --> ld["JSON-LD totalTime<br/>= total + chill + freeze"]
+  afterOut --> ld
 ```
 
-| The recipe has | Hero | Directions header |
+Both the hero and the sentence come from one function, `describeTime` in [`src/lib/time.ts`](../src/lib/time.ts), with a unit test for every case below.
+
+### The Directions sentence
+
+Generated, never written by hand. The numbers are bold.
+
+| The recipe has | Hero | Directions sentence |
 |---|---|---|
-| No `{wait:}`, no `{chill:}` | Total time | `Total Time: 1 hr (Prep 20 min, Cook 40 min)`; without `prep`/`cook` just `Total Time: 1 hr` |
-| `{wait:}` | Total time, Active | `Total Time: 4 hr 30 min (1 hr 25 min active, 3 hr 5 min hands-off)`; `prep`/`cook` are not shown |
-| `{chill:}`, no `{wait:}` | Total time, Chill `+8 hr` | `Total Time: 30 min, plus 8 hr chilling`; with `prep`/`cook`: `Total Time: 30 min (Prep 10 min, Cook 20 min), plus 8 hr chilling` |
-| `{wait:}` and `{chill:}` | Total time, Active, Chill | `Total Time: … (… active, … hands-off), plus … chilling` |
+| Only work | Total time | **25 min** from start to finish. |
+| Hands-off time | Total time, Active | **4 hr 30 min** in total: **1 hr 25 min** of work and **3 hr 5 min** of simmering, baking and resting. |
+| Fridge time | Total time, Chill | **30 min** of work, then at least **8 hr** in the fridge. |
+| Both | Total time, Active, Chill | **45 min** in total: **30 min** of work and **15 min** of cooling, then at least **4 hr** in the fridge. |
+| Fridge and freezer | Total time, Chill, Freeze | **40 min** of work, then at least **2 hr** in the fridge and **6 hr** in the freezer. |
+
+Rules:
+
+- The verbs are listed in the order they first appear in the method, each once, joined as “a, b and c”.
+- Hands-off time gets its own number instead of “the rest is …”, so the reader can see that work and hands-off time add up to the total.
+- “At least” is used only for the fridge and freezer, where longer is fine. A bake should not run longer.
+- The fridge always comes before the freezer, in the hero and in the sentence, whatever the order in the method.
+- A day or more is written in days: `1 day 2 hr`.
 
 How the sums are made:
 
-- A range counts at its **lower bound**: `{wait:20-25m}` adds 20 minutes, `{chill:8-12h}` reads “8–12 hours” but adds 8 hours. Write `time.total` with the same lower bounds, or the active time comes out too long.
-- The sums are rounded to whole minutes, so waits shorter than 30 seconds in total count as no wait at all.
+- A range counts at its **lower bound**: `{bake:20-25m}` adds 20 minutes, `{chill:8-12h}` reads “8–12 hours” but adds 8 hours. Write `time.total` with the same lower bounds, or the active time comes out too long.
+- The sums are made in seconds and rounded to whole minutes once, so hands-off time shorter than 30 seconds in total counts as none.
 
-`{chill:}` is for time after the dish is finished, when it only has to set (tiramisu, terrines). A rest the cook has to plan around before serving, like resting a lasagna, is `{wait:}`.
+Known simplification: work done *during* hands-off time (making the béchamel while the ragù simmers) is not counted as active. Active is the time the recipe needs the cook at the counter, not every minute they spend in the kitchen.
 
 ## Scaling
 
@@ -287,17 +343,13 @@ The build fails in two places.
 - a required field is missing, or a value has the wrong type;
 - an ingredient or `about` `unit` is not in the unit list;
 - `qty`, `about.qty`, `about.max` or a `yield` number is zero or negative, or `about.max` is not larger than `about.qty`;
-- `time` values are not positive whole minutes, or `{wait:}` timers add up to `time.total` or more (there would be no active time left);
-- a `{chill:}` duration in a step paragraph is malformed (`{chill:overnight}`);
+- `time.total` is not a positive whole number of minutes, or the hands-off verbs add up to `time.total` or more (there would be no active time left);
+- any step text (`heat`, a paragraph or a tip) has a malformed duration (`{chill:overnight}`), an unknown token (`{wait:1h}`) or an amount with a unit outside the unit list (`{2 cups}`); the path points to the exact line, e.g. `steps.3.text.1`;
 - a step has only tips and no `heat`;
 - `tint` is not a `#rrggbb` colour, or a URL is not a URL;
 - the `image` file does not exist.
 
-**Rendering the page**, with the broken token in the message but without a field path, when:
-
-- an inline amount has a unit outside the unit list (`{2 cups}`);
-- a `{timer:}` duration is malformed, or any duration token in `heat` or a tip is;
-- a `{wait:}` duration is malformed (it is read during schema validation, but the error is thrown as it is rather than reported against a field).
+**Rendering the page** runs the same checks again on the same text, so in practice it only fails if schema validation was bypassed.
 
 Not checked, so it is up to the author:
 
@@ -354,7 +406,7 @@ steps:
 ---
 ```
 
-For a full recipe with groups, `about`, `heat`, tips, `{wait:}` and `{chill:}`, see [`lasagna.md`](../src/content/recipes/lasagna.md) and [`tiramisu.md`](../src/content/recipes/tiramisu.md).
+For a full recipe with groups, `about`, `heat`, tips, hands-off verbs and `{chill:}`, see [`lasagna.md`](../src/content/recipes/lasagna.md) and [`tiramisu.md`](../src/content/recipes/tiramisu.md).
 
 ## Open decisions
 
@@ -365,6 +417,7 @@ Not decided yet; listed so they are not lost. None of them exists in the code to
 | Unit system | Metric only | Metric stays the default. A reader toggle to imperial later needs conversions for `g`/`ml` and a decision on `tsp`/`tbsp` (already shared) and on oven temperatures, which are plain text today |
 | `byline` | Used for the recipe’s origin (“Adapted from …”) | Decide whether it is the author, the origin, or both, and whether origin moves to `source` |
 | Size and preparation | Both in `note`: `medium, diced into small cubes` | Separate `size` and `prep` fields for a consistent order |
+| Time before starting | Not supported: every hands-off verb is part of the total | Overnight soaking of pulses, an overnight marinade or a cold rise happen before the cook starts. They would sit outside the total like `{chill:}` and open the sentence: “Start the night before: at least **12 hr** of soaking, then …” |
 | Heat | Free text; the temperature is bold text | A structured temperature (`temp: 180`), needed for a °F toggle and a preheat timer |
 | Amounts in steps | `{25 g}` scales but is not linked to an ingredient | Link step amounts to list ingredients, so the build can check that splits add up and every ingredient is used |
 | Body sections | Free Markdown with different headings per recipe | Fixed headings, or structured fields for allergens, serving suggestions and variations |

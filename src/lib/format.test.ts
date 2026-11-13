@@ -47,6 +47,9 @@ describe('durations', () => {
     expect(formatMinutes(195)).toBe('3 hr 15 min');
     expect(formatMinutes(60)).toBe('1 hr');
     expect(formatMinutes(45)).toBe('45 min');
+    expect(formatMinutes(1440)).toBe('1 day');
+    expect(formatMinutes(1500)).toBe('1 day 1 hr');
+    expect(formatMinutes(2880 + 5)).toBe('2 days 5 min');
   });
 
   it('formats ISO 8601 durations', () => {

@@ -19,7 +19,7 @@ First run needs the browsers: `pnpm exec playwright install chromium webkit`.
 
 1. Put the photo in `src/assets/recipes/`.
 2. Add `src/content/recipes/<slug>.md`. It is served at `/<slug>/`; the recipe with `featured: true` is also the home page.
-3. Check it against **[the recipe model](docs/recipe-model.md)**: every field, what is required, the inline step markup (`{25 g}`, `{timer:}`, `{wait:}`, `{chill:}`), how time and scaling are derived, and the writing conventions. The build fails with a clear message when something required is missing or malformed.
+3. Check it against **[the recipe model](docs/recipe-model.md)**: every field, what is required, the inline step markup (`{25 g}`, `{timer:}`, hands-off verbs like `{simmer:}`, `{chill:}`), how time and scaling are derived, and the writing conventions. The build fails with a clear message when something required is missing or malformed.
 
 ## Structure
 
