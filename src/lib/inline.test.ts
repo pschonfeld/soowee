@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTimer, plainText, renderInline, totalChillMinutes, totalWaitMinutes, waitSeconds } from './inline';
+import { DURATION_TOKENS, HANDS_OFF, parseTimer, plainText, renderInline, stepTimes } from './inline';
 
 describe('parseTimer', () => {
   it('parses single and compound durations with generated labels', () => {
@@ -57,37 +57,64 @@ describe('plainText', () => {
   });
 });
 
-describe('wait time', () => {
-  it('counts only {wait:} timers, not {timer:}', () => {
-    expect(waitSeconds('Simmer {wait:1h} then check {timer:5m}')).toBe(3600);
-    expect(waitSeconds('Nothing to wait for')).toBe(0);
+describe('hands-off time', () => {
+  it('renders every hands-off verb as a timer', () => {
+    for (const token of Object.keys(HANDS_OFF)) {
+      expect(renderInline(`{${token}:10m}`)).toContain('data-timer="600"');
+    }
   });
 
-  it('sums across steps, ignores tips, and rounds to minutes', () => {
+  it('counts only hands-off verbs, not {timer:}, sums across steps, ignores tips and rounds to minutes', () => {
     const steps = [
-      { text: ['Simmer {wait:1h}', { tip: 'A {wait:30m} in a tip is ignored' }] },
-      { text: ['Bake {wait:20m}'] },
+      { text: ['Simmer {simmer:1h}, check {timer:5m}', { tip: 'A {bake:30m} in a tip is ignored' }] },
+      { text: ['Bake {bake:20m}', 'Simmer {simmer:10s}'] },
     ];
-    expect(totalWaitMinutes(steps)).toBe(80);
+    expect(stepTimes(steps)).toEqual({ handsOff: 80, activities: ['simmer', 'bake'], after: [] });
+  });
+
+  it('lists each activity once, in order of first appearance', () => {
+    const steps = [{ text: ['{rest:5m}', '{bake:5m}', '{rest:5m}'] }];
+    expect(stepTimes(steps).activities).toEqual(['rest', 'bake']);
   });
 });
 
-describe('chill time', () => {
+describe('time after the dish is finished', () => {
   it('renders as plain text, not a timer button', () => {
-    const html = renderInline('Refrigerate for at least {chill:8h}.');
-    expect(html).toBe('Refrigerate for at least 8 hours.');
+    expect(renderInline('Refrigerate for at least {chill:8h}.')).toBe('Refrigerate for at least 8 hours.');
+    expect(renderInline('Freeze for {freeze:6h}.')).toBe('Freeze for 6 hours.');
     expect(plainText('Chill {chill:6-8h}.')).toBe('Chill 6–8 hours.');
   });
 
-  it('is counted on its own, never as hands-off time', () => {
+  it('is counted on its own, never as hands-off time, per kind', () => {
     const steps = [
-      { text: ['Simmer {wait:1h}', 'Chill {chill:8h}', { tip: 'A {chill:2h} in a tip is ignored' }] },
+      { text: ['Simmer {simmer:1h}', 'Chill {chill:8h}', 'Chill {chill:30m} more', { tip: 'A {chill:2h} in a tip is ignored' }] },
     ];
-    expect(totalChillMinutes(steps)).toBe(480);
-    expect(totalWaitMinutes(steps)).toBe(60);
+    expect(stepTimes(steps)).toEqual({ handsOff: 60, activities: ['simmer'], after: [{ token: 'chill', minutes: 510 }] });
   });
 
-  it('names the {chill:} token when the duration is invalid', () => {
+  it('names the token when the duration is invalid', () => {
     expect(() => renderInline('Chill {chill:overnight}')).toThrow(/Invalid duration "\{chill:overnight\}"/);
+    expect(() => renderInline('Bake {bake:soon}')).toThrow(/Invalid duration "\{bake:soon\}"/);
+  });
+});
+
+describe('unknown tokens', () => {
+  it('fail instead of being printed raw', () => {
+    expect(() => renderInline('Simmer {wait:1h}')).toThrow(/Unknown token "\{wait:1h\}"/);
+    expect(() => plainText('{steam:5m}')).toThrow(/Unknown token/);
+    for (const typo of ['{Bake:5m}', '{bake2:5m}', '{pre-heat:5m}', '{ bake :5m}', '{bake :5m}']) {
+      expect(() => renderInline(typo), typo).toThrow(/Unknown token/);
+    }
+    expect(DURATION_TOKENS).toContain('timer');
+  });
+
+  it('a known token without a duration fails too', () => {
+    for (const empty of ['{bake:}', '{timer:}', '{chill:}']) {
+      expect(() => renderInline(empty), empty).toThrow(/Invalid duration/);
+    }
+  });
+
+  it('leaves amounts and ordinary braces alone', () => {
+    expect(plainText('{25 g} and {2}')).toBe('25 g and 2');
   });
 });

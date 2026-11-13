@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { UNITS } from './format';
+import { DURATION_TOKENS, HANDS_OFF } from './inline';
 
 /**
  * docs/recipe-model.md documents the recipe schema. These checks fail when the schema or the inline
@@ -33,10 +34,13 @@ describe('docs/recipe-model.md', () => {
   });
 
   it('mentions every inline duration token', () => {
-    const inline = read('./inline.ts');
-    const tokens = [...new Set([...inline.matchAll(/\\\{\(([a-z|]+)\):/g)].flatMap(([, t]) => t.split('|')))];
-    expect(tokens.sort()).toEqual(['chill', 'timer', 'wait']);
-    expect(tokens.filter((token) => !doc.includes(`{${token}:`))).toEqual([]);
+    expect(DURATION_TOKENS.length).toBeGreaterThan(3);
+    expect(DURATION_TOKENS.filter((token) => !doc.includes(`{${token}:`))).toEqual([]);
+  });
+
+  it('lists every hands-off verb with the word used in the time sentence', () => {
+    const missing = Object.entries(HANDS_OFF).filter(([token, word]) => !doc.includes(`| \`{${token}:}\` | ${word} |`));
+    expect(missing).toEqual([]);
   });
 
   it('lists every allowed unit', () => {

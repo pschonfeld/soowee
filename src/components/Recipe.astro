@@ -3,8 +3,9 @@ import { render, type CollectionEntry } from 'astro:content';
 import { Image, Picture } from 'astro:assets';
 import '../styles/global.css';
 import Wordmark from '../assets/brand/soowee-wordmark.svg';
-import { formatMinutes, formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
-import { plainText, renderInline, totalChillMinutes, totalWaitMinutes } from '../lib/inline';
+import { formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
+import { plainText, renderInline, stepTimes } from '../lib/inline';
+import { describeTime } from '../lib/time';
 import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
 
@@ -30,21 +31,11 @@ const pageStyle = [
 const SourceTag = r.source?.url ? 'a' : 'div';
 
 const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
-const totalTime = formatMinutes(r.time.total);
-// Hands-off time comes from the {wait:…} timers in the steps; the rest of the total is active work.
-// (content.config.ts guarantees this leaves a positive active time.)
-const waitMinutes = totalWaitMinutes(r.steps);
-const activeMinutes = r.time.total - waitMinutes;
-const showActive = waitMinutes > 0;
-const timeParts = showActive
-  ? [`${formatMinutes(activeMinutes)} active`, `${formatMinutes(waitMinutes)} hands-off`]
-  : [
-      r.time.prep !== undefined && `Prep ${formatMinutes(r.time.prep)}`,
-      r.time.cook !== undefined && `Cook ${formatMinutes(r.time.cook)}`,
-    ].filter(Boolean);
-// Fridge time ({chill:…}) is not part of the total: the dish is done, it just has to set. Shown on its own.
-const chillMinutes = totalChillMinutes(r.steps);
-const chillTime = chillMinutes > 0 ? formatMinutes(chillMinutes) : undefined;
+// Hero and Directions header both come from describeTime, so they cannot disagree (see lib/time.ts).
+// content.config.ts guarantees the hands-off time leaves a positive active time.
+const times = stepTimes(r.steps);
+const time = describeTime(r.time.total, times);
+const afterMinutes = times.after.reduce((sum, a) => sum + a.minutes, 0);
 
 type Ingredient = { qty?: number; unit?: string; name: string; about?: { qty: number; max?: number; unit: string }; note?: string };
 /** "g flour" / "onion": the unit (if any) and name, as shown after the quantity. */
@@ -74,10 +65,8 @@ const jsonLd = {
   image: imageUrl,
   recipeCuisine: r.cuisine,
   recipeYield: yieldText,
-  prepTime: r.time.prep !== undefined ? isoDuration(r.time.prep) : undefined,
-  cookTime: r.time.cook !== undefined ? isoDuration(r.time.cook) : undefined,
-  // schema.org's totalTime means until it can be served, so the chilling counts here.
-  totalTime: isoDuration(r.time.total + chillMinutes),
+  // schema.org's totalTime means until it can be served, so time in the fridge or freezer counts here.
+  totalTime: isoDuration(r.time.total + afterMinutes),
   recipeIngredient: r.ingredients.flatMap((g) => g.items.map(ingredientText)),
   recipeInstructions: r.steps.map((s, i) => ({
     '@type': 'HowToSection',
@@ -168,23 +157,23 @@ const icons = {
             <dl class="meta">
               <div>
                 <dt>Total time</dt>
-                <dd>{totalTime}</dd>
+                <dd>{time.total}</dd>
               </div>
               {
-                showActive && (
+                time.active && (
                   <div>
                     <dt>Active</dt>
-                    <dd>{formatMinutes(activeMinutes)}</dd>
+                    <dd>{time.active}</dd>
                   </div>
                 )
               }
               {
-                chillTime && (
+                time.after.map((a) => (
                   <div>
-                    <dt>Chill</dt>
-                    <dd>+{chillTime}</dd>
+                    <dt>{a.label}</dt>
+                    <dd>{a.value}</dd>
                   </div>
-                )
+                ))
               }
               <div>
                 <dt>Yield</dt>
@@ -313,10 +302,8 @@ const icons = {
               <div class="section-head">
                 <div>
                   <h2 class="section-title" id="directions-title">Directions</h2>
-                  <p class="section-sub">
-                    Total Time: {totalTime}
-                    {timeParts.length > 0 && ` (${timeParts.join(', ')})`}
-                    {chillTime && `, plus ${chillTime} chilling`}
+                  <p class="section-sub section-sub--time">
+                    {time.sentence.map((s) => (s.strong ? <strong>{s.text}</strong> : s.text))}
                   </p>
                 </div>
               </div>

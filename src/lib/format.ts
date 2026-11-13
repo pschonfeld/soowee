@@ -44,11 +44,12 @@ export function formatYield(min: number, max: number | undefined, unit: string, 
   return `${max ? `${n(min)}–${n(max)}` : n(min)} ${unit}`;
 }
 
-/** 195 → "3 hr 15 min" */
+/** 195 → "3 hr 15 min", 1500 → "1 day 1 hr" */
 export function formatMinutes(total: number): string {
-  const h = Math.floor(total / 60);
+  const d = Math.floor(total / 1440);
+  const h = Math.floor((total % 1440) / 60);
   const m = total % 60;
-  return [h && `${h} hr`, m && `${m} min`].filter(Boolean).join(' ');
+  return [d && `${d} day${d === 1 ? '' : 's'}`, h && `${h} hr`, m && `${m} min`].filter(Boolean).join(' ');
 }
 
 /** 195 → "PT3H15M" (schema.org) */

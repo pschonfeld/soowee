@@ -1,12 +1,52 @@
-/** Tiny inline renderer for step text: **bold**, {timer:10m} and {25 g} amounts. Build-time only. */
+/** Tiny inline renderer for step text: **bold**, {timer:10m}, {simmer:1h} and {25 g} amounts. Build-time only. */
 import { UNITS, formatQty } from './format';
 
-/** {timer:…} needs attention when it rings; {wait:…} is hands-off time (simmering, baking). */
+/**
+ * Hands-off time: the dish works on its own while the cook is free. Rendered as a timer like {timer:…},
+ * counted in time.total, subtracted from it to get the active time, and named in the time summary
+ * ("3 hr 5 min of simmering, baking and resting"). The value is the word used in that sentence.
+ * Add a verb here when a recipe needs one; an unknown token fails the build.
+ */
+export const HANDS_OFF = {
+  simmer: 'simmering',
+  bake: 'baking',
+  roast: 'roasting',
+  rest: 'resting',
+  rise: 'rising',
+  cool: 'cooling',
+  dry: 'drying',
+  drain: 'draining',
+  soak: 'soaking',
+  marinate: 'marinating',
+} as const;
+
+/**
+ * Time after the dish is finished, when it only has to set: plain text (not a timer), kept OUT of
+ * time.total and shown on its own ("then at least 8 hr in the fridge").
+ */
+export const AFTER = {
+  chill: { label: 'Chill', place: 'in the fridge' },
+  freeze: { label: 'Freeze', place: 'in the freezer' },
+} as const;
+
+export type HandsOffToken = keyof typeof HANDS_OFF;
+export type AfterToken = keyof typeof AFTER;
+
+/** Every duration token, for error messages and the docs check. */
+export const DURATION_TOKENS = ['timer', ...Object.keys(HANDS_OFF), ...Object.keys(AFTER)] as const;
+
 // Each duration pattern captures (token, value), so errors name the token that was mistyped.
-const TIMER = /\{(timer|wait):([^}]+)\}/g;
-const WAIT = /\{(wait):([^}]+)\}/g;
-/** {chill:6h} – set-and-forget time in the fridge: shown as text, kept out of the total and listed separately. */
-const CHILL = /\{(chill):([^}]+)\}/g;
+// The value may be empty, so `{bake:}` reaches parseTimer and fails instead of being printed raw.
+const alternation = (tokens: readonly string[]) => new RegExp(`\\{(${tokens.join('|')}):([^}]*)\\}`, 'g');
+/** {timer:…} needs attention when it rings; the hands-off verbs ring too. */
+const TIMER = alternation(['timer', ...Object.keys(HANDS_OFF)]);
+const WAIT = alternation(Object.keys(HANDS_OFF));
+const AFTER_PATTERN = alternation(Object.keys(AFTER));
+/**
+ * Anything that looks like a duration token, so a misspelt or retired one ({wait:1h}, {Bake:5m}, {pre-heat:5m},
+ * { bake :5m}) is not printed raw. Amounts ({25 g}) have no colon and never match.
+ */
+const ANY_TOKEN = /\{\s*([A-Za-z][\w-]*)\s*:[^}]*\}/g;
 const BOLD = /\*\*(.+?)\*\*/g;
 /** {25 g}, {1.5} – the amount used at this point of the recipe (not the ingredient total). */
 const AMOUNT = /\{\s*(\d+(?:\.\d+)?)\s*([A-Za-z]*)\s*\}/g;
@@ -64,44 +104,68 @@ export function parseTimer(value: string, token = 'timer'): { seconds: number; l
   return { seconds, label: split.filter(([n]) => n).map(([n, unit]) => words(n, unit)).join(' ') };
 }
 
+function rejectUnknownTokens(source: string): void {
+  for (const [token, name] of source.matchAll(ANY_TOKEN)) {
+    // Known name, written exactly as the renderer expects it: no spaces, lower case.
+    if (!(DURATION_TOKENS as readonly string[]).includes(name) || !token.startsWith(`{${name}:`)) {
+      throw new Error(`Unknown token "${token}" (allowed: ${DURATION_TOKENS.join(', ')})`);
+    }
+  }
+}
+
 export function renderInline(source: string): string {
+  rejectUnknownTokens(source);
   return escapeHtml(source)
     .replace(AMOUNT, (_, qty: string, unit: string) => amount(qty, unit, true))
     .replace(BOLD, '<strong>$1</strong>')
-    .replace(CHILL, (_, token: string, value: string) => parseTimer(value, token).label)
+    .replace(AFTER_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
     .replace(TIMER, (_, token: string, value: string) => {
       const { seconds, label } = parseTimer(value, token);
       return `<button type="button" class="timer" data-timer="${seconds}" aria-label="Start timer: ${label}">${TIMER_ICON}<span>${label}</span></button>`;
     });
 }
 
-type Steps = { text: (string | { tip: string })[] }[];
-
-function seconds(source: string, pattern: RegExp): number {
-  return [...source.matchAll(pattern)].reduce((sum, [, token, value]) => sum + parseTimer(value, token).seconds, 0);
-}
-
-/** Minutes matched by `pattern` across all steps (tips are not scanned), rounded as shown on the page. */
-function totalMinutes(steps: Steps, pattern: RegExp): number {
-  const total = steps
-    .flatMap((s) => s.text)
-    .reduce((sum, p) => sum + (typeof p === 'string' ? seconds(p, pattern) : 0), 0);
-  return Math.round(total / 60);
-}
-
-/** Hands-off seconds in a piece of step text. */
-export const waitSeconds = (source: string) => seconds(source, WAIT);
-
-/** Hands-off minutes ({wait:…}), part of time.total. */
-export const totalWaitMinutes = (steps: Steps) => totalMinutes(steps, WAIT);
-
-/** Chilling minutes ({chill:…}), on top of time.total. */
-export const totalChillMinutes = (steps: Steps) => totalMinutes(steps, CHILL);
-
 export function plainText(source: string): string {
+  rejectUnknownTokens(source);
   return source
     .replace(AMOUNT, (_, qty: string, unit: string) => amount(qty, unit, false))
     .replace(BOLD, '$1')
-    .replace(CHILL, (_, token: string, value: string) => parseTimer(value, token).label)
+    .replace(AFTER_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
     .replace(TIMER, (_, token: string, value: string) => parseTimer(value, token).label);
+}
+
+type Steps = { text: (string | { tip: string })[] }[];
+
+/** What the step paragraphs say about time. Tips and `heat` are not counted. */
+export interface StepTimes {
+  /** Minutes of hands-off time, part of time.total. */
+  handsOff: number;
+  /** The hands-off verbs used, in the order they first appear, without repeats. */
+  activities: HandsOffToken[];
+  /** Time after the dish is finished, outside time.total, in the order of AFTER (fridge before freezer). */
+  after: { token: AfterToken; minutes: number }[];
+}
+
+/** Sums are made in seconds and rounded to minutes once, as shown on the page. A range counts at its lower bound. */
+export function stepTimes(steps: Steps): StepTimes {
+  const paragraphs = steps.flatMap((s) => s.text).filter((p): p is string => typeof p === 'string');
+  let handsOff = 0;
+  const activities = new Set<HandsOffToken>();
+  const after = new Map<AfterToken, number>();
+  for (const p of paragraphs) {
+    for (const [, token, value] of p.matchAll(WAIT)) {
+      handsOff += parseTimer(value, token).seconds;
+      activities.add(token as HandsOffToken);
+    }
+    for (const [, token, value] of p.matchAll(AFTER_PATTERN)) {
+      after.set(token as AfterToken, (after.get(token as AfterToken) ?? 0) + parseTimer(value, token).seconds);
+    }
+  }
+  return {
+    handsOff: Math.round(handsOff / 60),
+    activities: [...activities],
+    after: (Object.keys(AFTER) as AfterToken[])
+      .map((token) => ({ token, minutes: Math.round((after.get(token) ?? 0) / 60) }))
+      .filter(({ minutes }) => minutes > 0),
+  };
 }

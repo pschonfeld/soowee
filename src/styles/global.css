@@ -592,6 +592,12 @@ a.story:hover,
   color: var(--text-secondary);
 }
 
+/* The numbers in the time sentence carry the meaning; the words around them stay quiet. */
+.section-sub--time strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
 /* Scale stepper */
 .scale {
   display: flex;

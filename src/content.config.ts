@@ -2,21 +2,21 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { UNITS } from './lib/format';
-import { totalChillMinutes, totalWaitMinutes } from './lib/inline';
+import { plainText, stepTimes } from './lib/inline';
 
 /**
  * A recipe is one Markdown file: structured data in the frontmatter
  * (so it can be scaled, timed and exported as JSON-LD), free-form notes
- * in the Markdown body.
+ * in the Markdown body. docs/recipe-model.md explains every field.
  *
  * Inline markup allowed in step text:
  *   **bold**                      – ingredient mentions
- *   {wait:1h}                     – same as a timer, but hands-off: it is subtracted from the total
- *                                   to show the cook how much of the time is active work
- *   {chill:6h}                    – minimum time in the fridge before serving; plain text, not a timer, and
- *                                   NOT part of time.total (shown separately as "plus 6 hr chilling")
  *   {timer:20m} {timer:5-10m}     – tappable timer; the label ("5–10 minutes") is generated so wording
  *                                   stays consistent, and a range rings at its lower bound (time to check)
+ *   {simmer:1h} {bake:30m} …      – hands-off time: a timer too, but subtracted from the total to get the
+ *                                   active time and named in the time summary (list: HANDS_OFF in lib/inline.ts)
+ *   {chill:6h} {freeze:4h}        – minimum time in the fridge/freezer after the dish is finished; plain text,
+ *                                   not a timer, and NOT part of time.total (shown separately)
  *   {25 g} or {2}                 – an amount used in this step; scales with the recipe
  */
 const ingredient = z.object({
@@ -70,10 +70,8 @@ const recipes = defineCollection({
         max: z.number().positive().optional(),
         unit: z.string().default('servings'),
       }),
-      /** Minutes. `total` excludes {chill:…} time. */
+      /** Minutes, start to finish: includes hands-off time ({simmer:…}), excludes {chill:…}/{freeze:…}. */
       time: z.object({
-        prep: z.number().int().positive().optional(),
-        cook: z.number().int().positive().optional(),
         total: z.number().int().positive(),
       }),
       ingredients: z
@@ -99,17 +97,27 @@ const recipes = defineCollection({
     })
       // Reported against the recipe file at validation time, not while rendering the page.
       .superRefine((r, ctx) => {
-        try {
-          totalChillMinutes(r.steps);
-        } catch (error) {
-          ctx.addIssue({ code: 'custom', path: ['steps'], message: (error as Error).message });
-        }
-        const wait = totalWaitMinutes(r.steps);
-        if (r.time.total - wait <= 0) {
+        // Every piece of step text: unknown tokens, malformed durations and units are reported with their path.
+        let valid = true;
+        r.steps.forEach((step, i) => {
+          const texts: [string, (string | number)[]][] = step.heat !== undefined ? [[step.heat, ['heat']]] : [];
+          step.text.forEach((p, j) => texts.push(typeof p === 'string' ? [p, ['text', j]] : [p.tip, ['text', j, 'tip']]));
+          for (const [text, path] of texts) {
+            try {
+              plainText(text);
+            } catch (error) {
+              valid = false;
+              ctx.addIssue({ code: 'custom', path: ['steps', i, ...path], message: (error as Error).message });
+            }
+          }
+        });
+        if (!valid) return;
+        const { handsOff } = stepTimes(r.steps);
+        if (r.time.total - handsOff <= 0) {
           ctx.addIssue({
             code: 'custom',
             path: ['time', 'total'],
-            message: `{wait:…} timers add up to ${wait} min, but time.total is ${r.time.total} min`,
+            message: `Hands-off time ({simmer:…}, {bake:…} …) adds up to ${handsOff} min, but time.total is ${r.time.total} min`,
           });
         }
       }),

@@ -19,8 +19,6 @@ yield:
   max: 10
   unit: servings
 time:
-  prep: 30
-  cook: 220
   total: 270
 ingredients:
   - group: For the cheeses
@@ -84,8 +82,8 @@ steps:
       - tip: Do not let the vegetables brown. Salting them now draws out moisture so they sweat instead of frying.
       - Return the meat and its juices to the pot, season with {8 g} **salt** and stir well.
       - Pour in {240 ml} **red wine** and simmer over medium-high heat, stirring occasionally, until the smell of alcohol is gone and the liquid has almost evaporated.
-      - Stir in {1.4 L} **passata**. Reduce the heat to medium-low, cover the pot and simmer gently, with a bubble breaking the surface only now and then, for {wait:1h}, stirring occasionally.
-      - Remove the lid, add {240 ml} **water** and simmer uncovered on low heat for {wait:1h} more, stirring occasionally.
+      - Stir in {1.4 L} **passata**. Reduce the heat to medium-low, cover the pot and simmer gently, with a bubble breaking the surface only now and then, for {simmer:1h}, stirring occasionally.
+      - Remove the lid, add {240 ml} **water** and simmer uncovered on low heat for {simmer:1h} more, stirring occasionally.
       - tip: The ragù should stay loose and spoonable; add a splash of water if it thickens. Fresh pasta sheets take their moisture from the sauce.
       - Skim any pooled orange fat from the surface. Taste and adjust with up to {3 g} **salt** and **black pepper**.
       - tip: Keep the seasoning slightly under. The Pecorino Romano and Provolone bring salt of their own.
@@ -110,9 +108,9 @@ steps:
       - Spread {300 ml} ragù over the top sheet, then the remaining béchamel (about 200 ml) from edge to edge so no pasta is exposed.
   - title: Bake
     text:
-      - Cover the dish with foil, without letting it touch the surface, and bake for {wait:30m}.
-      - Remove the foil, sprinkle with the reserved {30 g} **Pecorino Romano** and bake uncovered for {wait:20-25m} until the top is golden, the edges are bubbling and the centre reads at least 75 °C on an instant-read thermometer.
-      - Rest for {wait:15-20m} before slicing.
+      - Cover the dish with foil, without letting it touch the surface, and bake for {bake:30m}.
+      - Remove the foil, sprinkle with the reserved {30 g} **Pecorino Romano** and bake uncovered for {bake:20-25m} until the top is golden, the edges are bubbling and the centre reads at least 75 °C on an instant-read thermometer.
+      - Rest for {rest:15-20m} before slicing.
       - tip: Resting lets the béchamel and cheese set so the slices hold their shape.
 ---
 
