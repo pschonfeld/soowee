@@ -119,6 +119,22 @@
 @media (min-width: 48rem) {
   :root {
     --gutter: var(--s-8);
+    /* Ingredients | Directions split. The hero text column uses the same numbers, so it is
+       exactly as wide as Ingredients. Even on tablets in portrait, where 5 : 7 would leave
+       Ingredients too narrow for three buttons across. */
+    --sheet-gap: var(--s-12);
+    --col1-fr: 1fr;
+    --col2-fr: 1fr;
+    --col1-share: 0.5;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --sheet-gap: var(--s-16);
+    --col1-fr: 5fr;
+    --col2-fr: 7fr;
+    --col1-share: calc(5 / 12);
   }
 }
 
@@ -284,10 +300,6 @@ a.story:hover,
   right: 0;
   height: var(--media-h);
   background: var(--backdrop) center / cover no-repeat;
-}
-
-.hero__backdrop > .is-mirror-end {
-  display: none;
 }
 
 .hero__backdrop > .is-mirror {
@@ -483,21 +495,22 @@ a.story:hover,
 
 @media (min-width: 48rem) {
   .hero {
-    /* The composition lives in a frame of at most 100rem; on wider screens the blurred
-       backdrop continues on both sides instead of the photo stretching into a thin band. */
+    /* The photo starts at 42% of a frame of at most 100rem and always runs to the right edge,
+       like Apple's full-bleed hero. On wide windows the hero grows taller instead, so the photo
+       keeps roughly its own 3:2 proportions rather than becoming a thin band. */
     --frame: min(100%, 100rem);
     --frame-left: calc((100% - var(--frame)) / 2);
     --photo-left: calc(var(--frame-left) + var(--frame) * 0.42);
-    --photo-width: calc(var(--frame) * 0.58);
+    --photo-width: calc(100% - var(--photo-left));
     display: flex;
     align-items: center;
-    min-height: clamp(30rem, 62svh, 42rem);
+    min-height: max(clamp(30rem, 62svh, 42rem), min((50vw + 0.08 * min(100vw, 100rem)) / 1.6, 70svh));
   }
 
-  /* Photo on the right 58% of the frame; its mirror image extends it to the left under the text. */
+  /* Photo box from --photo-left to the right edge; its mirror image extends it to the left under the text. */
   .hero__backdrop > div {
     left: var(--photo-left);
-    right: var(--frame-left);
+    right: 0;
     height: 100%;
   }
 
@@ -508,14 +521,6 @@ a.story:hover,
     transform: scaleX(-1);
   }
 
-  .hero__backdrop > .is-mirror-end {
-    display: block;
-    top: 0;
-    left: calc(100% - var(--frame-left) - 1px);
-    right: calc(var(--frame-left) - var(--photo-width));
-    transform: scaleX(-1);
-  }
-
   /* Measured in the frame, so on wide monitors it darkens the text column, not the photo. */
   .hero__backdrop::after {
     background: linear-gradient(to right, rgb(0 0 0 / calc(var(--scrim) * 1)) calc(var(--frame-left) + var(--frame) * 0.52), rgb(0 0 0 / calc(var(--scrim) * 0.962)) calc(var(--frame-left) + var(--frame) * 0.555), rgb(0 0 0 / calc(var(--scrim) * 0.854)) calc(var(--frame-left) + var(--frame) * 0.59), rgb(0 0 0 / calc(var(--scrim) * 0.691)) calc(var(--frame-left) + var(--frame) * 0.625), rgb(0 0 0 / calc(var(--scrim) * 0.5)) calc(var(--frame-left) + var(--frame) * 0.66), rgb(0 0 0 / calc(var(--scrim) * 0.309)) calc(var(--frame-left) + var(--frame) * 0.695), rgb(0 0 0 / calc(var(--scrim) * 0.146)) calc(var(--frame-left) + var(--frame) * 0.73), rgb(0 0 0 / calc(var(--scrim) * 0.038)) calc(var(--frame-left) + var(--frame) * 0.765), rgb(0 0 0 / calc(var(--scrim) * 0)) calc(var(--frame-left) + var(--frame) * 0.8));
@@ -523,17 +528,18 @@ a.story:hover,
 
   .hero__media {
     position: absolute;
-    inset: 0 var(--frame-left) 0 var(--photo-left);
+    inset: 0 0 0 var(--photo-left);
     height: auto;
     z-index: 0;
-    /* Invisible until past the text column (≈ 52% of the hero), then fades in. */
     /* Transparent until past the text column (18% of the photo box), opaque by 50%. */
     --fade: linear-gradient(90deg, rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0.038) 22%, rgb(0 0 0 / 0.146) 26%, rgb(0 0 0 / 0.309) 30%, rgb(0 0 0 / 0.5) 34%, rgb(0 0 0 / 0.691) 38%, rgb(0 0 0 / 0.854) 42%, rgb(0 0 0 / 0.962) 46%, rgb(0 0 0 / 1) 50%);
   }
 
+  /* Exactly as wide as the Ingredients column below (same 74rem content box, 5 : 7 split, gap),
+     so the hero text and the page share one left column. */
   .hero__body {
-    width: 46%;
-    max-width: 30rem;
+    width: calc((min(100%, 74rem) - 2 * var(--gutter) - var(--sheet-gap)) * var(--col1-share));
+    max-width: none;
     margin: 0 0 0 max(0px, calc((100% - 74rem) / 2));
     padding: 5.5rem var(--gutter) var(--s-10);
     box-sizing: content-box;
@@ -541,30 +547,6 @@ a.story:hover,
 
   .hero h1 {
     font-size: var(--text-large);
-  }
-}
-
-/* Wider than the frame: the photo's right edge meets the mirrored backdrop, so it fades out there too,
-   and past the mirrors a stretched blurred copy fills the rest; the mirrors fade into it. */
-@media (min-width: 100rem) {
-  .hero__backdrop {
-    background: var(--backdrop) center / cover no-repeat;
-  }
-
-  /* The mirrors are flipped with scaleX(-1), and the mask flips with them:
-     270deg here fades the left mirror's outer (left) edge, 90deg the right mirror's outer edge. */
-  .hero__backdrop > .is-mirror {
-    -webkit-mask-image: linear-gradient(270deg, transparent, #000 35%);
-    mask-image: linear-gradient(270deg, transparent, #000 35%);
-  }
-
-  .hero__backdrop > .is-mirror-end {
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
-    mask-image: linear-gradient(90deg, transparent, #000 35%);
-  }
-
-  .hero__media {
-    --fade: linear-gradient(90deg, rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0.038) 22%, rgb(0 0 0 / 0.146) 26%, rgb(0 0 0 / 0.309) 30%, rgb(0 0 0 / 0.5) 34%, rgb(0 0 0 / 0.691) 38%, rgb(0 0 0 / 0.854) 42%, rgb(0 0 0 / 0.962) 46%, rgb(0 0 0 / 1) 50%, rgb(0 0 0 / 0.962) 91.25%, rgb(0 0 0 / 0.854) 92.5%, rgb(0 0 0 / 0.691) 93.75%, rgb(0 0 0 / 0.5) 95%, rgb(0 0 0 / 0.309) 96.25%, rgb(0 0 0 / 0.146) 97.5%, rgb(0 0 0 / 0.038) 98.75%, rgb(0 0 0 / 0) 100%);
   }
 }
 
@@ -583,16 +565,10 @@ a.story:hover,
 
 @media (min-width: 48rem) {
   .sheet {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: var(--s-12);
+    grid-template-columns: minmax(0, var(--col1-fr)) minmax(0, var(--col2-fr));
+    gap: var(--sheet-gap);
     align-items: start;
     padding-block: var(--s-10) var(--s-16);
-  }
-}
-
-@media (min-width: 64rem) {
-  .sheet {
-    gap: var(--s-16);
   }
 }
 

@@ -88,7 +88,14 @@ test('mirrored backdrop meets the photo at its edge and text stays off the sharp
     const mirror = box('.hero__backdrop > .is-mirror');
     const title = box('.hero h1');
     const lede = box('.lede');
-    return { media, photoCopy, mirror, title, lede, wide: innerWidth >= 768 };
+    const body = document.querySelector('.hero__body')!;
+    const pad = parseFloat(getComputedStyle(body).paddingLeft);
+    const text = body.getBoundingClientRect();
+    const column = box('.sheet > div:first-child');
+    return {
+      media, photoCopy, mirror, title, lede, wide: innerWidth >= 768, vw: innerWidth,
+      text: { left: text.left + pad, right: text.right - pad }, column,
+    };
   });
   // The blurred copy has exactly the photo's box, so `cover` crops both the same way.
   for (const k of ['left', 'top', 'width', 'height'] as const) {
@@ -98,6 +105,11 @@ test('mirrored backdrop meets the photo at its edge and text stays off the sharp
     // Within 2px: the mirror deliberately overlaps the photo by 1px to hide the subpixel seam.
     expect(Math.abs(g.mirror.right - g.media.left)).toBeLessThanOrEqual(2);
     expect(Math.abs(g.mirror.width - g.media.width)).toBeLessThanOrEqual(1);
+    // Full-bleed: the photo runs to the right edge of the window.
+    expect(Math.abs(g.media.right - g.vw)).toBeLessThanOrEqual(1);
+    // The hero text column is exactly the Ingredients column.
+    expect(Math.abs(g.text.left - g.column.left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(g.text.right - g.column.right)).toBeLessThanOrEqual(1);
     // The photo is masked out for its first 18%: text must end before the photo shows.
     expect(g.lede.right).toBeLessThanOrEqual(g.media.left + g.media.width * 0.18 + 1);
   } else {
@@ -124,6 +136,39 @@ test('Cook, Save and Share are on the first screen of a 320 × 568 phone', async
   await page.goto('/lasagna/');
   const bottom = await page.locator('.actions').evaluate((e) => e.getBoundingClientRect().bottom);
   expect(bottom).toBeLessThanOrEqual(568);
+});
+
+test('hero text matches the Ingredients column and the photo runs to the edge at every width', async ({ page }) => {
+  for (const [width, height] of [[768, 1024], [1023, 900], [1024, 900], [1440, 900], [1920, 1080], [2560, 1440], [3440, 1440]]) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/fish-and-chips/');
+    const g = await page.evaluate(() => {
+      const body = document.querySelector('.hero__body')!;
+      const cs = getComputedStyle(body);
+      const b = body.getBoundingClientRect();
+      const col = document.querySelector('.sheet > div:first-child')!.getBoundingClientRect();
+      const media = document.querySelector('.hero__media')!.getBoundingClientRect();
+      const mirror = document.querySelector('.hero__backdrop > .is-mirror')!.getBoundingClientRect();
+      const hero = document.querySelector('.hero')!.getBoundingClientRect();
+      return {
+        textLeft: b.left + parseFloat(cs.paddingLeft), textRight: b.right - parseFloat(cs.paddingRight),
+        colLeft: col.left, colRight: col.right, bodyRight: b.right,
+        media: { left: media.left, right: media.right, width: media.width, height: media.height },
+        mirrorRight: mirror.right, mirrorLeft: mirror.left, vw: innerWidth, vh: innerHeight, heroHeight: hero.height,
+      };
+    });
+    const at = `at ${width}px`;
+    expect(Math.abs(g.textLeft - g.colLeft), at).toBeLessThanOrEqual(1);
+    expect(Math.abs(g.textRight - g.colRight), at).toBeLessThanOrEqual(1);
+    expect(Math.abs(g.media.right - g.vw), at).toBeLessThanOrEqual(1);
+    expect(Math.abs(g.mirrorRight - g.media.left), at).toBeLessThanOrEqual(2);
+    expect(g.mirrorLeft, at).toBeLessThanOrEqual(0);
+    // The whole text column, padding included, ends before the photo starts to show.
+    expect(g.bodyRight, at).toBeLessThanOrEqual(g.media.left + g.media.width * 0.18 + 1);
+    // Wide windows grow the hero rather than squeezing the photo into a band (capped at 70% of the height).
+    expect(g.heroHeight, at).toBeLessThanOrEqual(Math.max(672, g.vh * 0.7) + 1);
+    if (width >= 1920 && width / height < 2) expect(g.media.width / g.media.height, at).toBeLessThanOrEqual(1.65);
+  }
 });
 
 test('home page leads to the featured recipe', async ({ page }) => {

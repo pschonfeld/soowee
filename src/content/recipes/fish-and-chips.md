@@ -2,7 +2,7 @@
 title: Fish & Chips
 description: A classic British dish featuring crispy beer-battered cod served with creamy pea purée.
 cuisine: British
-byline: Source · Gordon Ramsay Recipes
+byline: Adapted from Gordon Ramsay
 image: ../../assets/recipes/fish-and-chips.jpg
 imageAlt: Golden battered fish on a bed of chips with a lemon wedge
 imageCredit:
@@ -11,7 +11,8 @@ imageCredit:
   url: https://commons.wikimedia.org/wiki/File:Fish_and_chips_blackpool.jpg
 source:
   label: Original recipe
-  title: Classic Beer Battered Fish & Mushy Peas Recipe
+  title: Classic Beer Battered Fish & Mushy Peas
+  url: https://www.gordonramsayrestaurants.com/recipes/classic-beer-battered-fish-and-mushy-peas/
 yield:
   min: 4
   unit: servings
@@ -85,3 +86,7 @@ steps:
 - **Alcohol:** The batter contains beer, which may not be suitable for individuals avoiding alcohol. If necessary, opt for a non-alcoholic beer.
 - **Fish:** This recipe contains cod, which is a common allergen for those with fish allergies. Ensure no cross-contamination occurs during preparation.
 - **Frying oil:** If using shared oil, ensure it hasn’t been used for frying other allergens, such as shellfish, to avoid cross-contamination.
+
+## Source
+
+Adapted from [Gordon Ramsay: Classic Beer Battered Fish & Mushy Peas](https://www.gordonramsayrestaurants.com/recipes/classic-beer-battered-fish-and-mushy-peas/).
