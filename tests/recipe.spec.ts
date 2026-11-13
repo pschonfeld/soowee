@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 const RECIPES = [
   { path: '/lasagna/', title: 'Lasagna', ingredients: 21, steps: 5 },
   { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 21, steps: 7 },
-  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 9, steps: 4 },
+  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 8, steps: 4 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
