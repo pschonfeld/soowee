@@ -43,6 +43,8 @@ for (const recipe of RECIPES) {
       for (const scheme of ['light', 'dark'] as const) {
         await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
         await page.goto(recipe.path);
+        // Wait for the hero photo to decode, or the screenshot shows only the blurred backdrop.
+        await page.locator('.hero__media img').evaluate((img: HTMLImageElement) => img.decode());
         await page.screenshot({ path: `screenshots/${testInfo.project.name}/${slug}-${scheme}.png`, fullPage: true });
       }
       await page.getByRole('button', { name: 'Cook', exact: true }).click();
@@ -50,6 +52,61 @@ for (const recipe of RECIPES) {
     });
   });
 }
+
+test('hero backdrop is derived from each recipe photo', async ({ page }) => {
+  const read = () =>
+    page.evaluate(() => {
+      const style = getComputedStyle(document.body);
+      return {
+        backdrop: style.getPropertyValue('--backdrop'),
+        edge: style.getPropertyValue('--backdrop-edge'),
+        scrim: Number(style.getPropertyValue('--scrim')),
+      };
+    });
+  await page.goto('/lasagna/');
+  const lasagna = await read();
+  await page.goto('/fish-and-chips/');
+  const fish = await read();
+  for (const b of [lasagna, fish]) {
+    expect(b.backdrop).toMatch(/^url\(data:image\/webp;base64,/);
+    expect(b.scrim).toBeGreaterThan(0);
+    expect(b.scrim).toBeLessThanOrEqual(0.9);
+  }
+  expect(lasagna.backdrop).not.toBe(fish.backdrop);
+  expect(lasagna.edge).not.toBe(fish.edge);
+  // The lasagna photo has bright cheese and bread, so it needs a substantial scrim for white text.
+  expect(lasagna.scrim).toBeGreaterThanOrEqual(0.5);
+  await expect(page.getByRole('link', { name: 'soowee home' })).toHaveCount(0);
+});
+
+test('mirrored backdrop meets the photo at its edge and text stays off the sharp photo', async ({ page }) => {
+  await page.goto('/lasagna/');
+  const g = await page.evaluate(() => {
+    const box = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+    const media = box('.hero__media');
+    const photoCopy = box('.hero__backdrop > div:not(.is-mirror)');
+    const mirror = box('.hero__backdrop > .is-mirror');
+    const title = box('.hero h1');
+    const lede = box('.lede');
+    return { media, photoCopy, mirror, title, lede, wide: innerWidth >= 768 };
+  });
+  // The blurred copy has exactly the photo's box, so `cover` crops both the same way.
+  for (const k of ['left', 'top', 'width', 'height'] as const) {
+    expect(Math.abs(g.photoCopy[k] - g.media[k])).toBeLessThanOrEqual(1);
+  }
+  if (g.wide) {
+    // Within 2px: the mirror deliberately overlaps the photo by 1px to hide the subpixel seam.
+    expect(Math.abs(g.mirror.right - g.media.left)).toBeLessThanOrEqual(2);
+    expect(Math.abs(g.mirror.width - g.media.width)).toBeLessThanOrEqual(1);
+    // The photo is masked out for its first 18%: text must end before the photo shows.
+    expect(g.lede.right).toBeLessThanOrEqual(g.media.left + g.media.width * 0.18 + 1);
+  } else {
+    expect(Math.abs(g.mirror.top - g.media.bottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs(g.mirror.height - g.media.height)).toBeLessThanOrEqual(1);
+    // The photo is fully transparent 5rem above its bottom edge, where the title starts.
+    expect(g.title.top).toBeGreaterThanOrEqual(g.media.bottom - 80 - 1);
+  }
+});
 
 test('home page leads to the featured recipe', async ({ page }) => {
   await page.goto('/');
@@ -236,8 +293,6 @@ test.describe('interactions', () => {
     test.skip(browserName === 'webkit', 'Safari only tabs to buttons/links with "Full Keyboard Access" enabled');
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name: 'Skip to recipe' })).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(page.getByRole('link', { name: 'soowee home' })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.locator('a.story')).toBeFocused();
     await page.keyboard.press('Tab');

@@ -47,8 +47,23 @@
   --tint-deep: #2e241c;
   --on-tint: #ffffff;
   --on-tint-secondary: rgb(255 255 255 / 0.78);
-  --on-tint-fill: rgb(255 255 255 / 0.15);
-  --on-tint-fill-hover: rgb(255 255 255 / 0.24);
+
+  /* Photo backdrop, set per recipe at build time (src/lib/backdrop.ts); these are the fallbacks. */
+  --backdrop: none;
+  --scrim: 0.35;
+  --cook-scrim: 0.35;
+
+  /* Glass for controls that float over the photo (after Apple's Liquid Glass).
+     --glass-fill is the value src/lib/backdrop.ts checks text contrast against. */
+  --glass-fill: rgb(255 255 255 / 0.14);
+  --glass-press: rgb(255 255 255 / 0.2);
+  --glass-blur: blur(16px) saturate(180%);
+  --glass-edge: inset 0 1px 0.5px rgb(255 255 255 / 0.32), inset 0 -0.5px 0.5px rgb(255 255 255 / 0.1),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.14);
+  --glass-edge-hover: inset 0 1px 0.5px rgb(255 255 255 / 0.5), inset 0 -0.5px 0.5px rgb(255 255 255 / 0.16),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.3);
+  --glass-shadow: 0 2px 12px rgb(0 0 0 / 0.16);
+  --glass-dark: rgb(28 28 30 / 0.82);
 }
 
 /* Manual override from the footer switch; without it the system setting applies. */
@@ -141,10 +156,27 @@ a {
   display: none !important;
 }
 
-.brand:focus-visible {
-  outline-offset: 0;
-  border-radius: 50%;
-  box-shadow: 0 0 0 6px rgb(0 0 0 / 0.75);
+.story,
+.action,
+.round,
+.segmented {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+  transition: box-shadow 0.15s;
+}
+
+/* Hover adds light to the rim, not to the fill, so text contrast never drops. */
+a.story:hover,
+.action:hover,
+.round:hover:not(:disabled) {
+  box-shadow: var(--glass-edge-hover), var(--glass-shadow);
+}
+
+.action:active,
+.round:active:not(:disabled) {
+  background: var(--glass-press);
 }
 
 .sr-only {
@@ -186,42 +218,59 @@ a {
 
 /* ───────────── Hero ───────────── */
 .hero {
+  --media-h: clamp(17rem, 58svh, 34rem);
   position: relative;
   isolation: isolate;
+  overflow: hidden;
   color: var(--on-tint);
-  background: linear-gradient(180deg, var(--tint) 40%, var(--tint-deep));
+  background: var(--backdrop-edge, var(--tint-deep));
+}
+
+/* Blurred copy of the photo under the photo itself, and its mirror image continuing below it.
+   Both use the same cover geometry as the photo, so the mirror meets it at the edge. */
+.hero__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.hero__backdrop > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--media-h);
+  background: var(--backdrop) center / cover no-repeat;
+}
+
+.hero__backdrop > .is-mirror {
+  top: calc(var(--media-h) - 1px); /* 1px overlap hides the subpixel seam */
+  transform: scaleY(-1);
+}
+
+/* Darkens the backdrop under the text; its strength is computed per photo for WCAG AA. */
+.hero__backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / calc(var(--scrim) * 0.3)),
+    rgb(0 0 0 / var(--scrim)) calc(var(--media-h) - 5rem)
+  );
 }
 
 .hero__media {
-  height: min(58svh, 34rem);
-  min-height: 17rem;
-  -webkit-mask-image: linear-gradient(#000 58%, transparent);
-  mask-image: linear-gradient(#000 58%, transparent);
+  height: var(--media-h);
+  /* Fully faded before the title starts, so text only ever sits on the checked backdrop. */
+  -webkit-mask-image: linear-gradient(#000 45%, transparent calc(100% - 5rem));
+  mask-image: linear-gradient(#000 45%, transparent calc(100% - 5rem));
 }
 
 .hero__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.brand {
-  position: absolute;
-  z-index: 2;
-  top: max(var(--s-3), env(safe-area-inset-top));
-  left: max(var(--gutter), env(safe-area-inset-left));
-  display: grid;
-  place-items: center;
-  width: var(--tap);
-  height: var(--tap);
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.92);
-  box-shadow: 0 1px 6px rgb(0 0 0 / 0.18);
-}
-
-.brand img {
-  width: 1.875rem;
-  height: auto;
 }
 
 .hero__body {
@@ -235,7 +284,7 @@ a {
 .eyebrow {
   font-size: var(--text-subhead);
   font-weight: 600;
-  color: color-mix(in oklab, var(--tint) 22%, white);
+  color: var(--on-tint-secondary);
 }
 
 .hero h1 {
@@ -293,12 +342,7 @@ a {
   padding: var(--s-2) var(--s-3) var(--s-2) var(--s-2);
   min-height: 3.75rem;
   border-radius: var(--radius-card);
-  background: var(--on-tint-fill);
   text-decoration: none;
-}
-
-a.story:hover {
-  background: var(--on-tint-fill-hover);
 }
 
 .story img {
@@ -320,7 +364,7 @@ a.story:hover {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--on-tint-secondary);
+  color: rgb(255 255 255 / 0.85);
 }
 
 .story__title {
@@ -353,18 +397,8 @@ a.story:hover {
   min-height: var(--tap);
   padding: 0 var(--s-2);
   border-radius: var(--radius-control);
-  background: var(--on-tint-fill);
   font-size: var(--text-subhead);
   font-weight: 600;
-  transition: background-color 0.15s;
-}
-
-.action:hover {
-  background: var(--on-tint-fill-hover);
-}
-
-.action:active {
-  background: rgb(255 255 255 / 0.3);
 }
 
 .action[data-saved] .icon {
@@ -383,7 +417,23 @@ a.story:hover {
     display: flex;
     align-items: center;
     min-height: clamp(30rem, 62svh, 42rem);
-    background: linear-gradient(100deg, var(--tint-deep), var(--tint) 55%);
+  }
+
+  /* Photo on the right 58%; its mirror image extends it to the left under the text. */
+  .hero__backdrop > div {
+    left: 42%;
+    height: 100%;
+  }
+
+  .hero__backdrop > .is-mirror {
+    top: 0;
+    left: -16%;
+    right: calc(58% - 1px);
+    transform: scaleX(-1);
+  }
+
+  .hero__backdrop::after {
+    background: linear-gradient(to right, rgb(0 0 0 / var(--scrim)) 0 52%, rgb(0 0 0 / 0) 80%);
   }
 
   .hero__media {
@@ -391,8 +441,9 @@ a.story:hover {
     inset: 0 0 0 42%;
     height: auto;
     z-index: 0;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40%);
-    mask-image: linear-gradient(90deg, transparent, #000 40%);
+    /* Invisible until past the text column (≈ 52% of the hero), then fades in. */
+    -webkit-mask-image: linear-gradient(90deg, transparent 18%, #000 50%);
+    mask-image: linear-gradient(90deg, transparent 18%, #000 50%);
   }
 
   .hero__body {
@@ -787,7 +838,9 @@ html.is-cooking {
   padding: 0;
   border: 0;
   color: var(--on-tint);
-  background: linear-gradient(180deg, var(--tint), var(--tint-deep));
+  background:
+    linear-gradient(rgb(0 0 0 / var(--cook-scrim)), rgb(0 0 0 / var(--cook-scrim))),
+    var(--backdrop) center / cover no-repeat var(--backdrop-edge, var(--tint-deep));
 }
 
 .cook[open] {
@@ -829,11 +882,6 @@ html.is-cooking {
   width: var(--tap);
   height: var(--tap);
   border-radius: 50%;
-  background: var(--on-tint-fill);
-}
-
-.round:hover {
-  background: var(--on-tint-fill-hover);
 }
 
 .round:disabled {
@@ -847,7 +895,6 @@ html.is-cooking {
   margin: var(--s-2) 0 var(--s-3);
   padding: 3px;
   border-radius: 999px;
-  background: var(--on-tint-fill);
 }
 
 .segmented button {
@@ -856,12 +903,13 @@ html.is-cooking {
   border-radius: 999px;
   font-size: var(--text-subhead);
   font-weight: 600;
-  color: var(--on-tint-secondary);
+  color: rgb(255 255 255 / 0.85);
 }
 
 .segmented button[aria-selected='true'] {
-  background: rgb(255 255 255 / 0.26);
-  color: #fff;
+  background: rgb(255 255 255 / 0.92);
+  color: #1c1c1e;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
 }
 
 .cook__panel {
@@ -943,6 +991,8 @@ html.is-cooking {
   font-size: var(--text-title3);
   line-height: 1.4;
   cursor: default;
+  /* Smaller than step lines, so it is never dimmed below normal-text contrast. */
+  color: var(--on-tint-secondary);
 }
 
 .cook__group {
@@ -981,11 +1031,6 @@ html.is-cooking {
   gap: var(--s-2);
 }
 
-.cook__nav .round {
-  background: rgb(255 255 255 / 0.22);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-}
 
 /* ───────────── Timers ───────────── */
 .timers {
@@ -1004,10 +1049,12 @@ html.is-cooking {
   gap: var(--s-3);
   padding: 0.25rem 0.25rem 0.25rem var(--s-4);
   border-radius: 999px;
-  background: #1c1c1e;
+  background: var(--glass-dark);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   color: #fff;
   font-size: var(--text-subhead);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.28);
+  box-shadow: inset 0 1px 0.5px rgb(255 255 255 / 0.14), 0 6px 24px rgb(0 0 0 / 0.28);
 }
 
 .timer-chip time {
@@ -1043,17 +1090,37 @@ html.is-cooking {
   text-align: center;
   padding: var(--s-2) var(--s-4);
   border-radius: 999px;
-  background: #1c1c1e;
+  background: var(--glass-dark);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   color: #fff;
   font-size: var(--text-subhead);
   font-weight: 600;
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.28);
+  box-shadow: inset 0 1px 0.5px rgb(255 255 255 / 0.14), 0 6px 24px rgb(0 0 0 / 0.28);
 }
 
 /* Stays rendered so the status live region announces reliably. */
 .toast:empty {
   opacity: 0;
   pointer-events: none;
+}
+
+/* Reduce Transparency: same tints, no blur; dark chips become solid. */
+@media (prefers-reduced-transparency: reduce) {
+  .story,
+  .action,
+  .round,
+  .segmented,
+  .timer-chip,
+  .toast {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .timer-chip:not(.is-done),
+  .toast {
+    background: #1c1c1e;
+  }
 }
 
 /* ───────────── Motion & print ───────────── */

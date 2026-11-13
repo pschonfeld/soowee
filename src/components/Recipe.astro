@@ -2,10 +2,10 @@
 import { render, type CollectionEntry } from 'astro:content';
 import { Image, Picture } from 'astro:assets';
 import '../styles/global.css';
-import mark from '../assets/brand/soowee-mark.svg';
 import Wordmark from '../assets/brand/soowee-wordmark.svg';
 import { formatMinutes, formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
 import { plainText, renderInline, waitSeconds } from '../lib/inline';
+import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
 
 interface Props {
@@ -16,6 +16,15 @@ const { entry } = Astro.props;
 const r = entry.data;
 const { Content } = await render(entry);
 const tint = await tintFor(r.image, r.tint);
+const backdrop = await backdropFor(r.image);
+const pageStyle = [
+  `--tint:${tint.base}`,
+  `--tint-deep:${tint.deep}`,
+  backdrop &&
+    `--backdrop:url(${backdrop.image});--backdrop-edge:${backdrop.edge};--scrim:${backdrop.scrim};--cook-scrim:${backdrop.cookScrim}`,
+]
+  .filter(Boolean)
+  .join(';');
 
 const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
 const totalTime = formatMinutes(r.time.total);
@@ -98,7 +107,7 @@ const icons = {
     </script>
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
   </head>
-  <body style={`--tint:${tint.base};--tint-deep:${tint.deep}`}>
+  <body style={pageStyle}>
     <a class="skip" href="#recipe">Skip to recipe</a>
 
     <main>
@@ -109,6 +118,11 @@ const icons = {
         data-yield-unit={r.yield.unit}
       >
         <header class="hero">
+          <!-- The photo continues past its edge as a mirrored, blurred copy (background extension). -->
+          <div class="hero__backdrop" aria-hidden="true">
+            <div></div>
+            <div class="is-mirror"></div>
+          </div>
           <div class="hero__media">
             <Picture
               src={r.image}
@@ -120,10 +134,6 @@ const icons = {
               fetchpriority="high"
             />
           </div>
-
-          <a class="brand" href="/" aria-label="soowee home">
-            <img src={mark.src} width={mark.width} height={mark.height} alt="" />
-          </a>
 
           <div class="hero__body">
             {r.cuisine && <p class="eyebrow">{r.cuisine}</p>}
