@@ -27,22 +27,21 @@ ingredients:
   - group: For the cream
     items:
       - { qty: 6, name: eggs, note: "very fresh, separated" }
-      - { qty: 6, unit: tbsp, name: sugar, note: "fine granulated, 1 tbsp per egg" }
+      - { qty: 6, unit: tbsp, name: sugar, note: "fine granulated" }
       - { qty: 750, unit: g, name: mascarpone }
       - { name: salt, note: a pinch }
   - group: For the assembly
     items:
       - { qty: 36, name: Savoiardi biscuits, about: { qty: 300, max: 360, unit: g }, note: "ladyfingers, half for each layer" }
-      - { name: cocoa powder, note: "unsweetened, for dusting" }
       - { qty: 10, unit: g, name: dark chocolate, note: "½–1 square, for grating" }
-      - { name: icing sugar, note: "optional, for serving" }
+      - { name: cocoa powder, note: "unsweetened, for dusting" }
 equipment:
   - Hand mixer or stand mixer
   - Two large bowls
-  - Fine-mesh sieve, for dusting cocoa
-  - Fine grater, for the chocolate
+  - Spatula
+  - Fine-mesh sieve
+  - Fine grater
   - Rectangular dish
-  - Cling film
 steps:
   - title: Make the coffee
     text:
@@ -67,7 +66,7 @@ steps:
   - title: Chill and serve
     text:
       - Cover and refrigerate overnight, for at least {chill:8h}. It is at its best after 1–2 days.
-      - Just before serving, dust the top with a little more **cocoa powder**. Slice and serve chilled, with a little **icing sugar** if you like.
+      - Just before serving, dust the top with a little more **cocoa powder**. Slice and serve chilled
       - tip: The cocoa on top darkens overnight as it absorbs moisture from the cream; the fresh dusting brings back the colour and the dry, bitter finish.
       - tip: The eggs are raw. For pregnant, elderly, very young or immunocompromised guests, use pasteurised eggs.
 ---
