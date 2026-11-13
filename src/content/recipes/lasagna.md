@@ -61,7 +61,7 @@ equipment:
   - Large bowl
   - Kitchen paper
   - Baking dish, porcelain
-  - Baking tray, to catch drips
+  - Baking tray
   - Instant-read thermometer
   - Pastry brush
   - Knife and chopping board
