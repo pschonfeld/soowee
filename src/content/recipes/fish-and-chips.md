@@ -24,7 +24,7 @@ ingredients:
   - group: For the chips
     items:
       - { qty: 800, unit: g, name: floury potatoes, note: "Maris Piper, Agria or Russet; peeled" }
-      - { qty: 3, unit: L, name: water, note: "for parboiling the chips, then the peas" }
+      - { qty: 3, unit: l, name: water, note: "for parboiling the chips, then the peas" }
       - { qty: 30, unit: g, name: fine sea salt, note: "for the cooking water" }
   - group: For the pea purée
     items:
@@ -34,7 +34,7 @@ ingredients:
       - { qty: 3, unit: g, name: fine sea salt }
   - group: For frying
     items:
-      - { qty: 2.5, unit: L, name: sunflower or rapeseed oil, note: "at least 5 cm deep in the pot" }
+      - { qty: 2.5, unit: l, name: sunflower or rapeseed oil, note: "at least 5 cm deep in the pot" }
   - group: For the fish
     items:
       - { qty: 4, name: cod fillets, note: "skinless, boneless, about 175 g each and 2.5 cm thick; haddock also works" }
@@ -53,7 +53,7 @@ ingredients:
       - { qty: 1, name: lemon, note: "cut into wedges" }
       - { qty: 4, unit: tbsp, name: malt vinegar }
 equipment:
-  - Heavy-bottomed pot, at least 6 L and about 24 cm wide
+  - Heavy-bottomed pot, at least 6 l and about 24 cm wide
   - Large pot for boiling
   - Probe or frying thermometer
   - Spider or slotted spoon

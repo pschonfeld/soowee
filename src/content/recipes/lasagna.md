@@ -39,7 +39,7 @@ ingredients:
       - { qty: 240, unit: ml, name: red wine, note: dry }
       - { qty: 1.4, unit: l, name: passata, note: "unsalted, 100% tomato, ideally San Marzano" }
       - { qty: 240, unit: ml, name: water }
-      - { qty: 12, unit: g, name: fine sea salt, note: "in total: 1 g with the vegetables, 8 g with the meat, up to 3 g to adjust at the end" } I hehehehe V hehehehe hehehehe
+      - { qty: 12, unit: g, name: fine sea salt, note: "in total: 1 g with the vegetables, 8 g with the meat, up to 3 g to adjust at the end" }
       - { name: black pepper, note: freshly ground }
   - group: For the béchamel
     items:
