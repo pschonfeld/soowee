@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const RECIPES = [
   { path: '/lasagna/', title: 'Lasagna', ingredients: 21, steps: 5 },
-  { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 12, steps: 4 },
+  { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 21, steps: 7 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -210,11 +210,11 @@ test.describe('interactions', () => {
     await expect(page.locator('.step p', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
     await expect(page.locator('.step p', { hasText: 'Pour in' })).toContainText('Pour in 360\u00a0ml red wine');
     await expect(page.locator('[data-line]', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
-    await expect(page.locator('.hero [data-yield]')).toHaveText('9 servings');
+    await expect(page.locator('.hero [data-yield]')).toHaveText('12–15 servings');
     // One ingredient split across steps: 80 g Pecorino in the list, 50 g for the layers and 30 g for the top.
     await expect(page.locator('.ingredient', { hasText: 'Pecorino Romano' }).locator('[data-qty]')).toHaveText('120');
     await expect(page.locator('.step p', { hasText: 'Grate' })).toContainText('Grate 120\u00a0g Pecorino Romano and set 45\u00a0g aside');
-    await expect(page.locator('.step p', { hasText: 'reserved' })).toContainText('the reserved 45\u00a0g Pecorino Romano');
+    await expect(page.locator('.step p', { hasText: 'Remove the foil' })).toContainText('the reserved 45\u00a0g Pecorino Romano');
 
     await page.getByRole('button', { name: 'Scale down' }).click();
     await page.getByRole('button', { name: 'Scale down' }).click();
@@ -235,28 +235,28 @@ test.describe('interactions', () => {
   });
 
   test('shows how much of the total time is active work', async ({ page }) => {
-    // 4 hr total, minus the hands-off simmering, baking and resting (1 h + 1 h + 20 min + 15 min + 15 min).
-    await expect(page.locator('.meta')).toContainText(/Active\s*1 hr 10 min/);
-    await expect(page.locator('.directions .section-sub')).toContainText('1 hr 10 min active, 2 hr 50 min hands-off');
+    // 4 hr 30 min total, minus the hands-off simmering, baking and resting (3 hr 5 min of {wait:} timers).
+    await expect(page.locator('.meta')).toContainText(/Active\s*1 hr 25 min/);
+    await expect(page.locator('.directions .section-sub')).toContainText('1 hr 25 min active, 3 hr 5 min hands-off');
     await page.goto('/fish-and-chips/');
-    await expect(page.locator('.meta')).not.toContainText('Active');
+    await expect(page.locator('.meta')).toContainText(/Active\s*55 min/);
   });
 
   test('preheating is the first, highlighted line of its step', async ({ page }) => {
-    const step = page.locator('.step', { hasText: 'Assemble the lasagna' });
+    const step = page.locator('.step', { hasText: 'Make the béchamel' });
     await expect(step.locator('p').first()).toHaveClass(/heat/);
     await expect(step.locator('.heat')).toHaveText(
-      'Preheat the oven to 180 °C, conventional top and bottom heat, with a rack in the lower-middle position.',
+      'Preheat the oven to 180 °C, conventional top and bottom heat, with a rack in the lower-middle position. Allow about 20 minutes.',
     );
-    // [data-step="4"] also matches the step label and tips now that they carry it too, for step-level dimming.
-    await expect(page.locator('#panel-directions .cook__line[data-step="4"]').first()).toContainText(
+    // [data-step="3"] also matches the step label and tips now that they carry it too, for step-level dimming.
+    await expect(page.locator('#panel-directions .cook__line[data-step="3"]').first()).toContainText(
       'Preheat the oven',
     );
   });
 
   test('ingredient names lead, qualifiers follow', async ({ page }) => {
     const names = await page.locator('.ingredient > span:nth-of-type(2)').allInnerTexts();
-    expect(names).toContain('onion, medium, diced into small cubes');
+    expect(names).toContain('onion, medium, about 150 g, diced into small cubes');
     expect(names).toContain('g butter, unsalted');
     expect(names.some((n) => /^(medium|dry|whole|unsalted|fresh|shredded|grated)\b/i.test(n.replace(/^(g|ml|L|tbsp|tsp) /, '')))).toBe(false);
   });
@@ -265,13 +265,14 @@ test.describe('interactions', () => {
     const labels = await page.locator('.step .timer').allInnerTexts();
     expect(labels.map((l) => l.trim())).toEqual([
       '30 minutes',
-      '5–10 minutes',
-      '2–3 minutes',
+      '8–10 minutes',
+      '8–10 minutes',
       '1 hour',
       '1 hour',
       '1–2 minutes',
-      '20 minutes',
-      '15–20 minutes',
+      '3–5 minutes',
+      '30 minutes',
+      '20–25 minutes',
       '15–20 minutes',
     ]);
   });
@@ -348,7 +349,7 @@ test.describe('interactions', () => {
   test('timers count down, finish and can be dismissed', async ({ page }) => {
     await page.clock.install();
     await page.goto('/lasagna/');
-    await page.getByRole('button', { name: 'Start timer: 5–10 minutes' }).first().click();
+    await page.getByRole('button', { name: 'Start timer: 8–10 minutes' }).first().click();
 
     await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
     await expect(page.locator('.timer-chip')).toHaveCount(2);
@@ -356,15 +357,15 @@ test.describe('interactions', () => {
 
     const chip = page.locator('.timer-chip');
     await expect(chip).toHaveCount(1);
-    await expect(chip).toContainText('5–10 minutes');
-    // A range rings at its lower bound (5 of "5–10 minutes"): time to start checking.
+    await expect(chip).toContainText('8–10 minutes');
+    // A range rings at its lower bound (8 of "8–10 minutes"): time to start checking.
     await page.clock.fastForward('02:00');
-    await expect(chip.locator('time')).toHaveText(/^0[23]:\d\d$/);
-    await page.clock.fastForward('03:01');
+    await expect(chip.locator('time')).toHaveText(/^0[56]:\d\d$/);
+    await page.clock.fastForward('06:01');
     await expect(chip.locator('time')).toHaveText('Done');
-    await expect(page.locator('[data-toast]')).toHaveText('Timer finished: Step 2, 5–10 minutes');
+    await expect(page.locator('[data-toast]')).toHaveText('Timer finished: Step 2, 8–10 minutes');
 
-    await page.getByRole('button', { name: 'Dismiss timer: Step 2, 5–10 minutes' }).click();
+    await page.getByRole('button', { name: 'Dismiss timer: Step 2, 8–10 minutes' }).click();
     await expect(chip).toHaveCount(0);
   });
 
