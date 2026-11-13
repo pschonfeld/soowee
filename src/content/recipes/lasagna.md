@@ -60,7 +60,7 @@ equipment:
   - Wooden spoon
   - Large bowl
   - Kitchen paper
-  - Baking dish, porcelain, 38 × 26 × 7 cm (4.5 L)
+  - Baking dish, porcelain
   - Baking tray, to catch drips
   - Instant-read thermometer
   - Pastry brush
