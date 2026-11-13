@@ -32,15 +32,15 @@
   --gutter: var(--s-4);
   --tap: 2.75rem; /* 44pt minimum target */
 
-  /* Colour: iOS grouped background system, light / dark */
-  --bg: light-dark(#f2f2f7, #000000);
-  --card: light-dark(#ffffff, #1c1c1e);
-  --text: light-dark(#1c1c1e, #ffffff);
-  --text-secondary: light-dark(#5f5f64, #aeaeb2);
-  --separator: light-dark(rgb(60 60 67 / 0.18), rgb(84 84 88 / 0.6));
-  --timer-fg: light-dark(#9a4a00, #ffb340);
-  --timer-bg: light-dark(#ffe9c7, rgb(255 159 10 / 0.2));
-  --focus: light-dark(#0a63d8, #6cb0ff);
+  /* Colour: iOS grouped background system. Light values here; dark below. */
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --text: #1c1c1e;
+  --text-secondary: #5f5f64;
+  --separator: rgb(60 60 67 / 0.18);
+  --timer-fg: #9a4a00;
+  --timer-bg: #ffe9c7;
+  --focus: #0a63d8;
 
   /* Hero backdrop – overridden per recipe from the photo */
   --tint: #4a3b2f;
@@ -75,6 +75,47 @@
   color-scheme: dark;
 }
 
+/* Dark palette. light-dark() follows color-scheme, which the footer switch sets.
+   Safari before 17.5 lacks light-dark(), so it gets the same palette from media queries. */
+@supports (color: light-dark(red, red)) {
+  :root {
+    --bg: light-dark(#f2f2f7, #000000);
+    --card: light-dark(#ffffff, #1c1c1e);
+    --text: light-dark(#1c1c1e, #ffffff);
+    --text-secondary: light-dark(#5f5f64, #aeaeb2);
+    --separator: light-dark(rgb(60 60 67 / 0.18), rgb(84 84 88 / 0.6));
+    --timer-fg: light-dark(#9a4a00, #ffb340);
+    --timer-bg: light-dark(#ffe9c7, rgb(255 159 10 / 0.2));
+    --focus: light-dark(#0a63d8, #6cb0ff);
+  }
+}
+
+@supports not (color: light-dark(red, red)) {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --text: #ffffff;
+      --text-secondary: #aeaeb2;
+      --separator: rgb(84 84 88 / 0.6);
+      --timer-fg: #ffb340;
+      --timer-bg: rgb(255 159 10 / 0.2);
+      --focus: #6cb0ff;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --bg: #000000;
+    --card: #1c1c1e;
+    --text: #ffffff;
+    --text-secondary: #aeaeb2;
+    --separator: rgb(84 84 88 / 0.6);
+    --timer-fg: #ffb340;
+    --timer-bg: rgb(255 159 10 / 0.2);
+    --focus: #6cb0ff;
+  }
+}
+
 @media (min-width: 48rem) {
   :root {
     --gutter: var(--s-8);
@@ -100,6 +141,8 @@ body {
   color: var(--text);
   font: 400 var(--text-body) / 1.47 var(--font);
   -webkit-font-smoothing: antialiased;
+  /* Lets long words break when text is enlarged, instead of widening their column. */
+  overflow-wrap: anywhere;
 }
 
 h1,
@@ -243,6 +286,10 @@ a.story:hover,
   background: var(--backdrop) center / cover no-repeat;
 }
 
+.hero__backdrop > .is-mirror-end {
+  display: none;
+}
+
 .hero__backdrop > .is-mirror {
   top: calc(var(--media-h) - 1px); /* 1px overlap hides the subpixel seam */
   transform: scaleY(-1);
@@ -322,6 +369,24 @@ a.story:hover,
   border-left: 1px solid rgb(255 255 255 / 0.28);
 }
 
+/* 320px-wide phones (iPhone SE 1st gen, Display Zoom): keep the three facts on one line. */
+@media (max-width: 22.5rem) {
+  .meta > div {
+    padding-right: var(--s-2);
+  }
+
+  .meta > div + div {
+    padding-left: var(--s-2);
+  }
+}
+
+/* Short phone screens: a lower photo so the Cook / Save / Share row stays on the first screen. */
+@media (max-width: 47.99rem) and (max-height: 37.5rem) {
+  .hero {
+    --media-h: clamp(12rem, 42svh, 34rem);
+  }
+}
+
 .meta dt {
   font-size: var(--text-caption);
   font-weight: 600;
@@ -387,7 +452,8 @@ a.story:hover,
 
 .actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* Three across; fewer when text is enlarged, so nothing pushes the page sideways. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr));
   gap: var(--s-2);
   margin-top: var(--s-2);
 }
@@ -417,31 +483,47 @@ a.story:hover,
 
 @media (min-width: 48rem) {
   .hero {
+    /* The composition lives in a frame of at most 100rem; on wider screens the blurred
+       backdrop continues on both sides instead of the photo stretching into a thin band. */
+    --frame: min(100%, 100rem);
+    --frame-left: calc((100% - var(--frame)) / 2);
+    --photo-left: calc(var(--frame-left) + var(--frame) * 0.42);
+    --photo-width: calc(var(--frame) * 0.58);
     display: flex;
     align-items: center;
     min-height: clamp(30rem, 62svh, 42rem);
   }
 
-  /* Photo on the right 58%; its mirror image extends it to the left under the text. */
+  /* Photo on the right 58% of the frame; its mirror image extends it to the left under the text. */
   .hero__backdrop > div {
-    left: 42%;
+    left: var(--photo-left);
+    right: var(--frame-left);
     height: 100%;
   }
 
   .hero__backdrop > .is-mirror {
     top: 0;
-    left: -16%;
-    right: calc(58% - 1px);
+    left: calc(var(--photo-left) - var(--photo-width));
+    right: calc(100% - var(--photo-left) - 1px);
     transform: scaleX(-1);
   }
 
+  .hero__backdrop > .is-mirror-end {
+    display: block;
+    top: 0;
+    left: calc(100% - var(--frame-left) - 1px);
+    right: calc(var(--frame-left) - var(--photo-width));
+    transform: scaleX(-1);
+  }
+
+  /* Measured in the frame, so on wide monitors it darkens the text column, not the photo. */
   .hero__backdrop::after {
-    background: linear-gradient(to right, rgb(0 0 0 / calc(var(--scrim) * 1)) 52%, rgb(0 0 0 / calc(var(--scrim) * 0.962)) 55.5%, rgb(0 0 0 / calc(var(--scrim) * 0.854)) 59%, rgb(0 0 0 / calc(var(--scrim) * 0.691)) 62.5%, rgb(0 0 0 / calc(var(--scrim) * 0.5)) 66%, rgb(0 0 0 / calc(var(--scrim) * 0.309)) 69.5%, rgb(0 0 0 / calc(var(--scrim) * 0.146)) 73%, rgb(0 0 0 / calc(var(--scrim) * 0.038)) 76.5%, rgb(0 0 0 / calc(var(--scrim) * 0)) 80%);
+    background: linear-gradient(to right, rgb(0 0 0 / calc(var(--scrim) * 1)) calc(var(--frame-left) + var(--frame) * 0.52), rgb(0 0 0 / calc(var(--scrim) * 0.962)) calc(var(--frame-left) + var(--frame) * 0.555), rgb(0 0 0 / calc(var(--scrim) * 0.854)) calc(var(--frame-left) + var(--frame) * 0.59), rgb(0 0 0 / calc(var(--scrim) * 0.691)) calc(var(--frame-left) + var(--frame) * 0.625), rgb(0 0 0 / calc(var(--scrim) * 0.5)) calc(var(--frame-left) + var(--frame) * 0.66), rgb(0 0 0 / calc(var(--scrim) * 0.309)) calc(var(--frame-left) + var(--frame) * 0.695), rgb(0 0 0 / calc(var(--scrim) * 0.146)) calc(var(--frame-left) + var(--frame) * 0.73), rgb(0 0 0 / calc(var(--scrim) * 0.038)) calc(var(--frame-left) + var(--frame) * 0.765), rgb(0 0 0 / calc(var(--scrim) * 0)) calc(var(--frame-left) + var(--frame) * 0.8));
   }
 
   .hero__media {
     position: absolute;
-    inset: 0 0 0 42%;
+    inset: 0 var(--frame-left) 0 var(--photo-left);
     height: auto;
     z-index: 0;
     /* Invisible until past the text column (≈ 52% of the hero), then fades in. */
@@ -462,6 +544,30 @@ a.story:hover,
   }
 }
 
+/* Wider than the frame: the photo's right edge meets the mirrored backdrop, so it fades out there too,
+   and past the mirrors a stretched blurred copy fills the rest; the mirrors fade into it. */
+@media (min-width: 100rem) {
+  .hero__backdrop {
+    background: var(--backdrop) center / cover no-repeat;
+  }
+
+  /* The mirrors are flipped with scaleX(-1), and the mask flips with them:
+     270deg here fades the left mirror's outer (left) edge, 90deg the right mirror's outer edge. */
+  .hero__backdrop > .is-mirror {
+    -webkit-mask-image: linear-gradient(270deg, transparent, #000 35%);
+    mask-image: linear-gradient(270deg, transparent, #000 35%);
+  }
+
+  .hero__backdrop > .is-mirror-end {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
+    mask-image: linear-gradient(90deg, transparent, #000 35%);
+  }
+
+  .hero__media {
+    --fade: linear-gradient(90deg, rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0.038) 22%, rgb(0 0 0 / 0.146) 26%, rgb(0 0 0 / 0.309) 30%, rgb(0 0 0 / 0.5) 34%, rgb(0 0 0 / 0.691) 38%, rgb(0 0 0 / 0.854) 42%, rgb(0 0 0 / 0.962) 46%, rgb(0 0 0 / 1) 50%, rgb(0 0 0 / 0.962) 91.25%, rgb(0 0 0 / 0.854) 92.5%, rgb(0 0 0 / 0.691) 93.75%, rgb(0 0 0 / 0.5) 95%, rgb(0 0 0 / 0.309) 96.25%, rgb(0 0 0 / 0.146) 97.5%, rgb(0 0 0 / 0.038) 98.75%, rgb(0 0 0 / 0) 100%);
+  }
+}
+
 /* ───────────── Sheet (ingredients + directions) ───────────── */
 .sheet {
   display: grid;
@@ -469,6 +575,10 @@ a.story:hover,
   max-width: 74rem;
   margin: 0 auto;
   padding: var(--s-8) var(--gutter) var(--s-10);
+}
+
+.sheet > * {
+  min-width: 0;
 }
 
 @media (min-width: 48rem) {
@@ -488,6 +598,7 @@ a.story:hover,
 
 .section-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--s-4);
@@ -556,7 +667,7 @@ a.story:hover,
 
 .ingredient {
   display: grid;
-  grid-template-columns: 2.75rem 1fr 1.125rem;
+  grid-template-columns: 2.75rem minmax(0, 1fr) 1.125rem;
   gap: var(--s-2);
   align-items: baseline;
   min-height: 3.25rem;
@@ -685,6 +796,17 @@ a.story:hover,
   white-space: nowrap;
 }
 
+/* Invisible 44px-tall touch area; the pill itself keeps its size in the sentence. */
+.step .timer {
+  position: relative;
+}
+
+.step .timer::after {
+  content: '';
+  position: absolute;
+  inset: -0.5rem 0; /* taller only, so it never reaches words beside the pill */
+}
+
 .timer svg {
   flex: none;
 }
@@ -784,6 +906,7 @@ a.story:hover,
 /* Appearance switch: small segmented control, as in Apple's site footers */
 .theme {
   display: flex;
+  flex-wrap: wrap;
   margin: 0;
   padding: 2px;
   border: 0;
@@ -868,6 +991,7 @@ html.is-cooking {
 .cook__title {
   flex: 1;
   min-width: 0;
+  outline: none;
   font-size: var(--text-footnote);
   font-weight: 600;
   line-height: 1.25;
@@ -1013,7 +1137,7 @@ html.is-cooking {
 
 .cook__ingredient {
   display: grid;
-  grid-template-columns: 3.75rem 1fr;
+  grid-template-columns: 3.75rem minmax(0, 1fr);
   gap: var(--s-3);
   padding: 0.625rem 0;
   font-size: var(--text-title2);
@@ -1106,6 +1230,26 @@ html.is-cooking {
 .toast:empty {
   opacity: 0;
   pointer-events: none;
+}
+
+/* Windows High Contrast and other forced-colour modes drop backgrounds: draw control edges instead. */
+@media (forced-colors: active) {
+  .timer,
+  .action,
+  .story,
+  .round,
+  .scale,
+  .segmented button,
+  .ingredient,
+  .heat,
+  .tip,
+  .timer-chip {
+    border: 1px solid ButtonText;
+  }
+
+  .segmented button[aria-selected='true'] {
+    border-width: 3px;
+  }
 }
 
 /* Reduce Transparency: same tints, no blur; dark chips become solid. */

@@ -108,6 +108,24 @@ test('mirrored backdrop meets the photo at its edge and text stays off the sharp
   }
 });
 
+for (const path of ['/lasagna/', '/fish-and-chips/']) {
+  test(`reflows without sideways scrolling at 320px with 200% text (${path})`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(path);
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+    await page.getByRole('button', { name: 'Cook', exact: true }).click();
+    expect(await page.evaluate(() => document.querySelector('#cook')!.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  });
+}
+
+test('Cook, Save and Share are on the first screen of a 320 × 568 phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/lasagna/');
+  const bottom = await page.locator('.actions').evaluate((e) => e.getBoundingClientRect().bottom);
+  expect(bottom).toBeLessThanOrEqual(568);
+});
+
 test('home page leads to the featured recipe', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/lasagna\/$/);
@@ -231,13 +249,18 @@ test.describe('interactions', () => {
     await expect(page.locator('[data-save]')).toHaveText('Save');
   });
 
-  test('cook mode: opens, moves focus, steps, switches tabs, closes with Escape', async ({ page }) => {
+  test('cook mode: opens, moves focus, steps, switches tabs, closes with Escape', async ({ page, browserName }) => {
     const open = page.getByRole('button', { name: 'Cook', exact: true });
     await open.click();
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Close cook mode' })).toBeFocused();
+    await expect(page.locator('#cook-title')).toBeFocused();
+    if (browserName === 'chromium') {
+      // Safari only tabs to buttons with "Full Keyboard Access" turned on.
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('button', { name: 'Close cook mode' })).toBeFocused();
+    }
     await expect(page.locator('main')).toHaveJSProperty('inert', true);
 
     const lines = page.locator('[data-line]');

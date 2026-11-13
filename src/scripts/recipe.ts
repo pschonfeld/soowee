@@ -304,7 +304,9 @@ function openCook() {
   selectTab(tabs[1]);
   setActive(activeLine, false);
   lines[activeLine]?.scrollIntoView({ block: 'start', behavior: 'auto' });
-  $('[data-cook-close]', cook)!.focus();
+  // Focus the title, not the Close button: Safari would draw a focus ring after a tap or click.
+  // Tab from here reaches Close first, as before.
+  $('#cook-title', cook)!.focus();
   void keepAwake();
 }
 

@@ -93,8 +93,9 @@ const icons = {
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{`${r.title} · soowee`}</title>
     <meta name="description" content={r.description} />
-    <meta name="theme-color" content={tint.base} />
+    <meta name="theme-color" content={backdrop?.edge ?? tint.base} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content={r.title} />
     <meta property="og:description" content={r.description} />
@@ -122,6 +123,7 @@ const icons = {
           <div class="hero__backdrop" aria-hidden="true">
             <div></div>
             <div class="is-mirror"></div>
+            <div class="is-mirror-end"></div>
           </div>
           <div class="hero__media">
             <Picture
@@ -129,7 +131,7 @@ const icons = {
               alt={r.imageAlt}
               formats={['avif', 'webp']}
               widths={[480, 768, 1080, 1440, 1920, 2560]}
-              sizes="(min-width: 48rem) 62vw, 100vw"
+              sizes="(min-width: 100rem) 58rem, (min-width: 48rem) 58vw, 100vw"
               loading="eager"
               fetchpriority="high"
             />
@@ -350,7 +352,7 @@ const icons = {
     <dialog class="cook" id="cook" aria-labelledby="cook-title">
       <div class="cook__head">
         <Image src={r.image} alt="" width={72} height={72} fit="cover" loading="lazy" />
-        <p class="cook__title" id="cook-title">
+        <p class="cook__title" id="cook-title" tabindex="-1">
           {r.title}
           <span>soowee</span>
         </p>
