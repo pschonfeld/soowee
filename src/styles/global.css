@@ -263,8 +263,10 @@ a.story:hover,
 .hero__media {
   height: var(--media-h);
   /* Fully faded before the title starts, so text only ever sits on the checked backdrop. */
-  -webkit-mask-image: linear-gradient(#000 45%, transparent calc(100% - 5rem));
-  mask-image: linear-gradient(#000 45%, transparent calc(100% - 5rem));
+  /* Eased (smootherstep) so the photo melts into its blurred copy without a visible band. */
+  --fade: linear-gradient(rgb(0 0 0 / 1) calc(25% + (75% - 5rem) * 0), rgb(0 0 0 / 0.984) calc(25% + (75% - 5rem) * 0.125), rgb(0 0 0 / 0.896) calc(25% + (75% - 5rem) * 0.25), rgb(0 0 0 / 0.725) calc(25% + (75% - 5rem) * 0.375), rgb(0 0 0 / 0.5) calc(25% + (75% - 5rem) * 0.5), rgb(0 0 0 / 0.275) calc(25% + (75% - 5rem) * 0.625), rgb(0 0 0 / 0.104) calc(25% + (75% - 5rem) * 0.75), rgb(0 0 0 / 0.016) calc(25% + (75% - 5rem) * 0.875), rgb(0 0 0 / 0) calc(25% + (75% - 5rem) * 1));
+  -webkit-mask-image: var(--fade);
+  mask-image: var(--fade);
 }
 
 .hero__media img {
@@ -433,7 +435,7 @@ a.story:hover,
   }
 
   .hero__backdrop::after {
-    background: linear-gradient(to right, rgb(0 0 0 / var(--scrim)) 0 52%, rgb(0 0 0 / 0) 80%);
+    background: linear-gradient(to right, rgb(0 0 0 / calc(var(--scrim) * 1)) 52%, rgb(0 0 0 / calc(var(--scrim) * 0.984)) 56.5%, rgb(0 0 0 / calc(var(--scrim) * 0.896)) 61%, rgb(0 0 0 / calc(var(--scrim) * 0.725)) 65.5%, rgb(0 0 0 / calc(var(--scrim) * 0.5)) 70%, rgb(0 0 0 / calc(var(--scrim) * 0.275)) 74.5%, rgb(0 0 0 / calc(var(--scrim) * 0.104)) 79%, rgb(0 0 0 / calc(var(--scrim) * 0.016)) 83.5%, rgb(0 0 0 / calc(var(--scrim) * 0)) 88%);
   }
 
   .hero__media {
@@ -442,8 +444,7 @@ a.story:hover,
     height: auto;
     z-index: 0;
     /* Invisible until past the text column (≈ 52% of the hero), then fades in. */
-    -webkit-mask-image: linear-gradient(90deg, transparent 18%, #000 50%);
-    mask-image: linear-gradient(90deg, transparent 18%, #000 50%);
+    --fade: linear-gradient(90deg, rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0.016) 24.75%, rgb(0 0 0 / 0.104) 31.50%, rgb(0 0 0 / 0.275) 38.25%, rgb(0 0 0 / 0.5) 45%, rgb(0 0 0 / 0.725) 51.75%, rgb(0 0 0 / 0.896) 58.50%, rgb(0 0 0 / 0.984) 65.25%, rgb(0 0 0 / 1) 72%);
   }
 
   .hero__body {
