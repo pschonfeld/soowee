@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 const RECIPES = [
   { path: '/lasagna/', title: 'Lasagna', ingredients: 21, steps: 5 },
   { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 21, steps: 7 },
-  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 9, steps: 5 },
+  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 9, steps: 4 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -134,9 +134,11 @@ for (const { path } of RECIPES) {
 
 test('Cook, Save and Share are on the first screen of a 320 × 568 phone', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto('/lasagna/');
-  const bottom = await page.locator('.actions').evaluate((e) => e.getBoundingClientRect().bottom);
-  expect(bottom).toBeLessThanOrEqual(568);
+  for (const { path } of RECIPES) {
+    await page.goto(path);
+    const bottom = await page.locator('.actions').evaluate((e) => e.getBoundingClientRect().bottom);
+    expect(bottom, path).toBeLessThanOrEqual(568);
+  }
 });
 
 test('hero text matches the Ingredients column and the photo runs to the edge at every width', async ({ page }) => {
@@ -241,6 +243,22 @@ test.describe('interactions', () => {
     await expect(page.locator('.directions .section-sub')).toContainText('1 hr 25 min active, 3 hr 5 min hands-off');
     await page.goto('/fish-and-chips/');
     await expect(page.locator('.meta')).toContainText(/Active\s*55 min/);
+  });
+
+  test('chilling is shown on its own and kept out of the total', async ({ page }) => {
+    await expect(page.locator('.meta')).not.toContainText('Chill');
+    await page.goto('/tiramisu/');
+    const meta = page.locator('.meta');
+    await expect(meta).toContainText(/Total time\s*30 min/);
+    await expect(meta).toContainText(/Chill\s*\+8 hr/);
+    await expect(meta).not.toContainText('Active');
+    await expect(page.locator('.directions .section-sub')).toHaveText(/Total Time: 30 min\s*, plus 8 hr chilling/);
+    // Plain text in the step, not a timer button.
+    const chill = page.locator('.step', { hasText: 'Chill and serve' });
+    await expect(chill).toContainText('at least 8 hours');
+    await expect(chill.locator('.timer')).toHaveCount(0);
+    const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    expect(ld.totalTime).toBe('PT8H30M');
   });
 
   test('preheating is the first, highlighted line of its step', async ({ page }) => {

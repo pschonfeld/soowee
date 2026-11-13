@@ -2,7 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { UNITS } from './lib/format';
-import { totalWaitMinutes } from './lib/inline';
+import { totalChillMinutes, totalWaitMinutes } from './lib/inline';
 
 /**
  * A recipe is one Markdown file: structured data in the frontmatter
@@ -13,6 +13,8 @@ import { totalWaitMinutes } from './lib/inline';
  *   **bold**                      – ingredient mentions
  *   {wait:1h}                     – same as a timer, but hands-off: it is subtracted from the total
  *                                   to show the cook how much of the time is active work
+ *   {chill:6h}                    – minimum time in the fridge before serving; plain text, not a timer, and
+ *                                   NOT part of time.total (shown separately as "plus 6 hr chilling")
  *   {timer:20m} {timer:5-10m}     – tappable timer; the label ("5–10 minutes") is generated so wording
  *                                   stays consistent, and a range rings at its lower bound (time to check)
  *   {25 g} or {2}                 – an amount used in this step; scales with the recipe
@@ -60,7 +62,7 @@ const recipes = defineCollection({
         max: z.number().positive().optional(),
         unit: z.string().default('servings'),
       }),
-      /** Minutes. */
+      /** Minutes. `total` excludes {chill:…} time. */
       time: z.object({
         prep: z.number().int().positive().optional(),
         cook: z.number().int().positive().optional(),
@@ -89,6 +91,11 @@ const recipes = defineCollection({
     })
       // Reported against the recipe file at validation time, not while rendering the page.
       .superRefine((r, ctx) => {
+        try {
+          totalChillMinutes(r.steps);
+        } catch (error) {
+          ctx.addIssue({ code: 'custom', path: ['steps'], message: (error as Error).message });
+        }
         const wait = totalWaitMinutes(r.steps);
         if (r.time.total - wait <= 0) {
           ctx.addIssue({

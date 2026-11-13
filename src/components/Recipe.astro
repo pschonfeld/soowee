@@ -4,7 +4,7 @@ import { Image, Picture } from 'astro:assets';
 import '../styles/global.css';
 import Wordmark from '../assets/brand/soowee-wordmark.svg';
 import { formatMinutes, formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
-import { plainText, renderInline, totalWaitMinutes } from '../lib/inline';
+import { plainText, renderInline, totalChillMinutes, totalWaitMinutes } from '../lib/inline';
 import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
 
@@ -42,6 +42,9 @@ const timeParts = showActive
       r.time.prep !== undefined && `Prep ${formatMinutes(r.time.prep)}`,
       r.time.cook !== undefined && `Cook ${formatMinutes(r.time.cook)}`,
     ].filter(Boolean);
+// Fridge time ({chill:…}) is not part of the total: the dish is done, it just has to set. Shown on its own.
+const chillMinutes = totalChillMinutes(r.steps);
+const chillTime = chillMinutes > 0 ? formatMinutes(chillMinutes) : undefined;
 
 type Ingredient = { qty?: number; unit?: string; name: string; note?: string };
 /** "g flour" / "onion": the unit (if any) and name, as shown after the quantity. */
@@ -66,7 +69,8 @@ const jsonLd = {
   recipeYield: yieldText,
   prepTime: r.time.prep !== undefined ? isoDuration(r.time.prep) : undefined,
   cookTime: r.time.cook !== undefined ? isoDuration(r.time.cook) : undefined,
-  totalTime: isoDuration(r.time.total),
+  // schema.org's totalTime means until it can be served, so the chilling counts here.
+  totalTime: isoDuration(r.time.total + chillMinutes),
   recipeIngredient: r.ingredients.flatMap((g) => g.items.map(ingredientText)),
   recipeInstructions: r.steps.map((s, i) => ({
     '@type': 'HowToSection',
@@ -164,6 +168,14 @@ const icons = {
                   <div>
                     <dt>Active</dt>
                     <dd>{formatMinutes(activeMinutes)}</dd>
+                  </div>
+                )
+              }
+              {
+                chillTime && (
+                  <div>
+                    <dt>Chill</dt>
+                    <dd>+{chillTime}</dd>
                   </div>
                 )
               }
@@ -282,6 +294,7 @@ const icons = {
                   <p class="section-sub">
                     Total Time: {totalTime}
                     {timeParts.length > 0 && ` (${timeParts.join(', ')})`}
+                    {chillTime && `, plus ${chillTime} chilling`}
                   </p>
                 </div>
               </div>

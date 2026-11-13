@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTimer, plainText, renderInline, totalWaitMinutes, waitSeconds } from './inline';
+import { parseTimer, plainText, renderInline, totalChillMinutes, totalWaitMinutes, waitSeconds } from './inline';
 
 describe('parseTimer', () => {
   it('parses single and compound durations with generated labels', () => {
@@ -19,10 +19,10 @@ describe('parseTimer', () => {
   });
 
   it('rejects malformed or empty timers', () => {
-    expect(() => parseTimer('soon')).toThrow(/Invalid timer/);
-    expect(() => parseTimer('10')).toThrow(/Invalid timer/);
+    expect(() => parseTimer('soon')).toThrow(/Invalid duration "{timer:/);
+    expect(() => parseTimer('10')).toThrow(/Invalid duration "{timer:/);
     expect(() => parseTimer('0m')).toThrow(/no duration/);
-    expect(() => parseTimer('10-5m')).toThrow(/Invalid timer/);
+    expect(() => parseTimer('10-5m')).toThrow(/Invalid duration "{timer:/);
   });
 });
 
@@ -69,5 +69,25 @@ describe('wait time', () => {
       { text: ['Bake {wait:20m}'] },
     ];
     expect(totalWaitMinutes(steps)).toBe(80);
+  });
+});
+
+describe('chill time', () => {
+  it('renders as plain text, not a timer button', () => {
+    const html = renderInline('Refrigerate for at least {chill:8h}.');
+    expect(html).toBe('Refrigerate for at least 8 hours.');
+    expect(plainText('Chill {chill:6-8h}.')).toBe('Chill 6–8 hours.');
+  });
+
+  it('is counted on its own, never as hands-off time', () => {
+    const steps = [
+      { text: ['Simmer {wait:1h}', 'Chill {chill:8h}', { tip: 'A {chill:2h} in a tip is ignored' }] },
+    ];
+    expect(totalChillMinutes(steps)).toBe(480);
+    expect(totalWaitMinutes(steps)).toBe(60);
+  });
+
+  it('names the {chill:} token when the duration is invalid', () => {
+    expect(() => renderInline('Chill {chill:overnight}')).toThrow(/Invalid duration "\{chill:overnight\}"/);
   });
 });

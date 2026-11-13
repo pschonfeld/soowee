@@ -46,6 +46,7 @@ Inline markup in step text:
 - `**bold**` – ingredient mentions.
 - `{25 g}`, `{2 tbsp}`, `{1.5}` – the amount used at that point. It scales with the recipe, independently of the ingredient list, so one ingredient can be split across steps.
 - `{wait:1h}` – a timer for hands-off time (simmering, baking). The page subtracts these from the total and shows the rest as active time.
+- `{chill:6h}` – the minimum time in the fridge before serving (tiramisu, terrines). Plain text, not a timer, and not part of `time.total`: the page shows it separately ("plus 6 hr chilling"), because the dish is finished and only needs to set. Like `{wait:}`, it only counts in step text, not in `tip:` lines.
 - `{timer:20m}`, `{timer:1h30m}`, `{timer:5-10m}` – a tappable timer. The label ("5–10 minutes") is generated, so durations read the same everywhere; write the sentence around it ("bake for {timer:10m} more"). A range rings at its lower bound, when it is time to start checking.
 
 A step may also have `heat: Preheat your oven to **180 °C**.` – shown first and highlighted, so the oven or oil is on before it is needed.
