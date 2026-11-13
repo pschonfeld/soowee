@@ -1,0 +1,8 @@
+---
+import { getCollection } from 'astro:content';
+
+// No gallery yet: the home page sends you to the featured recipe.
+const recipes = await getCollection('recipes');
+const entry = recipes.find((r) => r.data.featured) ?? recipes[0];
+return Astro.redirect(`/${entry.id}/`);
+---

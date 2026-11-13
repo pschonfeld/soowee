@@ -1,0 +1,433 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import { Image, Picture } from 'astro:assets';
+import '../styles/global.css';
+import mark from '../assets/brand/soowee-mark.svg';
+import Wordmark from '../assets/brand/soowee-wordmark.svg';
+import { formatMinutes, formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
+import { plainText, renderInline, waitSeconds } from '../lib/inline';
+import { tintFor } from '../lib/tint';
+
+interface Props {
+  entry: CollectionEntry<'recipes'>;
+}
+
+const { entry } = Astro.props;
+const r = entry.data;
+const { Content } = await render(entry);
+const tint = await tintFor(r.image, r.tint);
+
+const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
+const totalTime = formatMinutes(r.time.total);
+// Hands-off time comes from the {wait:…} timers in the steps; the rest of the total is active work.
+const waitMinutes = Math.round(
+  r.steps.flatMap((s) => s.text).reduce((sum, p) => sum + (typeof p === 'string' ? waitSeconds(p) : 0), 0) / 60,
+);
+const activeMinutes = r.time.total - waitMinutes;
+if (activeMinutes <= 0) {
+  throw new Error(`${entry.id}: {wait:…} timers add up to ${waitMinutes} min, but time.total is ${r.time.total} min`);
+}
+const showActive = waitMinutes > 0;
+const timeParts = showActive
+  ? [`${formatMinutes(activeMinutes)} active`, `${formatMinutes(waitMinutes)} hands-off`]
+  : [
+      r.time.prep !== undefined && `Prep ${formatMinutes(r.time.prep)}`,
+      r.time.cook !== undefined && `Cook ${formatMinutes(r.time.cook)}`,
+    ].filter(Boolean);
+
+const ingredientText = (i: { qty?: number; unit?: string; name: string; note?: string }) =>
+  [i.qty !== undefined && formatQty(i.qty, i.unit), i.unit, i.note ? `${i.name}, ${i.note}` : i.name]
+    .filter(Boolean)
+    .join(' ');
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Recipe',
+  name: r.title,
+  description: r.description,
+  image: new URL(r.image.src, Astro.url).href,
+  recipeCuisine: r.cuisine,
+  recipeYield: yieldText,
+  prepTime: r.time.prep !== undefined ? isoDuration(r.time.prep) : undefined,
+  cookTime: r.time.cook !== undefined ? isoDuration(r.time.cook) : undefined,
+  totalTime: isoDuration(r.time.total),
+  recipeIngredient: r.ingredients.flatMap((g) => g.items.map(ingredientText)),
+  recipeInstructions: r.steps.map((s, i) => ({
+    '@type': 'HowToSection',
+    name: s.title ?? `Step ${i + 1}`,
+    itemListElement: [s.heat, ...s.text]
+      .filter((p): p is string => typeof p === 'string')
+      .map((p) => ({ '@type': 'HowToStep', text: plainText(p) })),
+  })),
+};
+
+const icons = {
+  cook: 'M3.6 8.200h10.800v4.300a2.700 2.700 0 0 1-2.700 2.700H6.300a2.700 2.700 0 0 1-2.700-2.700V8.200ZM1.800 8.200h14.400M6.200 5.400h5.600M9 5.400V3.200',
+  save: 'M5 2.8h8a.8.8 0 0 1 .8.8v11.600L9 12.200l-4.800 3V3.600a.8.8 0 0 1 .8-.8Z',
+  share: 'M9 11V2.400M6 5l3-3 3 3M5.600 8H4.400a.9.9 0 0 0-.9.900v5.700c0 .5.400.9.900.9h9.200c.5 0 .9-.4.900-.9V8.900a.9.9 0 0 0-.9-.9h-1.200',
+  chevron: 'm7 3.500 5 5.500-5 5.500',
+  close: 'm4.500 4.500 9 9m0-9-9 9',
+  check: 'm3.500 9.500 3.500 3.500 7.500-8',
+  minus: 'M4 9h10',
+  plus: 'M4 9h10M9 4v10',
+  up: 'm4 11.500 5-5 5 5',
+  down: 'm4 6.500 5 5 5-5',
+  heat: 'M9 2.200a1.800 1.800 0 0 0-1.800 1.800v6.200a3.300 3.300 0 1 0 3.600 0V4A1.800 1.800 0 0 0 9 2.200ZM9 7.200v5.600',
+  bulb: 'M9 1.800a5 5 0 0 0-3 9c.5.400.800 1 .800 1.600v.4h4.400v-.4c0-.6.300-1.200.800-1.600a5 5 0 0 0-3-9ZM7.200 15.600h3.600',
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{`${r.title} · soowee`}</title>
+    <meta name="description" content={r.description} />
+    <meta name="theme-color" content={tint.base} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={r.title} />
+    <meta property="og:description" content={r.description} />
+    <meta property="og:image" content={new URL(r.image.src, Astro.url).href} />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem('soowee:theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
+  </head>
+  <body style={`--tint:${tint.base};--tint-deep:${tint.deep}`}>
+    <a class="skip" href="#recipe">Skip to recipe</a>
+
+    <main>
+      <article
+        data-recipe={entry.id}
+        data-yield-min={r.yield.min}
+        data-yield-max={r.yield.max}
+        data-yield-unit={r.yield.unit}
+      >
+        <header class="hero">
+          <div class="hero__media">
+            <Picture
+              src={r.image}
+              alt={r.imageAlt}
+              formats={['avif', 'webp']}
+              widths={[480, 768, 1080, 1440, 1920, 2560]}
+              sizes="(min-width: 48rem) 62vw, 100vw"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
+
+          <a class="brand" href="/" aria-label="soowee home">
+            <img src={mark.src} width={mark.width} height={mark.height} alt="" />
+          </a>
+
+          <div class="hero__body">
+            {r.cuisine && <p class="eyebrow">{r.cuisine}</p>}
+            <h1>{r.title}</h1>
+            {r.byline && <p class="byline">{r.byline}</p>}
+
+            <dl class="meta">
+              <div>
+                <dt>Total time</dt>
+                <dd>{totalTime}</dd>
+              </div>
+              {
+                showActive && (
+                  <div>
+                    <dt>Active</dt>
+                    <dd>{formatMinutes(activeMinutes)}</dd>
+                  </div>
+                )
+              }
+              <div>
+                <dt>Yield</dt>
+                <dd data-yield>{yieldText}</dd>
+              </div>
+            </dl>
+
+            {
+              r.source &&
+                (() => {
+                  const Tag = r.source.url ? 'a' : 'div';
+                  return (
+                    <Tag class="story" href={r.source.url} rel={r.source.url && 'noopener'}>
+                      <Image src={r.image} alt="" width={88} height={88} fit="cover" loading="eager" />
+                      <span class="story__text">
+                        <span class="story__label">{r.source.label}</span>
+                        <span class="story__title">{r.source.title}</span>
+                      </span>
+                      {r.source.url && (
+                        <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
+                          <path d={icons.chevron} />
+                        </svg>
+                      )}
+                    </Tag>
+                  );
+                })()
+            }
+
+            <div class="actions">
+              <button type="button" class="action" data-cook-open aria-haspopup="dialog">
+                <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.cook} /></svg>
+                Cook
+              </button>
+              <button type="button" class="action" data-save>
+                <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.save} /></svg>
+                <span data-save-label>Save</span>
+              </button>
+              <button type="button" class="action" data-share>
+                <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.share} /></svg>
+                Share
+              </button>
+            </div>
+
+            <p class="lede">{r.description}</p>
+          </div>
+        </header>
+
+        <div class="sheet" id="recipe">
+          <div>
+            <section class="ingredients" aria-labelledby="ingredients-title">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title" id="ingredients-title">Ingredients</h2>
+                  <p class="section-sub">Yields <span data-yield>{yieldText}</span></p>
+                </div>
+                <div class="scale" role="group" aria-label="Scale recipe">
+                  <button type="button" data-scale="-1" aria-label="Scale down">
+                    <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.minus} /></svg>
+                  </button>
+                  <output data-scale-output aria-live="polite">{formatScale(1)}</output>
+                  <button type="button" data-scale="1" aria-label="Scale up">
+                    <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.plus} /></svg>
+                  </button>
+                </div>
+              </div>
+
+              {
+                r.ingredients.map((group) => (
+                  <>
+                    {group.group && <h3 class="group-label">{group.group}</h3>}
+                    <ul>
+                      {group.items.map((item) => (
+                        <li>
+                          <label class="ingredient">
+                            <input type="checkbox" />
+                            <span class="ingredient__qty" data-qty={item.qty} data-unit={item.unit}>
+                              {item.qty !== undefined && formatQty(item.qty, item.unit)}
+                            </span>
+                            <span>
+                              {[item.unit, item.name].filter(Boolean).join(' ')}
+                              {item.note && <span class="ingredient__note">, {item.note}</span>}
+                            </span>
+                            <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
+                              <path d={icons.check} />
+                            </svg>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ))
+              }
+            </section>
+
+            {
+              r.equipment.length > 0 && (
+                <section class="equipment" aria-labelledby="equipment-title">
+                  <div class="section-head">
+                    <h2 class="section-title" id="equipment-title">
+                      Equipment
+                    </h2>
+                  </div>
+                  <ul>
+                    {r.equipment.map((item) => (
+                      <li>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+              )
+            }
+          </div>
+
+          <div>
+            <section class="directions" aria-labelledby="directions-title">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title" id="directions-title">Directions</h2>
+                  <p class="section-sub">
+                    Total Time: {totalTime}
+                    {timeParts.length > 0 && ` (${timeParts.join(', ')})`}
+                  </p>
+                </div>
+              </div>
+
+              <ol>
+                {
+                  r.steps.map((step, i) => (
+                    <li class="step" data-step={i + 1}>
+                      <h3 class="step__label">
+                        Step {i + 1}
+                        {step.title && <span class="step__title">{step.title}</span>}
+                      </h3>
+                      {step.heat && (
+                        <p class="heat">
+                          <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
+                            <path d={icons.heat} />
+                          </svg>
+                          <span set:html={renderInline(step.heat)} />
+                        </p>
+                      )}
+                      {step.text.map((p) =>
+                        typeof p === 'string' ? (
+                          <p set:html={renderInline(p)} />
+                        ) : (
+                          <p class="tip">
+                            <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
+                              <path d={icons.bulb} />
+                            </svg>
+                            <span>
+                              <span class="sr-only">Tip: </span>
+                              <Fragment set:html={renderInline(p.tip)} />
+                            </span>
+                          </p>
+                        ),
+                      )}
+                    </li>
+                  ))
+                }
+              </ol>
+            </section>
+
+            {
+              entry.body?.trim() && (
+                <section class="prose" aria-label="Notes">
+                  <Content />
+                </section>
+              )
+            }
+          </div>
+        </div>
+      </article>
+    </main>
+
+    <footer class="footer">
+      <Wordmark class="footer__wordmark" width={91} height={15} />
+      {
+        r.imageCredit && (
+          <p>
+            Photo: <a href={r.imageCredit.url}>{r.imageCredit.author}</a>, {r.imageCredit.license}
+          </p>
+        )
+      }
+      <fieldset class="theme">
+        <legend class="sr-only">Appearance</legend>
+        {
+          ['Light', 'Dark', 'Auto'].map((label) => (
+            <label>
+              <input type="radio" name="theme" value={label.toLowerCase()} checked={label === 'Auto'} />
+              <span>{label}</span>
+            </label>
+          ))
+        }
+      </fieldset>
+    </footer>
+
+    <dialog class="cook" id="cook" aria-labelledby="cook-title">
+      <div class="cook__head">
+        <Image src={r.image} alt="" width={72} height={72} fit="cover" loading="lazy" />
+        <p class="cook__title" id="cook-title">
+          {r.title}
+          <span>soowee</span>
+        </p>
+        <button type="button" class="round" data-cook-close aria-label="Close cook mode">
+          <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.close} /></svg>
+        </button>
+      </div>
+
+      <div class="segmented" role="tablist" aria-label="Cook mode view">
+        <button
+          type="button"
+          role="tab"
+          id="tab-ingredients"
+          aria-controls="panel-ingredients"
+          aria-selected="false"
+          tabindex="-1">Ingredients</button
+        >
+        <button type="button" role="tab" id="tab-directions" aria-controls="panel-directions" aria-selected="true"
+          >Directions</button
+        >
+      </div>
+
+      <div class="cook__panel" id="panel-ingredients" role="tabpanel" aria-labelledby="tab-ingredients" tabindex="0" hidden>
+        <div class="cook__inner">
+        <p class="cook__yield">
+          Yields <span data-yield>{yieldText}</span>
+        </p>
+        {
+          r.ingredients.map((group) => (
+            <>
+              {group.group && <h3 class="cook__group">{group.group}</h3>}
+              <ul>
+                {group.items.map((item) => (
+                  <li class="cook__ingredient">
+                    <b data-qty={item.qty} data-unit={item.unit}>
+                      {item.qty !== undefined && formatQty(item.qty, item.unit)}
+                    </b>
+                    <span>
+                      {[item.unit, item.name].filter(Boolean).join(' ')}
+                      {item.note && <span class="ingredient__note">, {item.note}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ))
+        }
+        </div>
+      </div>
+
+      <div class="cook__panel" id="panel-directions" role="tabpanel" aria-labelledby="tab-directions" tabindex="0">
+        <div class="cook__inner">
+        {
+          r.steps.map((step, i) => (
+            <>
+              <h3 class="cook__step-label">
+                Step {i + 1} {step.title && <span>· {step.title}</span>}
+              </h3>
+              {step.heat && <p class="cook__line" data-line data-step={i + 1} set:html={renderInline(step.heat)} />}
+              {step.text.map((p) =>
+                typeof p === 'string' ? (
+                  <p class="cook__line" data-line data-step={i + 1} set:html={renderInline(p)} />
+                ) : (
+                  <p class="cook__line cook__line--tip" set:html={`Tip: ${renderInline(p.tip)}`} />
+                ),
+              )}
+            </>
+          ))
+        }
+        </div>
+      </div>
+
+      <div class="cook__nav">
+        <button type="button" class="round" data-cook-nav="-1" aria-label="Previous step">
+          <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.up} /></svg>
+        </button>
+        <button type="button" class="round" data-cook-nav="1" aria-label="Next step">
+          <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.down} /></svg>
+        </button>
+      </div>
+    </dialog>
+
+    <div class="timers" role="region" aria-label="Timers" data-timers></div>
+    <p class="toast" role="status" data-toast></p>
+
+    <script>
+      import '../scripts/recipe.ts';
+    </script>
+  </body>
+</html>
