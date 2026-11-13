@@ -50,7 +50,7 @@ steps:
   - title: Make the cream
     text:
       - Separate {6} **eggs**, putting the whites in one large, clean bowl and the yolks in another.
-      - Add a pinch of **salt** to the whites and whisk until glossy and thick. When you lift the beaters, the peaks should hold, with the tips just bending over. Stop before they look dry or grainy.
+      - Add a pinch of **salt** to the whites and whisk until glossy and thick. When you lift the beaters, the peaks should hold, with the tips just bending over (soft peaks). Stop before they look dry or grainy.
       - tip: Whip the whites first. The same beaters can then go straight into the yolks without washing; the other way round, a trace of yolk fat would stop the whites from whipping.
       - Whisk the yolks with {6 tbsp} **sugar** for {timer:4-5m}, until pale, thick and creamy. The sugar should no longer feel gritty between your fingers, and the mixture should fall from the beaters in a ribbon that sits on the surface for a moment.
       - Add {750 g} **mascarpone**, straight from the fridge, and beat on low speed just until smooth.
