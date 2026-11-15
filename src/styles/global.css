@@ -382,7 +382,10 @@ a.story:hover,
   border-left: 1px solid rgb(255 255 255 / 0.28);
 }
 
-/* 320px-wide phones (iPhone SE 1st gen, Display Zoom): keep the three facts on one line. */
+/*
+ * 320px-wide phones (iPhone SE 1st gen, Display Zoom): tighter gaps keep Total time and Yield on one row
+ * up to about "12 hr 45 min" + "10–12 servings". Anything longer wraps under, which flex-wrap handles.
+ */
 @media (max-width: 22.5rem) {
   .meta > div {
     padding-right: var(--s-2);

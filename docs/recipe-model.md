@@ -207,8 +207,8 @@ Allowed in `heat`, step paragraphs and tips. Raw HTML is escaped, not rendered.
 |---|---|---|---|---|
 | `**mascarpone**` | Ingredient mention | Bold | | |
 | `{750 g}`, `{2 tbsp}`, `{6}` | Amount used at this point (not the ingredient total) | `750 g` | yes | |
-| `{timer:20m}`, `{timer:5-10m}` | Something the cook does or checks on | Tappable timer, label `5–10 minutes`; a range rings at its lower bound | | Active time |
-| `{simmer:1h}`, `{bake:30m}`, `{rest:15-20m}` … | Hands-off time: the dish works on its own. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Tappable timer, like `{timer:}` | | Total time, not active time |
+| `{timer:20m}`, `{timer:5-10m}` | Something the cook does or checks on | Tappable timer, label `5–10 minutes`; a range rings at its lower bound | | Work |
+| `{simmer:1h}`, `{bake:30m}`, `{rest:15-20m}` … | Hands-off time: the dish works on its own. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Tappable timer, like `{timer:}` | | Total time, not work |
 | `{chill:8h}`, `{freeze:6h}` | Minimum time in the fridge or freezer after the dish is finished | Plain text `8 hours`, not a timer | | Outside the total |
 | `tip: …` | A callout between paragraphs | Bulb icon; “Tip:” for screen readers | | |
 
@@ -234,12 +234,12 @@ One vocabulary on every recipe:
 
 | Term | Where | Meaning |
 |---|---|---|
-| **Total time** | Hero | `time.total`: start to finish, until the dish is ready or goes into the fridge |
-| **Active** | Hero | The part of the total the cook is busy: total minus hands-off time. Shown only when the recipe has hands-off time, otherwise it would equal the total |
-| **Chill**, **Freeze** | Hero, as `+8 hr` | Time after the dish is finished. The `+` says it comes on top of the total |
-| “of work” | Directions sentence | The same number as Active, in plain words |
+| **Total time** | Hero; repeated in the Directions sentence (“4 hr 30 min in total”, or “30 min of work” when all of it is work) | `time.total`: start to finish, until the dish is ready or goes into the fridge. Never includes the fridge or freezer |
+| **Work** | Directions sentence (“1 hr 25 min of work”) | The part of the total the cook is busy: total minus hands-off time |
+| **Hands-off** | This document only | Time the dish works on its own: the verbs below. Named by what happens (“simmering, baking”), never by this word on the page |
+| **In the fridge / freezer** | Directions sentence (“then at least 8 hr in the fridge”) | Time after the dish is finished, on top of the total |
 
-“Active” is a label next to a number; in a sentence it reads like jargon, so the Directions header says “of work” instead.
+The hero shows exactly two facts, **Total time** and **Yield**, on every recipe. A third column wrapped onto a second row on narrow phones, and a fridge time next to the total read as if it were part of it. Everything else about time is in the Directions sentence, the one place that can say how the parts relate. This follows the “25 minutes, plus 4 hours’ chilling” convention of NYT Cooking, America’s Test Kitchen and BBC Good Food, rather than Food Network’s total that includes “inactive” time.
 
 ### Hands-off verbs
 
@@ -260,10 +260,10 @@ Each verb is a timer that counts as hands-off time. The word in the second colum
 
 Time after the dish is finished, outside the total:
 
-| Token | Hero | In the sentence | Use for |
-|---|---|---|---|
-| `{chill:}` | Chill | in the fridge | Setting: tiramisu, panna cotta, terrines |
-| `{freeze:}` | Freeze | in the freezer | Ice cream, semifreddo |
+| Token | In the sentence | Use for |
+|---|---|---|
+| `{chill:}` | in the fridge | Setting: tiramisu, panna cotta, terrines |
+| `{freeze:}` | in the freezer | Ice cream, semifreddo |
 
 `{chill:}` is for a dish that is done and only has to set. Cooling a component before the next step is `{cool:}`, and resting a lasagna before slicing is `{rest:}`: both are part of the total.
 
@@ -271,49 +271,49 @@ Time after the dish is finished, outside the total:
 
 ```mermaid
 flowchart TD
-  total["time.total<br/>written by hand"] --> active["Active = total − hands-off"]
+  total["time.total<br/>written by hand"] --> work["Work = total − hands-off"]
   off["Hands-off verbs in step paragraphs<br/>{simmer:} {bake:} {rest:} …"] --> handsoff["Hands-off minutes<br/>+ verbs in order of first use"]
-  handsoff --> active
+  handsoff --> work
   after["{chill:} {freeze:} in step paragraphs"] --> afterOut["Minutes per kind"]
-  active --> hero["Hero<br/>Total time · Active · Chill · Freeze · Yield"]
-  afterOut --> hero
-  total --> hero
+  total --> hero["Hero<br/>Total time and Yield only"]
   total --> sentence["Directions sentence"]
-  active --> sentence
+  work --> sentence
   handsoff --> sentence
   afterOut --> sentence
   total --> ld["JSON-LD totalTime<br/>= total + chill + freeze"]
   afterOut --> ld
 ```
 
-Both the hero and the sentence come from one function, `describeTime` in [`src/lib/time.ts`](../src/lib/time.ts), with a unit test for every case below.
+The sentence is built by `describeTime` in [`src/lib/time.ts`](../src/lib/time.ts), with a unit test for every case below. JSON-LD is the one place where the fridge and freezer are added to the total, because schema.org’s `totalTime` means “until it can be served”.
 
 ### The Directions sentence
 
 Generated, never written by hand. The numbers are bold.
 
-| The recipe has | Hero | Directions sentence |
-|---|---|---|
-| Only work | Total time | **25 min** from start to finish. |
-| Hands-off time | Total time, Active | **4 hr 30 min** in total: **1 hr 25 min** of work and **3 hr 5 min** of simmering, baking and resting. |
-| Fridge time | Total time, Chill | **30 min** of work, then at least **8 hr** in the fridge. |
-| Both | Total time, Active, Chill | **45 min** in total: **30 min** of work and **15 min** of cooling, then at least **4 hr** in the fridge. |
-| Fridge and freezer | Total time, Chill, Freeze | **40 min** of work, then at least **2 hr** in the fridge and **6 hr** in the freezer. |
+| The recipe has | Directions sentence |
+|---|---|
+| Only work | **25 min** from start to finish. |
+| Hands-off time | **4 hr 30 min** in total: **1 hr 25 min** of work and **3 hr 5 min** of simmering, baking and resting. |
+| Fridge time | **30 min** of work, then at least **8 hr** in the fridge. |
+| Both | **45 min** in total: **30 min** of work and **15 min** of cooling, then at least **4 hr** in the fridge. |
+| Fridge and freezer | **40 min** of work, then at least **2 hr** in the fridge and **6 hr** in the freezer. |
+
+The hero is the same in every case: Total time and Yield.
 
 Rules:
 
 - The verbs are listed in the order they first appear in the method, each once, joined as “a, b and c”.
 - Hands-off time gets its own number instead of “the rest is …”, so the reader can see that work and hands-off time add up to the total.
 - “At least” is used only for the fridge and freezer, where longer is fine. A bake should not run longer.
-- The fridge always comes before the freezer, in the hero and in the sentence, whatever the order in the method.
+- The fridge always comes before the freezer, whatever the order in the method.
 - A day or more is written in days: `1 day 2 hr`.
 
 How the sums are made:
 
-- A range counts at its **lower bound**: `{bake:20-25m}` adds 20 minutes, `{chill:8-12h}` reads “8–12 hours” but adds 8 hours. Write `time.total` with the same lower bounds, or the active time comes out too long.
+- A range counts at its **lower bound**: `{bake:20-25m}` adds 20 minutes, `{chill:8-12h}` reads “8–12 hours” but adds 8 hours. Write `time.total` with the same lower bounds, or the work time comes out too long.
 - The sums are made in seconds and rounded to whole minutes once, so hands-off time shorter than 30 seconds in total counts as none.
 
-Known simplification: work done *during* hands-off time (making the béchamel while the ragù simmers) is not counted as active. Active is the time the recipe needs the cook at the counter, not every minute they spend in the kitchen.
+Known simplification: work done *during* hands-off time (making the béchamel while the ragù simmers) is not counted as work. Work is the time the recipe needs the cook at the counter, not every minute they spend in the kitchen.
 
 ## Scaling
 
@@ -343,7 +343,7 @@ The build fails in two places.
 - a required field is missing, or a value has the wrong type;
 - an ingredient or `about` `unit` is not in the unit list;
 - `qty`, `about.qty`, `about.max` or a `yield` number is zero or negative, or `about.max` is not larger than `about.qty`;
-- `time.total` is not a positive whole number of minutes, or the hands-off verbs add up to `time.total` or more (there would be no active time left);
+- `time.total` is not a positive whole number of minutes, or the hands-off verbs add up to `time.total` or more (there would be no work left);
 - any step text (`heat`, a paragraph or a tip) has a malformed duration (`{chill:overnight}`), an unknown token (`{wait:1h}`) or an amount with a unit outside the unit list (`{2 cups}`); the path points to the exact line, e.g. `steps.3.text.1`;
 - a step has only tips and no `heat`;
 - `tint` is not a `#rrggbb` colour, or a URL is not a URL;

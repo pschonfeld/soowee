@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { UNITS } from './format';
-import { DURATION_TOKENS, HANDS_OFF } from './inline';
+import { AFTER, DURATION_TOKENS, HANDS_OFF } from './inline';
 
 /**
  * docs/recipe-model.md documents the recipe schema. These checks fail when the schema or the inline
@@ -40,6 +40,11 @@ describe('docs/recipe-model.md', () => {
 
   it('lists every hands-off verb with the word used in the time sentence', () => {
     const missing = Object.entries(HANDS_OFF).filter(([token, word]) => !doc.includes(`| \`{${token}:}\` | ${word} |`));
+    expect(missing).toEqual([]);
+  });
+
+  it('lists every after-the-dish token with the place used in the time sentence', () => {
+    const missing = Object.entries(AFTER).filter(([token, place]) => !doc.includes(`| \`{${token}:}\` | ${place} |`));
     expect(missing).toEqual([]);
   });
 

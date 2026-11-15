@@ -3,7 +3,7 @@ import { UNITS, formatQty } from './format';
 
 /**
  * Hands-off time: the dish works on its own while the cook is free. Rendered as a timer like {timer:…},
- * counted in time.total, subtracted from it to get the active time, and named in the time summary
+ * counted in time.total, subtracted from it to get the work time, and named in the time summary
  * ("3 hr 5 min of simmering, baking and resting"). The value is the word used in that sentence.
  * Add a verb here when a recipe needs one; an unknown token fails the build.
  */
@@ -22,11 +22,11 @@ export const HANDS_OFF = {
 
 /**
  * Time after the dish is finished, when it only has to set: plain text (not a timer), kept OUT of
- * time.total and shown on its own ("then at least 8 hr in the fridge").
+ * time.total and named in the time summary ("then at least 8 hr in the fridge"). The value is that place.
  */
 export const AFTER = {
-  chill: { label: 'Chill', place: 'in the fridge' },
-  freeze: { label: 'Freeze', place: 'in the freezer' },
+  chill: 'in the fridge',
+  freeze: 'in the freezer',
 } as const;
 
 export type HandsOffToken = keyof typeof HANDS_OFF;

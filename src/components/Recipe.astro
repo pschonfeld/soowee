@@ -3,7 +3,7 @@ import { render, type CollectionEntry } from 'astro:content';
 import { Image, Picture } from 'astro:assets';
 import '../styles/global.css';
 import Wordmark from '../assets/brand/soowee-wordmark.svg';
-import { formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
+import { formatMinutes, formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
 import { plainText, renderInline, stepTimes } from '../lib/inline';
 import { describeTime } from '../lib/time';
 import { backdropFor } from '../lib/backdrop';
@@ -31,10 +31,11 @@ const pageStyle = [
 const SourceTag = r.source?.url ? 'a' : 'div';
 
 const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
-// Hero and Directions header both come from describeTime, so they cannot disagree (see lib/time.ts).
-// content.config.ts guarantees the hands-off time leaves a positive active time.
+// The hero shows only the total; the Directions header says the rest in one generated sentence (lib/time.ts).
+// content.config.ts guarantees the hands-off time leaves a positive amount of work.
+const totalTime = formatMinutes(r.time.total);
 const times = stepTimes(r.steps);
-const time = describeTime(r.time.total, times);
+const timeSentence = describeTime(r.time.total, times);
 const afterMinutes = times.after.reduce((sum, a) => sum + a.minutes, 0);
 
 type Ingredient = { qty?: number; unit?: string; name: string; about?: { qty: number; max?: number; unit: string }; note?: string };
@@ -154,27 +155,12 @@ const icons = {
             <h1>{r.title}</h1>
             {r.byline && <p class="byline">{r.byline}</p>}
 
+            {/* Two facts only, so the row stays on one line on phones; the rest of the time is the sentence under Directions. */}
             <dl class="meta">
               <div>
                 <dt>Total time</dt>
-                <dd>{time.total}</dd>
+                <dd>{totalTime}</dd>
               </div>
-              {
-                time.active && (
-                  <div>
-                    <dt>Active</dt>
-                    <dd>{time.active}</dd>
-                  </div>
-                )
-              }
-              {
-                time.after.map((a) => (
-                  <div>
-                    <dt>{a.label}</dt>
-                    <dd>{a.value}</dd>
-                  </div>
-                ))
-              }
               <div>
                 <dt>Yield</dt>
                 <dd data-yield>{yieldText}</dd>
@@ -303,7 +289,7 @@ const icons = {
                 <div>
                   <h2 class="section-title" id="directions-title">Directions</h2>
                   <p class="section-sub section-sub--time">
-                    {time.sentence.map((s) => (s.strong ? <strong>{s.text}</strong> : s.text))}
+                    {timeSentence.map((s) => (s.strong ? <strong>{s.text}</strong> : s.text))}
                   </p>
                 </div>
               </div>

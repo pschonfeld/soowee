@@ -14,9 +14,9 @@ import { plainText, stepTimes } from './lib/inline';
  *   {timer:20m} {timer:5-10m}     – tappable timer; the label ("5–10 minutes") is generated so wording
  *                                   stays consistent, and a range rings at its lower bound (time to check)
  *   {simmer:1h} {bake:30m} …      – hands-off time: a timer too, but subtracted from the total to get the
- *                                   active time and named in the time summary (list: HANDS_OFF in lib/inline.ts)
+ *                                   work time and named in the time summary (list: HANDS_OFF in lib/inline.ts)
  *   {chill:6h} {freeze:4h}        – minimum time in the fridge/freezer after the dish is finished; plain text,
- *                                   not a timer, and NOT part of time.total (shown separately)
+ *                                   not a timer, and NOT part of time.total (named in the Directions sentence)
  *   {25 g} or {2}                 – an amount used in this step; scales with the recipe
  */
 const ingredient = z.object({
