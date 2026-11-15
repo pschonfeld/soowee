@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DURATION_TOKENS, HANDS_OFF, parseTimer, plainText, renderInline, stepTimes } from './inline';
+import { DURATION_TOKENS, HANDS_OFF, parseQuantity, parseTimer, plainText, renderInline, stepTimes } from './inline';
 
 describe('parseTimer', () => {
   it('parses single and compound durations with generated labels', () => {
@@ -44,8 +44,22 @@ describe('renderInline', () => {
     expect(timer).toContain('aria-label="Start timer: 5–10 minutes"');
   });
 
-  it('fails loudly on an unknown unit', () => {
-    expect(() => renderInline('{2 eggs}')).toThrow(/Unknown unit "eggs"/);
+  it('renders ingredient mentions with and without an amount', () => {
+    expect(renderInline('{750 g mascarpone}')).toBe('<span data-qty="750" data-unit="g">750</span>\u00a0g <strong>mascarpone</strong>');
+    expect(renderInline('{6 eggs}')).toBe('<span data-qty="6">6</span> <strong>eggs</strong>');
+    expect(renderInline('{cocoa powder}')).toBe('<strong>cocoa powder</strong>');
+  });
+
+  it('fails loudly on a unit stuck to the number that is not a unit', () => {
+    expect(() => renderInline('{25gr}')).toThrow(/Unknown unit "gr"/);
+  });
+
+  it('fails loudly on a malformed token', () => {
+    expect(() => renderInline('{ }')).toThrow(/Malformed token/);
+    expect(() => renderInline('{-2 g}')).toThrow(/Malformed token/);
+    expect(() => renderInline('{0 g}')).toThrow(/above zero/);
+    expect(() => renderInline('{25 g: butter}')).toThrow(/Unknown token/);
+    expect(() => plainText('at {5:00}')).toThrow(/Unknown token/);
   });
 });
 
