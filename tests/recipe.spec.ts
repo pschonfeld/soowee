@@ -239,10 +239,21 @@ test.describe('interactions', () => {
     await expect(first.locator('input')).not.toBeChecked();
   });
 
-  test('shows how much of the total time is active work, in the hero and as a sentence', async ({ page }) => {
+  test('the hero shows only total time and yield, on one row even at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    for (const recipe of RECIPES) {
+      await page.goto(recipe.path);
+      const meta = page.locator('.meta');
+      await expect(meta.locator('dt')).toHaveText(['Total time', 'Yield']);
+      // One row: both facts share the same top edge.
+      const tops = await meta.locator('dt').evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
+      expect(new Set(tops).size).toBe(1);
+    }
+  });
+
+  test('says how much of the total time is work, as a sentence under Directions', async ({ page }) => {
     // 4 hr 30 min total, minus 3 hr 5 min of {simmer:}, {bake:} and {rest:}.
     await expect(page.locator('.meta')).toContainText(/Total time\s*4 hr 30 min/);
-    await expect(page.locator('.meta')).toContainText(/Active\s*1 hr 25 min/);
     const sentence = page.locator('.directions .section-sub');
     await expect(sentence).toHaveText(
       '4 hr 30 min in total: 1 hr 25 min of work and 3 hr 5 min of simmering, baking and resting.',
@@ -257,19 +268,14 @@ test.describe('interactions', () => {
     expect(ld.cookTime).toBeUndefined();
 
     await page.goto('/fish-and-chips/');
-    await expect(page.locator('.meta')).toContainText(/Active\s*55 min/);
     await expect(page.locator('.directions .section-sub')).toHaveText(
       '1 hr 35 min in total: 55 min of work and 40 min of soaking and drying.',
     );
   });
 
-  test('chilling is shown on its own and kept out of the total', async ({ page }) => {
-    await expect(page.locator('.meta')).not.toContainText('Chill');
+  test('chilling is kept out of the total and named in the sentence', async ({ page }) => {
     await page.goto('/tiramisu/');
-    const meta = page.locator('.meta');
-    await expect(meta).toContainText(/Total time\s*30 min/);
-    await expect(meta).toContainText(/Chill\s*\+8 hr/);
-    await expect(meta).not.toContainText('Active');
+    await expect(page.locator('.meta')).toContainText(/Total time\s*30 min/);
     await expect(page.locator('.directions .section-sub')).toHaveText('30 min of work, then at least 8 hr in the fridge.');
     // Plain text in the step, not a timer button.
     const chill = page.locator('.step', { hasText: 'Chill and serve' });
