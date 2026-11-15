@@ -1,6 +1,6 @@
 ---
 title: Lasagna
-description: Southern-leaning Italian home-style lasagna, fresh egg pasta layered with a slow-cooked beef and pork ragù, a light béchamel, mozzarella fior di latte, Provolone and Pecorino Romano, baked until golden. Made for a large dish and a full table.
+description: Fresh egg pasta layered with a slow-simmered beef and pork ragù and béchamel, sharpened with Provolone Piccante and Pecorino Romano instead of the usual Parmigiano. About four and a half hours, most of it simmering, for a full table of eight to ten.
 featured: true
 cuisine: Italian
 byline: Adapted from Vincenzo’s Plate
@@ -51,51 +51,39 @@ ingredients:
       - { qty: 600, unit: g, name: egg pasta sheets, note: "fresh, enough for 4 layers of about 150 g" }
       - { name: extra virgin olive oil, note: for greasing }
 equipment:
-  - Oven, conventional top and bottom heat
   - Pot, heavy-bottomed, 5 L
-  - Saucepan
-  - Whisk
-  - Wooden spoon
-  - Large bowl
-  - Kitchen paper
-  - Baking dish, porcelain
-  - Baking tray
+  - Baking dish, porcelain, 38 × 26 × 7 cm (4.5 L)
   - Instant-read thermometer
-  - Pastry brush
-  - Knife and chopping board
-  - Aluminium foil
 steps:
   - title: Prepare the cheeses
     text:
-      - Tear {250 g mozzarella fior di latte} into small pieces and drain on kitchen paper for at least {timer:30m}, ideally for the whole time the ragù simmers or overnight in the fridge.
-      - tip: Start here. The mozzarella drains while the ragù cooks. Use fior di latte, not mozzarella di bufala, which releases too much water in the oven and turns the layers wet.
+      - Start here, so the mozzarella drains while the ragù cooks. Tear {250 g mozzarella fior di latte} into small pieces and drain on kitchen paper for at least {timer:30m}, ideally for the whole time the ragù simmers or overnight in the fridge.
+      - tip: Use fior di latte, not mozzarella di bufala, which releases too much water in the oven and turns the layers wet.
       - Grate {80 g Pecorino Romano} and set {30 g} aside for the top. Shred {100 g Provolone Piccante}.
       - tip: Parmigiano Reggiano can replace the Pecorino Romano. If only Provolone dolce is available, use it and add {20 g} more Pecorino Romano for bite.
-  - title: Make the ragù
+  - title: Make the soffritto and brown the meat
     text:
-      - Heat {2 tbsp extra virgin olive oil} in a large heavy-bottomed pot over medium-high heat.
-      - Add {250 g ground beef} and {250 g ground pork} and spread them out in an even layer. Leave untouched for the first 2–3 minutes so a crust forms on the bottom, then break the meat up with a wooden spoon and keep cooking, stirring now and then, for {timer:8-10m} in total, until the juices have evaporated and the meat is deeply browned with a brown film on the base of the pot.
-      - tip: Brown the meat in two batches. In a crowded pot the meat steams in its own juices and turns grey, and this browning is where most of the ragù’s flavour comes from.
-      - Transfer the meat to a large bowl with a slotted spoon and brown the remaining {250 g ground beef} and {250 g ground pork} the same way. Add it to the bowl.
-      - Leave about 2 tablespoons of fat in the pot and spoon off the rest. Lower the heat to medium.
-      - Add the {onion}, {carrot}, {celery} and {1 g salt}. Cook for {timer:8-10m}, scraping up the browned bits from the base of the pot, until soft and sweet.
-      - tip: Do not let the vegetables brown. Salting them now draws out moisture so they sweat instead of frying.
-      - Return the meat and its juices to the pot, season with {8 g salt} and stir well.
-      - Pour in {240 ml red wine} and simmer over medium-high heat, stirring occasionally, until the smell of alcohol is gone and the liquid has almost evaporated.
+      - Heat {2 tbsp extra virgin olive oil} in a large heavy-bottomed pot over medium-low heat. Add the {onion}, {carrot}, {celery} and {1 g salt} and cook gently, stirring now and then, for {timer:12-15m}, until soft, sweet and translucent.
+      - tip: Do not let the vegetables brown. The salt draws out moisture so they sweat instead of frying.
+      - Turn the heat up to high and add {500 g ground beef} and {500 g ground pork}. Spread the meat over the soffritto, leave it untouched for 2–3 minutes, then break it up with a wooden spoon.
+      - Keep cooking, stirring now and then, for {timer:12-15m}, until the water the meat releases has cooked off and the meat sizzles in its own fat and browns in places.
+      - tip: Do not stop when the meat is no longer pink. Until its water has gone it is boiling, not browning, and that browning is where the ragù gets its depth. The sizzle tells you it has turned.
+      - Season with {8 g salt}, pour in {240 ml red wine} and simmer, scraping the base of the pot, until the smell of alcohol is gone and the liquid has almost evaporated.
+  - title: Simmer the ragù
+    text:
       - Stir in {1.4 L passata}. Reduce the heat to medium-low, cover the pot and simmer gently, with a bubble breaking the surface only now and then, for {simmer:1h}, stirring occasionally.
-      - Remove the lid, add {240 ml water} and simmer uncovered on low heat for {simmer:1h} more, stirring occasionally.
-      - tip: The ragù should stay loose and spoonable; add a splash of water if it thickens. Fresh pasta sheets take their moisture from the sauce.
+      - Remove the lid, add {240 ml water} and simmer uncovered on low heat for {simmer:1h} more, stirring occasionally. Add a splash of water if it thickens, so it stays loose and spoonable.
+      - tip: Fresh pasta sheets take their moisture from the sauce. A thick ragù leaves them dry and chewy.
       - Skim any pooled orange fat from the surface. Taste and adjust with up to {3 g salt} and {black pepper}.
       - tip: Keep the seasoning slightly under. The Pecorino Romano and Provolone bring salt of their own.
   - title: Make the béchamel
-    heat: Preheat the oven to **180 °C**, conventional top and bottom heat, with a rack in the lower-middle position. Allow about 20 minutes.
+    heat: Preheat the oven to **180 °C**, conventional top and bottom heat, with a rack in the lower-middle position. Allow about 20 minutes. Avoid the fan setting, which dries the surface and edges before the centre is hot.
     text:
       - While the ragù finishes, melt {40 g butter} in a saucepan over low heat.
       - Whisk in {40 g flour} and cook for {timer:1-2m} until the raw flour smell is gone, without letting it colour.
       - Add {400 ml milk} gradually, a little at a time, whisking constantly so no lumps form.
       - Cook over low heat, whisking, until the sauce comes to a gentle bubble, then keep cooking for {timer:3-5m} until it is smooth and as thick as pouring custard.
       - Season with a pinch of {salt} and a few gratings of {nutmeg}, remove from the heat and keep warm. You should have about 440 ml.
-      - tip: Do not use the fan setting. It dries the surface and edges before the centre is hot.
   - title: Assemble the lasagna
     text:
       - Grease the baking dish with {extra virgin olive oil} using a pastry brush and stand it on the baking tray.
@@ -117,13 +105,13 @@ steps:
 ## Chef’s Notes
 
 - **Make ahead:** The ragù keeps for 3 days in the fridge and tastes better on day two. Cool it in shallow containers within 2 hours. To assemble a day ahead, use cooled ragù and béchamel (press cling film onto the béchamel), cover and refrigerate. Take the dish out 30 minutes before baking, add 15–20 minutes to the covered bake and check that the centre reaches 75 °C. The baked lasagna slices and reheats better the next day.
-- **To serve:** Pair with a crisp green salad and a robust Italian red such as Chianti Classico or Aglianico.
+- **Serve:** Pair with a crisp green salad and a robust Italian red such as Chianti Classico or Aglianico.
 
 ## Allergens
 
-- **Milk:** butter, milk, mozzarella, Pecorino Romano, Provolone.
 - **Gluten:** flour and pasta sheets.
 - **Egg:** fresh egg pasta sheets.
+- **Milk:** butter, milk, mozzarella, Pecorino Romano, Provolone.
 - **Celery:** in the ragù.
 - **Sulphites:** red wine.
 
