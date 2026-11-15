@@ -26,7 +26,7 @@ ingredients:
       - { qty: 30, unit: g, name: fine sea salt, note: "for the cooking water" }
   - group: For the pea purée
     items:
-      - { qty: 400, unit: g, name: peas, note: "frozen, or fresh and shelled (buy about 2½ times this weight in pods)" }
+      - { qty: 400, unit: g, name: peas, note: frozen }
       - { qty: 50, unit: g, name: butter }
       - { qty: 2, unit: tsp, name: lemon juice }
       - { qty: 3, unit: g, name: fine sea salt }
@@ -62,42 +62,41 @@ equipment:
 steps:
   - title: Cut and soak the chips
     text:
-      - "Cut the **potatoes** into 1.5 cm batons, as even as you can so they cook at the same rate."
+      - "Cut the {potatoes} into 1.5 cm batons, as even as you can so they cook at the same rate."
       - "Rinse under cold running water until it runs mostly clear, then cover with fresh cold water and soak for {soak:30m}."
-      - tip: "Put the **lager beer** and **sparkling water** in the fridge now. They need to be properly cold for the batter."
-      - tip: "Using fresh peas? Shell them while the potatoes soak."
+      - tip: "Put the lager beer and sparkling water in the fridge now. They need to be properly cold for the batter."
   - title: Parboil the chips
-    heat: Bring the **water** and {30 g} **fine sea salt** to a boil in the large pot and set the oven to **90 °C**.
+    heat: Bring the {water} and {30 g fine sea salt} to a boil in the large pot and set the oven to **90 °C**.
     text:
-      - "Drain the soaked **potatoes**, add them to the boiling water and return to a gentle simmer. Cook for {timer:6-8m}, until a knife slides in with a little resistance and the edges look rough and fuzzy. They should not be starting to fall apart."
+      - "Drain the soaked {potatoes}, add them to the boiling water and return to a gentle simmer. Cook for {timer:6-8m}, until a knife slides in with a little resistance and the edges look rough and fuzzy. They should not be starting to fall apart."
       - "Lift the chips out with a spider onto a wire rack set over a tray, spread in a single layer, and keep the cooking water. Leave to steam-dry for {dry:10m}."
   - title: Make the pea purée
     text:
-      - "Set the heavy pot with the **oil** over medium-high heat now, so it reaches 190 °C by the time the chips are dry."
-      - "Bring the chip water back to a boil, add the **peas** and cook for {timer:2-5m}, until tender and bright green: frozen peas need the shorter time, fresh ones the longer. Scoop out 100 ml of the cooking water, then drain."
-      - "Blend the peas with the {50 g} **butter**, {3 g} **fine sea salt** and the **lemon juice**, adding cooking water a spoonful at a time until thick and spoonable. Taste and adjust salt and lemon, then keep warm with a lid."
+      - "Set the heavy pot with the {oil} over medium-high heat now, so it reaches 190 °C by the time the chips are dry."
+      - "Bring the chip water back to a boil, add the {peas} and cook for {timer:2-3m}, until tender and bright green. Scoop out 100 ml of the cooking water, then drain."
+      - "Blend the peas with the {50 g butter}, {3 g fine sea salt} and the {lemon juice}, adding cooking water a spoonful at a time until thick and spoonable. Taste and adjust salt and lemon, then keep warm with a lid."
       - tip: "The purée tightens as it stands. Loosen it with a splash of hot water before serving."
   - title: Fry the chips
-    heat: Bring the **oil** to **190 °C**, checking with a thermometer.
+    heat: Bring the {oil} to **190 °C**, checking with a thermometer.
     text:
       - "Fry the chips in 3 batches of about {270 g}, {timer:4-5m} each, until deep golden and crisp. Let the oil return to 190 °C before each new batch."
-      - "Move each batch to a clean wire rack over a tray in the oven and sprinkle straight away with {4 g} of the **flaky sea salt** in total."
+      - "Move each batch to a clean wire rack over a tray in the oven and sprinkle straight away with {4 g flaky sea salt} in total."
       - tip: "Never leave hot oil unattended, and keep the chips dry going in. Water makes the oil foam and boil over."
   - title: Make the batter and coat the cod
-    heat: Turn the heat down so the **oil** settles at **180 °C**.
+    heat: Turn the heat down so the {oil} settles at **180 °C**.
     text:
-      - "Pat the **cod fillets** very dry with paper towels and season both sides with {3 g} **fine sea salt**."
-      - "Whisk {120 g} **all-purpose flour**, the **rice flour**, **baking powder**, **sugar** and {3 g} **fine sea salt** together in a large bowl. Put {40 g} **all-purpose flour** on a plate."
-      - "Just before frying, pour the cold **lager beer** and **sparkling water** into the dry mix and whisk briefly. A few small lumps are fine. The batter should coat the back of a spoon like single cream. If it is much thicker, whisk in a splash more sparkling water."
+      - "Pat the {cod fillets} very dry with paper towels and season both sides with {3 g fine sea salt}."
+      - "Whisk {120 g all-purpose flour}, the {rice flour}, {baking powder}, {sugar} and {3 g fine sea salt} together in a large bowl. Put {40 g all-purpose flour} on a plate."
+      - "Just before frying, pour the cold {lager beer} and {sparkling water} into the dry mix and whisk briefly. A few small lumps are fine. The batter should coat the back of a spoon like single cream. If it is much thicker, whisk in a splash more sparkling water."
       - "Dust each fillet in the flour from the plate, shake off the excess, then dip in the batter and let the excess drip off."
   - title: Fry the fish
     text:
       - "Fry 2 fillets at a time. Hold each by one end and lower it into the oil away from you, keeping hold for a few seconds so it does not stick to the base. Fry for {timer:6-8m}, turning once halfway, until deep golden and the centre reads 60-63 °C on a probe thermometer."
-      - "Lift onto a wire rack over a tray (not paper towels, which steam the underside), sprinkle with {2 g} of the **flaky sea salt** in total, and keep in the oven. Let the oil climb back to 180 °C, about 2-3 minutes, before frying the second pair."
+      - "Lift onto a wire rack over a tray (not paper towels, which steam the underside), sprinkle with {2 g flaky sea salt} in total, and keep in the oven. Let the oil climb back to 180 °C, about 2-3 minutes, before frying the second pair."
       - tip: "Cod turns opaque and flakes at about 60 °C. 63 °C is the usual food-safety target, so use the higher end for children, pregnant guests or anyone vulnerable."
   - title: Serve
     text:
-      - "Loosen the purée with a splash of hot water if needed. Serve the fish and chips straight away with the purée, **lemon** wedges and **malt vinegar**."
+      - "Loosen the purée with a splash of hot water if needed. Serve the fish and chips straight away with the purée, {lemon} wedges and {malt vinegar}."
 ---
 
 ## Chef’s Notes

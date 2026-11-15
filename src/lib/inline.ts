@@ -1,4 +1,8 @@
-/** Tiny inline renderer for step text: **bold**, {timer:10m}, {simmer:1h} and {25 g} amounts. Build-time only. */
+/**
+ * Tiny inline renderer for step text: **bold**, {timer:10m}, {simmer:1h}, {25 g} amounts and ingredient mentions
+ * ({750 g mascarpone}, {cocoa powder}). Build-time only. Mentions are only parsed here; lib/mentions.ts checks that
+ * they name an ingredient of the recipe.
+ */
 import { UNITS, formatQty } from './format';
 
 /**
@@ -48,16 +52,56 @@ const AFTER_PATTERN = alternation(Object.keys(AFTER));
  */
 const ANY_TOKEN = /\{\s*([A-Za-z][\w-]*)\s*:[^}]*\}/g;
 const BOLD = /\*\*(.+?)\*\*/g;
-/** {25 g}, {1.5} – the amount used at this point of the recipe (not the ingredient total). */
-const AMOUNT = /\{\s*(\d+(?:\.\d+)?)\s*([A-Za-z]*)\s*\}/g;
+/**
+ * Braces without a colon: an amount, a mention or both.
+ *   {25 g} {1.5}              – an amount used at this point, not linked to an ingredient (an intermediate
+ *                               preparation, or a portion measured out earlier)
+ *   {750 g mascarpone} {6 eggs} – an amount measured out from the ingredient list here, plus the mention
+ *   {cocoa powder}            – an ingredient used here, without an amount
+ */
+const QUANTITY = /\{([^{}:]*)\}/g;
 
-function amount(qty: string, unit: string, html: boolean): string {
-  if (unit && !(UNITS as readonly string[]).includes(unit)) {
-    throw new Error(`Unknown unit "${unit}" in {${qty} ${unit}} (allowed: ${UNITS.join(', ')})`);
+export interface Quantity {
+  qty?: number;
+  unit?: (typeof UNITS)[number];
+  /** The ingredient as written in the text; resolved against the ingredient list by lib/mentions.ts. */
+  name?: string;
+}
+
+/** Parses the inside of a brace token without a colon; throws on anything that is neither an amount nor a name. */
+export function parseQuantity(inner: string): Quantity {
+  const text = inner.trim().replace(/\s+/g, ' ');
+  const amount = /^(\d+(?:\.\d+)?)(?:( ?)(\S+)(?: (.+))?)?$/.exec(text);
+  if (amount) {
+    const [, digits, space, word, rest] = amount;
+    const qty = Number(digits);
+    if (!(qty > 0)) throw new Error(`"{${inner}}" needs an amount above zero`);
+    if (word === undefined) return { qty };
+    if ((UNITS as readonly string[]).includes(word)) {
+      return { qty, unit: word as Quantity['unit'], ...(rest && { name: rest }) };
+    }
+    // {25gr}: a word stuck to the number is meant as a unit. With a space, {6 eggs}, it is an ingredient.
+    if (!space) throw new Error(`Unknown unit "${word}" in {${inner}} (allowed: ${UNITS.join(', ')})`);
+    return { qty, name: rest ? `${word} ${rest}` : word };
   }
-  const text = formatQty(Number(qty), unit || undefined);
-  const value = html ? `<span data-qty="${qty}"${unit ? ` data-unit="${unit}"` : ''}>${text}</span>` : text;
-  return unit ? `${value}\u00a0${unit}` : value;
+  if (/^\p{L}/u.test(text)) return { name: text };
+  throw new Error(`Malformed token "{${inner}}" (use an amount like {25 g}, an ingredient like {butter}, or both: {25 g butter})`);
+}
+
+/** Every amount and mention in a piece of step text, in order. */
+export function quantities(source: string): Quantity[] {
+  return [...source.matchAll(QUANTITY)].map(([, inner]) => parseQuantity(inner));
+}
+
+function renderQuantity({ qty, unit, name }: Quantity, html: boolean): string {
+  let value = '';
+  if (qty !== undefined) {
+    const text = formatQty(qty, unit);
+    value = html ? `<span data-qty="${qty}"${unit ? ` data-unit="${unit}"` : ''}>${text}</span>` : text;
+    if (unit) value += `\u00a0${unit}`;
+  }
+  if (name) value += (value ? ' ' : '') + (html ? `<strong>${name}</strong>` : name);
+  return value;
 }
 
 const TIMER_ICON =
@@ -105,6 +149,11 @@ export function parseTimer(value: string, token = 'timer'): { seconds: number; l
 }
 
 function rejectUnknownTokens(source: string): void {
+  // {25 g: butter}, {5:00}: a colon makes it a duration token, but no duration token starts like that.
+  const stray = /\{[^{}A-Za-z]*[^{}\sA-Za-z][^{}]*:[^{}]*\}/.exec(source);
+  if (stray && !/^\{\s*[A-Za-z]/.test(stray[0])) {
+    throw new Error(`Unknown token "${stray[0]}" (allowed: ${DURATION_TOKENS.join(', ')}, or an amount like {25 g butter})`);
+  }
   for (const [token, name] of source.matchAll(ANY_TOKEN)) {
     // Known name, written exactly as the renderer expects it: no spaces, lower case.
     if (!(DURATION_TOKENS as readonly string[]).includes(name) || !token.startsWith(`{${name}:`)) {
@@ -116,7 +165,7 @@ function rejectUnknownTokens(source: string): void {
 export function renderInline(source: string): string {
   rejectUnknownTokens(source);
   return escapeHtml(source)
-    .replace(AMOUNT, (_, qty: string, unit: string) => amount(qty, unit, true))
+    .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), true))
     .replace(BOLD, '<strong>$1</strong>')
     .replace(AFTER_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
     .replace(TIMER, (_, token: string, value: string) => {
@@ -128,7 +177,7 @@ export function renderInline(source: string): string {
 export function plainText(source: string): string {
   rejectUnknownTokens(source);
   return source
-    .replace(AMOUNT, (_, qty: string, unit: string) => amount(qty, unit, false))
+    .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), false))
     .replace(BOLD, '$1')
     .replace(AFTER_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
     .replace(TIMER, (_, token: string, value: string) => parseTimer(value, token).label);
@@ -168,4 +217,9 @@ export function stepTimes(steps: Steps): StepTimes {
       .map((token) => ({ token, minutes: Math.round((after.get(token) ?? 0) / 60) }))
       .filter(({ minutes }) => minutes > 0),
   };
+}
+
+/** The text of every **bold** span, for the check that ingredients are mentioned with {…}, not bold. */
+export function boldSpans(source: string): string[] {
+  return [...source.matchAll(BOLD)].map(([, text]) => text);
 }

@@ -3,6 +3,7 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { UNITS } from './lib/format';
 import { plainText, stepTimes } from './lib/inline';
+import { checkMentions } from './lib/mentions';
 
 /**
  * A recipe is one Markdown file: structured data in the frontmatter
@@ -17,7 +18,11 @@ import { plainText, stepTimes } from './lib/inline';
  *                                   work time and named in the time summary (list: HANDS_OFF in lib/inline.ts)
  *   {chill:6h} {freeze:4h}        – minimum time in the fridge/freezer after the dish is finished; plain text,
  *                                   not a timer, and NOT part of time.total (named in the Directions sentence)
- *   {25 g} or {2}                 – an amount used in this step; scales with the recipe
+ *   {25 g} or {2}                 – an amount used in this step, not linked to an ingredient; scales with the recipe
+ *   {750 g mascarpone} {6 eggs}   – an ingredient measured out here: the amount scales, the name is bold
+ *   {cocoa powder}                – an ingredient used here, without an amount
+ * Mentions must name an ingredient, every ingredient must be mentioned, and measured amounts must add up to the
+ * list (lib/mentions.ts).
  */
 const ingredient = z.strictObject({
   qty: z.number().positive().optional(),
@@ -112,6 +117,7 @@ const recipes = defineCollection({
           }
         });
         if (!valid) return;
+        for (const issue of checkMentions(r)) ctx.addIssue({ code: 'custom', ...issue });
         const { handsOff } = stepTimes(r.steps);
         if (r.time.total - handsOff <= 0) {
           ctx.addIssue({
