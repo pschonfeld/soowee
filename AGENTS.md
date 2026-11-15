@@ -10,7 +10,7 @@ Priorities, in order: **design, performance, UX, consistency**. Every recipe has
 - `pnpm typecheck`
 - Dev server: run `astro dev --background`, then manage it with `astro dev stop | status | logs`.
 
-This is Astro 7. When unsure about an API, check https://docs.astro.build rather than relying on memory.
+This is Astro 7. When unsure about an API, check <https://docs.astro.build> rather than relying on memory.
 
 ## Decisions
 
