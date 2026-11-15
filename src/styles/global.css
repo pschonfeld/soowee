@@ -305,6 +305,12 @@ a.story:hover,
 .hero__backdrop > .is-mirror {
   top: calc(var(--media-h) - 1px); /* 1px overlap hides the subpixel seam */
   transform: scaleY(-1);
+  /* On short screens the hero is taller than photo + mirror. Below the mirror only the hero background
+     (--backdrop-edge, the average of the photo's top edge) shows, and the mirror's last row, which varies
+     across the width, would end on it in a hard line. Fading the far end into that colour hides the seam.
+     The mask is in the element's own (flipped) space, so "to top" fades its visual bottom. */
+  -webkit-mask-image: linear-gradient(to top, #000 40%, transparent);
+  mask-image: linear-gradient(to top, #000 40%, transparent);
 }
 
 /* Darkens the backdrop under the text; its strength is computed per photo for WCAG AA. */
@@ -523,6 +529,9 @@ a.story:hover,
     left: calc(var(--photo-left) - var(--photo-width));
     right: calc(100% - var(--photo-left) - 1px);
     transform: scaleX(-1);
+    /* Side by side, the mirror always fills the hero's height, so there is no far end to fade. */
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   /* Measured in the frame, so on wide monitors it darkens the text column, not the photo. */
