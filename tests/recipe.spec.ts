@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import sharp from 'sharp';
 
 const RECIPES = [
   { path: '/lasagna/', title: 'Lasagna', ingredients: 21, steps: 5 },
@@ -78,6 +79,40 @@ test('hero backdrop is derived from each recipe photo', async ({ page }) => {
   // The lasagna photo has bright cheese and bread, so it needs a substantial scrim for white text.
   expect(lasagna.scrim).toBeGreaterThanOrEqual(0.5);
   await expect(page.getByRole('link', { name: 'soowee home' })).toHaveCount(0);
+});
+
+test('on short phone screens the backdrop has no hard line where the mirrored photo ends', async ({ page }) => {
+  // The hero can be taller than photo + mirror; the mirror must fade into the background, not stop in a line.
+  // Measured as the brightness jump between neighbouring pixel rows in the left gutter, which has no text.
+  // Before the fix this was 2–34 at the seam; a soft fade keeps it well under 1.
+  await page.emulateMedia({ colorScheme: 'dark' });
+  for (const [width, height] of [[375, 600], [320, 568]]) {
+    await page.setViewportSize({ width, height });
+    for (const recipe of RECIPES) {
+      await page.goto(recipe.path);
+      const g = await page.evaluate(() => {
+        const hero = document.querySelector('.hero')!.getBoundingClientRect();
+        const media = document.querySelector('.hero__media')!.getBoundingClientRect();
+        return { heroBottom: hero.bottom + scrollY, mirrorEnd: 2 * (media.bottom + scrollY) - 1 };
+      });
+      expect(g.heroBottom, `${recipe.title} ${width}×${height}: hero should outgrow the mirror`).toBeGreaterThan(g.mirrorEnd + 2);
+      const png = await page.screenshot({ fullPage: true, clip: { x: 0, y: 0, width, height: Math.ceil(g.heroBottom) } });
+      const { data, info } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+      const dpr = info.width / width;
+      const row = (y: number) => {
+        let sum = 0;
+        const py = Math.round(y * dpr);
+        for (let x = Math.round(2 * dpr); x < Math.round(12 * dpr); x++) {
+          const i = (py * info.width + x) * info.channels;
+          sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+        }
+        return sum / (Math.round(12 * dpr) - Math.round(2 * dpr));
+      };
+      const end = Math.round(g.mirrorEnd);
+      const jump = Math.max(...[end - 1, end, end + 1].map((y) => Math.abs(row(y) - row(y - 1))));
+      expect(jump, `${recipe.title} ${width}×${height}`).toBeLessThan(1);
+    }
+  }
 });
 
 test('mirrored backdrop meets the photo at its edge and text stays off the sharp photo', async ({ page }) => {
