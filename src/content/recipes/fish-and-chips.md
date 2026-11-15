@@ -26,7 +26,7 @@ ingredients:
       - { qty: 30, unit: g, name: fine sea salt, note: "for the cooking water" }
   - group: For the pea purée
     items:
-      - { qty: 400, unit: g, name: peas, note: "fresh or frozen" }
+      - { qty: 400, unit: g, name: peas, note: "frozen, or fresh and shelled (buy about 2½ times this weight in pods)" }
       - { qty: 50, unit: g, name: butter }
       - { qty: 2, unit: tsp, name: lemon juice }
       - { qty: 3, unit: g, name: fine sea salt }
@@ -65,6 +65,7 @@ steps:
       - "Cut the **potatoes** into 1.5 cm batons, as even as you can so they cook at the same rate."
       - "Rinse under cold running water until it runs mostly clear, then cover with fresh cold water and soak for {soak:30m}."
       - tip: "Put the **lager beer** and **sparkling water** in the fridge now. They need to be properly cold for the batter."
+      - tip: "Using fresh peas? Shell them while the potatoes soak."
   - title: Parboil the chips
     heat: Bring the **water** and {30 g} **fine sea salt** to a boil in the large pot and set the oven to **90 °C**.
     text:
@@ -73,7 +74,7 @@ steps:
   - title: Make the pea purée
     text:
       - "Set the heavy pot with the **oil** over medium-high heat now, so it reaches 190 °C by the time the chips are dry."
-      - "Bring the chip water back to a boil, add the **peas** and cook for {timer:3-5m}, until tender and bright green. Scoop out 100 ml of the cooking water, then drain."
+      - "Bring the chip water back to a boil, add the **peas** and cook for {timer:2-5m}, until tender and bright green: frozen peas need the shorter time, fresh ones the longer. Scoop out 100 ml of the cooking water, then drain."
       - "Blend the peas with the {50 g} **butter**, {3 g} **fine sea salt** and the **lemon juice**, adding cooking water a spoonful at a time until thick and spoonable. Taste and adjust salt and lemon, then keep warm with a lid."
       - tip: "The purée tightens as it stands. Loosen it with a splash of hot water before serving."
   - title: Fry the chips
@@ -99,20 +100,17 @@ steps:
       - "Loosen the purée with a splash of hot water if needed. Serve the fish and chips straight away with the purée, **lemon** wedges and **malt vinegar**."
 ---
 
-## Chef’s Tips
+## Chef’s Notes
 
 - **Keep the batter cold and fizzy:** Mix the batter only when the oil is ready. Cold liquids and the carbonation are what make the coating light, and resting the batter in the fridge lets the bubbles go flat. Lumps are fine, overmixing makes it tough.
 - **Dry the fish:** Pat the cod dry before seasoning and dusting. Surface moisture steams under the coating and makes it slide off.
 - **Double-fry the chips, not the fish:** Parboiling and then frying at high heat gives chips a fluffy inside and crisp shell. Fish needs one fry, a second would overcook it.
 - **Watch the oil temperature:** Adding food drops the oil temperature. Fry in small batches and wait for it to recover. Oil that is too cool gives greasy, pale results, oil that is too hot burns the batter before the fish cooks.
 - **Reuse the oil:** Once cool, strain it through a fine sieve and keep it in a sealed container for a later fry.
-
-## Serving Suggestions
-
 - For an authentic British experience, serve the fish and chips with the pea purée, a squeeze of lemon and a splash of malt vinegar.
 - Tartar sauce is a good optional extra.
 
-## Allergen Warnings
+## Allergens
 
 - **Gluten:** This recipe contains all-purpose flour and beer, which contain gluten. If needed, substitute gluten-free flour and gluten-free beer.
 - **Dairy:** The pea purée contains butter, which is unsuitable for those with dairy allergies or lactose intolerance. Replace with plant-based butter for a dairy-free option.

@@ -21,7 +21,7 @@ The source of truth is the schema in [`src/content.config.ts`](../src/content.co
 One recipe is one Markdown file in `src/content/recipes/`. The file name is the URL: `tiramisu.md` becomes `/tiramisu/`.
 
 - **Frontmatter** (the YAML between the `---` lines) holds the structured data: everything that is scaled, timed, validated or exported.
-- **Body** (the Markdown after the frontmatter) holds free-form notes: chef’s notes, allergens, the source. It is shown below the directions and is not validated.
+- **Body** (the Markdown after the frontmatter) holds the notes under three fixed headings: chef’s notes, allergens and, optionally, the source. It is shown below the directions; its text is free, only the headings are checked.
 
 ```mermaid
 flowchart LR
@@ -336,11 +336,12 @@ So a split amount can drift from its total at some scales: 15 g + 15 g of a 30 g
 
 ## Validation rules
 
-The build fails in two places.
+The build fails in two places, and `pnpm test` adds one more check.
 
 **Schema validation**, with the recipe file and the field path, when:
 
 - a required field is missing, or a value has the wrong type;
+- a key is not part of the schema, at any level: a misspelt `cusine:` or an invented `time.prep` fails instead of being dropped;
 - an ingredient or `about` `unit` is not in the unit list;
 - `qty`, `about.qty`, `about.max` or a `yield` number is zero or negative, or `about.max` is not larger than `about.qty`;
 - `time.total` is not a positive whole number of minutes, or the hands-off verbs add up to `time.total` or more (there would be no work left);
@@ -351,9 +352,10 @@ The build fails in two places.
 
 **Rendering the page** runs the same checks again on the same text, so in practice it only fails if schema validation was bypassed.
 
+**`pnpm test`** also checks the [notes](#notes-in-the-markdown-body): only the fixed headings, in order, with the required ones present (`src/lib/notes.test.ts`).
+
 Not checked, so it is up to the author:
 
-- **unknown keys**: a misspelt optional field (`cusine:`) is silently dropped, not reported;
 - that `yield.max` is larger than `yield.min`;
 - that every ingredient in the list is used in the steps, and the other way round;
 - that amounts split across steps add up to the ingredient total;
@@ -361,17 +363,15 @@ Not checked, so it is up to the author:
 
 ## Notes in the Markdown body
 
-Free Markdown after the frontmatter, shown as a “Notes” section below the directions. It is not part of the scaled or validated data and not in JSON-LD.
+Markdown after the frontmatter, shown as a “Notes” section below the directions. It is not part of the scaled data and not in JSON-LD, but its sections are fixed so every recipe reads the same way: only these headings, in this order, each at most once.
 
-Sections in use:
+| Heading | Required | Content |
+|---|---|---|
+| `## Chef’s Notes` | yes | Bullets: technique tips, make ahead and storage (give how long: “keeps 3 days in the fridge”), substitutions, what to serve with it |
+| `## Allergens` | yes | One bullet per allergen with where it comes from, plus a swap if there is one |
+| `## Source` | no | “Adapted from [title](url).”, plus a video link if there is one. Leave it out for your own recipes |
 
-| Heading | Content |
-|---|---|
-| `## Chef’s Notes` | Make ahead, storage, what to serve with it |
-| `## Allergens` | One bullet per allergen with where it comes from |
-| `## Source` | “Adapted from [title](url).”, plus a video link if there is one |
-
-The existing recipes do not all follow this yet (Fish & Chips uses “Chef’s Tips”, “Serving Suggestions” and “Allergen Warnings”). See [Open decisions](#open-decisions).
+No other headings: storage, variations and serving suggestions are bullets in Chef’s Notes, not sections of their own, so the page stays short. `src/lib/notes.test.ts` enforces this.
 
 ## Writing conventions
 
@@ -420,5 +420,3 @@ Not decided yet; listed so they are not lost. None of them exists in the code to
 | Time before starting | Not supported: every hands-off verb is part of the total | Overnight soaking of pulses, an overnight marinade or a cold rise happen before the cook starts. They would sit outside the total like `{chill:}` and open the sentence: “Start the night before: at least **12 hr** of soaking, then …” |
 | Heat | Free text; the temperature is bold text | A structured temperature (`temp: 180`), needed for a °F toggle and a preheat timer |
 | Amounts in steps | `{25 g}` scales but is not linked to an ingredient | Link step amounts to list ingredients, so the build can check that splits add up and every ingredient is used |
-| Body sections | Free Markdown with different headings per recipe | Fixed headings, or structured fields for allergens, serving suggestions and variations |
-| Strict schema | Unknown frontmatter keys are silently dropped | Reject unknown keys, so a typo in an optional field fails the build |

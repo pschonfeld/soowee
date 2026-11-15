@@ -19,7 +19,7 @@ import { plainText, stepTimes } from './lib/inline';
  *                                   not a timer, and NOT part of time.total (named in the Directions sentence)
  *   {25 g} or {2}                 – an amount used in this step; scales with the recipe
  */
-const ingredient = z.object({
+const ingredient = z.strictObject({
   qty: z.number().positive().optional(),
   unit: z.enum(UNITS).optional(),
   /** What you shop for, name first: "onion", "butter", "mozzarella fior di latte". */
@@ -29,19 +29,19 @@ const ingredient = z.object({
    * Kept out of `note` so it scales with the recipe.
    */
   about: z
-    .object({ qty: z.number().positive(), max: z.number().positive().optional(), unit: z.enum(UNITS) })
+    .strictObject({ qty: z.number().positive(), max: z.number().positive().optional(), unit: z.enum(UNITS) })
     .refine((a) => a.max === undefined || a.max > a.qty, { message: '`about.max` must be larger than `about.qty`' })
     .optional(),
   /** Size, cut or kind, shown after the name in a lighter tone: "medium, diced into small cubes". */
   note: z.string().optional(),
 });
 
-const paragraph = z.union([z.string(), z.object({ tip: z.string() })]);
+const paragraph = z.union([z.string(), z.strictObject({ tip: z.string() })]);
 
 const recipes = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/recipes' }),
   schema: ({ image }) =>
-    z.object({
+    z.strictObject({
       title: z.string(),
       description: z.string(),
       featured: z.boolean().default(false),
@@ -50,7 +50,7 @@ const recipes = defineCollection({
       image: image(),
       imageAlt: z.string(),
       imageCredit: z
-        .object({
+        .strictObject({
           author: z.string(),
           license: z.string(),
           url: z.url(),
@@ -59,29 +59,29 @@ const recipes = defineCollection({
       /** Optional override for the hero colour, otherwise derived from the photo. */
       tint: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
       source: z
-        .object({
+        .strictObject({
           label: z.string(),
           title: z.string(),
           url: z.url().optional(),
         })
         .optional(),
-      yield: z.object({
+      yield: z.strictObject({
         min: z.number().positive(),
         max: z.number().positive().optional(),
         unit: z.string().default('servings'),
       }),
       /** Minutes, start to finish: includes hands-off time ({simmer:…}), excludes {chill:…}/{freeze:…}. */
-      time: z.object({
+      time: z.strictObject({
         total: z.number().int().positive(),
       }),
       ingredients: z
-        .array(z.object({ group: z.string().optional(), items: z.array(ingredient).min(1) }))
+        .array(z.strictObject({ group: z.string().optional(), items: z.array(ingredient).min(1) }))
         .min(1),
       equipment: z.array(z.string()).default([]),
       steps: z
         .array(
           z
-            .object({
+            .strictObject({
               title: z.string().optional(),
               /** Oven or oil to get hot: shown first and highlighted, so it is started in time. */
               heat: z.string().optional(),
