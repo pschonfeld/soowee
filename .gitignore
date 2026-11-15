@@ -27,3 +27,7 @@ pnpm-debug.log*
 test-results/
 screenshots/
 lighthouse/
+
+# design reference screenshots (third-party, personal reference only)
+docs/design-reference/*
+!docs/design-reference/README.md
