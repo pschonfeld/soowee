@@ -2,8 +2,12 @@
 title: Marry Me Chicken Pasta
 description: A modern Italian-American bistro dish, not a Tuscan classic. Browned chicken thighs finish cooking in a sauce of reduced stock, cream and Parmigiano, sharpened by sun-dried tomatoes and tossed with tagliatelle.
 cuisine: Italian-American
-image: ../../assets/recipes/marry-me-chicken-pasta.webp
-imageAlt: Tagliatelle in a creamy sauce topped with sliced seared chicken, sun-dried tomatoes, parsley and grated Parmigiano, in a speckled cream bowl on a wooden table
+image: ../../assets/recipes/marry-me-chicken-pasta.jpg
+imageAlt: Tagliatelle with chicken in a creamy sauce, scattered with parsley and grated Parmigiano, in a speckled grey bowl on white marble
+imageCredit:
+  author: Sama Hosseini
+  license: Unsplash License
+  url: https://unsplash.com/photos/pasta-dish-on-white-ceramic-bowl-wTBGTwHlf0c
 yield:
   min: 3
   max: 4
