@@ -32,8 +32,8 @@ ingredients:
       - { qty: 240, unit: ml, name: red wine, note: dry }
       - { qty: 1, unit: L, name: passata, note: "unsalted, 100 % tomato" }
       - { qty: 400, unit: g, name: peeled tomatoes, note: "whole, tinned" }
-      - { qty: 240, unit: ml, name: milk, note: "whole (full-cream), not cream" }
-      - { qty: 1, unit: L, name: water, note: "hot from the kettle, added as needed" }
+      - { qty: 240, unit: ml, name: milk, note: "whole" }
+      - { qty: 1, unit: L, name: water, note: "hot, added as needed" }
       - { qty: 15, unit: g, name: fine sea salt, note: "in total: 1 g with the vegetables, 10 g with the meat, up to 4 g to adjust at the end" }
       - { name: black pepper, note: freshly ground }
   - group: For the pasta
