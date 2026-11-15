@@ -775,7 +775,7 @@ a.story:hover,
 
 .timer {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.25rem;
   margin: -1px 0;
   padding: 1px 0.5rem 1px 0.375rem;
@@ -783,9 +783,18 @@ a.story:hover,
   background: var(--timer-bg);
   color: var(--timer-fg);
   font-weight: 600;
+  max-width: 100%;
   line-height: inherit;
+  text-align: start;
   vertical-align: baseline;
-  white-space: nowrap;
+}
+
+/* The pill is one box, so it moves to the next line whole; only a label longer than a line ("1 hour 30 minutes"
+   at large text sizes) wraps inside it, between words, instead of pushing the page sideways. */
+.timer span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 /* Invisible 44px-tall touch area; the pill itself keeps its size in the sentence. */
@@ -799,8 +808,12 @@ a.story:hover,
   inset: -0.5rem 0; /* taller only, so it never reaches words beside the pill */
 }
 
+/* Sized with the text, and centred on the first line so a wrapped label keeps the icon beside its start. */
 .timer svg {
   flex: none;
+  width: 0.8em;
+  height: 0.8em;
+  margin-top: calc((1lh - 0.8em) / 2);
 }
 
 /* Oven or oil to get hot: first thing in the step, so it is on before it is needed. */
@@ -1106,11 +1119,6 @@ html.is-cooking {
   color: inherit;
   padding-inline: 0.5rem 0.625rem;
   border-radius: 0.625rem;
-}
-
-.cook__line .timer svg {
-  width: 0.8em;
-  height: 0.8em;
 }
 
 .cook__line--tip {

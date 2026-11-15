@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import sharp from 'sharp';
+import { parseTimer } from '../src/lib/inline';
 
 const RECIPES = [
   { path: '/lasagna/', title: 'Lasagna', ingredients: 21, steps: 6 },
@@ -166,6 +167,33 @@ for (const { path } of RECIPES) {
     expect(await page.evaluate(() => document.querySelector('#cook')!.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
   });
 }
+
+test('a long timer label fits at 320px with 200% text', async ({ page }, testInfo) => {
+  // No hand-curated recipe has to contain a multi-unit duration, so put the longest kind of label the schema allows
+  // into every rendered timer pill (step and cook view) and check nothing scrolls sideways.
+  const { label } = parseTimer('1h30m', 'simmer');
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/lasagna/');
+  await page.addStyleTag({ content: 'html { font-size: 200% }' });
+  await page.locator('.timer span').evaluateAll((spans, text) => spans.forEach((s) => (s.textContent = text)), label);
+  const pill = page.locator('.step .timer').first();
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await pill.locator('xpath=..').screenshot({ path: `screenshots/${testInfo.project.name}/long-timer-${scheme}.png` });
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  // The pill stays inside the step column, so its label wrapped rather than spilling out.
+  const { pillRight, stepRight } = await pill.evaluate((el) => ({
+    pillRight: el.getBoundingClientRect().right,
+    stepRight: el.closest('.step')!.getBoundingClientRect().right,
+  }));
+  expect(pillRight).toBeLessThanOrEqual(stepRight + 0.5);
+  // The cook view's panel scrolls on its own, so its overflow never reaches #cook or the page: measure the panel.
+  await page.getByRole('button', { name: 'Cook', exact: true }).click();
+  const panel = page.locator('#panel-directions');
+  await expect(panel.locator('.timer').first()).toHaveText(label);
+  expect(await panel.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+});
 
 test('Cook, Save and Share are on the first screen of a 320 × 568 phone', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
