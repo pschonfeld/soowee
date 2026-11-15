@@ -165,6 +165,12 @@ for (const { path } of RECIPES) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
     await page.getByRole('button', { name: 'Cook', exact: true }).click();
     expect(await page.evaluate(() => document.querySelector('#cook')!.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+    // Each panel scrolls on its own, so its sideways overflow never reaches #cook: measure both panels too.
+    for (const tab of ['Directions', 'Ingredients']) {
+      await page.getByRole('tab', { name: tab }).click();
+      const panel = page.getByRole('tabpanel', { name: tab });
+      expect(await panel.evaluate((el) => el.scrollWidth - el.clientWidth), `${tab} panel`).toBeLessThanOrEqual(0);
+    }
   });
 }
 
