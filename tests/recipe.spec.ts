@@ -9,6 +9,7 @@ const RECIPES = [
   { path: '/tiramisu/', title: 'Tiramisu', ingredients: 8, steps: 4 },
   { path: '/marry-me-chicken-pasta/', title: 'Marry Me Chicken Pasta', ingredients: 19, steps: 5 },
   { path: '/bolognese-sauce/', title: 'Bolognese Sauce', ingredients: 19, steps: 5 },
+  { path: '/crepes/', title: 'Crêpes', ingredients: 6, steps: 4 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
