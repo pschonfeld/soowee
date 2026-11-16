@@ -1,11 +1,16 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
+/** @type {Record<string, string | undefined>} Read via globalThis: the project has no Node type definitions. */
+const env = /** @type {any} */ (globalThis).process?.env ?? {};
+
 export default defineConfig({
-  // Production origin, e.g. SITE_URL=https://soowee.example. Unset (hosting not decided yet) means no
-  // canonical / og:url / og:image tags are emitted, rather than ones pointing at localhost.
-  // (Read via globalThis: the project has no Node type definitions.)
-  site: /** @type {any} */ (globalThis).process?.env?.SITE_URL || undefined,
+  // Production origin, e.g. SITE_URL=https://pschonfeld.github.io (set by .github/workflows/deploy.yml). Unset
+  // means no canonical / og:url / og:image tags are emitted, rather than ones pointing at localhost.
+  site: env.SITE_URL || undefined,
+  // The path the site is served under: BASE_PATH=/soowee on GitHub Pages, the root locally and in tests.
+  // Internal links go through sitePath() in src/lib/url.ts so they follow it.
+  base: env.BASE_PATH || undefined,
   // One small stylesheet: inlining it removes the only render-blocking request.
   build: { inlineStylesheets: 'always' },
 });

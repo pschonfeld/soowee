@@ -1,4 +1,5 @@
 ---
+import { sitePath } from '../lib/url';
 import { render, type CollectionEntry } from 'astro:content';
 import { Image, Picture } from 'astro:assets';
 import Page from './Page.astro';
@@ -123,7 +124,7 @@ const icons = {
         data-yield-unit={r.yield.unit}
       >
         <header class="hero">
-          <a class="btn btn--round btn--scrim back" href="/" aria-label="All recipes">
+          <a class="btn btn--round btn--scrim back" href={sitePath('/')} aria-label="All recipes">
             <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.back} /></svg>
           </a>
           <!-- The photo continues past its edge as a mirrored, blurred copy (background extension). -->

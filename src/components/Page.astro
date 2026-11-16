@@ -1,4 +1,5 @@
 ---
+import { sitePath } from '../lib/url';
 /**
  * The shell every page shares: <head>, skip link, footer (wordmark, photo credits, appearance switch).
  * Pages put their content in the default slot, extra <head> tags (JSON-LD) in `head`, and their photo credits
@@ -45,8 +46,8 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
         </>
       )
     }
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" href={sitePath('/favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={sitePath('/apple-touch-icon.png')} />
     {canonical && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content={og.type} />
     <meta property="og:site_name" content="soowee" />

@@ -1,4 +1,5 @@
 ---
+import { sitePath } from '../lib/url';
 /**
  * The owner's pick (`featured: true`): the recipe hero in miniature, with the same background extension. The photo
  * continues as a mirrored, blurred copy of itself under the text, darkened by the scrim backdropFor() computes so
@@ -30,7 +31,7 @@ const style = [
 const time = heroTime(r.time.total, directionTimes(r.directions));
 ---
 
-<a class="feature" href={`/${entry.id}/`} style={style}>
+<a class="feature" href={sitePath(`/${entry.id}/`)} style={style}>
   <div class="feature__backdrop" aria-hidden="true">
     <div></div>
     <div class="is-mirror"></div>

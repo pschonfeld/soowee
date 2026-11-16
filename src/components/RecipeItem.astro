@@ -1,4 +1,5 @@
 ---
+import { sitePath } from '../lib/url';
 /**
  * One recipe on the home page: a square photo beside the text on phones; an editorial card (large photo, the
  * same text under it) in two or three columns on wider screens.
@@ -29,7 +30,7 @@ const search = haystack([r.title, r.cuisine, ...r.ingredients.flatMap((g) => g.i
 ---
 
 <li class="item" data-slug={entry.id} data-search={search} data-pos={pos} data-featured={featured || undefined} hidden={featured}>
-  <a href={`/${entry.id}/`}>
+  <a href={sitePath(`/${entry.id}/`)}>
     <div class="item__media" style={`background:${tint.base}`}>
       {/*
         The ~1.5:1 photo covers its box, so it's drawn wider than the box: phones, a 6.5rem square (drawn ~10rem);
