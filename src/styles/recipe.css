@@ -504,6 +504,16 @@
   font-weight: 700;
 }
 
+/* A timer and the punctuation right after it (lib/inline.ts): no line break between them. The label inside the
+   timer may still wrap, so a long one never pushes the page sideways. */
+.timer-wrap {
+  white-space: nowrap;
+}
+
+.timer-wrap .timer {
+  white-space: normal;
+}
+
 .timer {
   display: inline-flex;
   align-items: flex-start;

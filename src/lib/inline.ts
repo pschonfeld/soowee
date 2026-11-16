@@ -58,6 +58,8 @@ const alternation = (tokens: readonly string[]) => new RegExp(`\\{(${tokens.join
 const TIMED_WAITS = Object.keys(WAITS).filter((token) => !(token in PLACES));
 /** {timer:…} needs attention when it rings; the hands-off verbs and the waits outside the fridge ring too. */
 const TIMER = alternation(['timer', ...Object.keys(HANDS_OFF), ...TIMED_WAITS]);
+/** A timer token plus the punctuation that directly follows it, matched per timer (never across two). */
+const TIMER_WITH_PUNCTUATION = new RegExp(`${TIMER.source}([,.;:!?)…]*)`, TIMER.flags);
 const HANDS_OFF_PATTERN = alternation(Object.keys(HANDS_OFF));
 const WAIT_PATTERN = alternation(Object.keys(WAITS));
 const PLACE_PATTERN = alternation(Object.keys(PLACES));
@@ -183,9 +185,11 @@ export function renderInline(source: string): string {
     .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), true))
     .replace(BOLD, '<strong>$1</strong>')
     .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
-    .replace(TIMER, (_, token: string, value: string) => {
+    .replace(TIMER_WITH_PUNCTUATION, (_, token: string, value: string, punctuation: string) => {
       const { seconds, label } = parseTimer(value, token);
-      return `<button type="button" class="timer" data-timer="${seconds}" aria-label="Start timer: ${label}">${TIMER_ICON}<span>${label}</span></button>`;
+      const button = `<button type="button" class="timer" data-timer="${seconds}" aria-label="Start timer: ${label}">${TIMER_ICON}<span>${label}</span></button>`;
+      // Punctuation right after a timer stays on its line (", until soft" never starts a line); see .timer-wrap.
+      return punctuation ? `<span class="timer-wrap">${button}${punctuation}</span>` : button;
     });
 }
 

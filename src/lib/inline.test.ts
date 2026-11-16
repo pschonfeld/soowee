@@ -50,6 +50,16 @@ describe('renderInline', () => {
     expect(renderInline('{cocoa powder}')).toBe('<strong>cocoa powder</strong>');
   });
 
+  it('keeps punctuation after a timer on the same line as the timer', () => {
+    const html = renderInline('Fry for {timer:5m}, then drain.');
+    expect(html).toMatch(/^Fry for <span class="timer-wrap"><button [^]*<\/button>,<\/span> then drain\.$/);
+    expect(renderInline('Fry for {timer:5m} more.')).not.toContain('timer-wrap');
+    // Two timers, punctuation after the second only: each timer is wrapped on its own, never the text between them.
+    const two = renderInline('Fry {timer:5m} then rest {timer:3m}.');
+    expect(two.match(/timer-wrap/g)).toHaveLength(1);
+    expect(two).toMatch(/then rest <span class="timer-wrap"><button [^<]*data-timer="180"/);
+  });
+
   it('fails loudly on a unit stuck to the number that is not a unit', () => {
     expect(() => renderInline('{25gr}')).toThrow(/Unknown unit "gr"/);
   });

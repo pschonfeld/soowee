@@ -49,6 +49,8 @@
   --image-edge: rgb(0 0 0 / 0.08);
   /* Glass for controls floating over the page itself (search bar), not over a photo. */
   --bar-fill: rgb(255 255 255 / 0.8);
+  /* Selected segment on the page (iOS: white in light, a raised grey in dark, never the card colour). */
+  --segment-selected: #ffffff;
 
   /* Hero backdrop – overridden per recipe from the photo */
   --tint: #4a3b2f;
@@ -114,6 +116,7 @@
     --focus: light-dark(#0a63d8, #6cb0ff);
     --image-edge: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.1));
     --bar-fill: light-dark(rgb(255 255 255 / 0.8), rgb(44 44 46 / 0.8));
+    --segment-selected: light-dark(#ffffff, #636366);
   }
 }
 
@@ -130,6 +133,7 @@
       --focus: #6cb0ff;
       --image-edge: rgb(255 255 255 / 0.1);
       --bar-fill: rgb(44 44 46 / 0.8);
+      --segment-selected: #636366;
     }
   }
 
@@ -144,6 +148,7 @@
     --focus: #6cb0ff;
     --image-edge: rgb(255 255 255 / 0.1);
     --bar-fill: rgb(44 44 46 / 0.8);
+    --segment-selected: #636366;
   }
 }
 
@@ -411,7 +416,7 @@ a {
   padding: 0 var(--s-4);
   border-radius: 999px;
   font-size: var(--text-subhead);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-secondary);
   transition: background-color 0.15s;
 }
@@ -423,10 +428,12 @@ a {
   inset: min(0px, (100% - var(--tap-min)) / 2) 0;
 }
 
+/* Selected: a raised fill and a heavier weight, so the state never rests on a faint background alone. */
 .segmented__item[aria-selected='true'],
 .segmented input:checked + .segmented__item {
-  background: var(--card);
+  background: var(--segment-selected);
   color: var(--text);
+  font-weight: 600;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
 }
 
