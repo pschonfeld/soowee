@@ -179,7 +179,37 @@ function rejectUnknownTokens(source: string): void {
   }
 }
 
+/** A number and the unit after it ("190 °C", "2 minutes") never part at a line end. */
+const NUMBER_UNIT = /(\d)[ \u00a0](°[CF]|%|g|kg|ml|L|cm|mm|tsp|tbsp|minutes?|min|hours?|hr|seconds?|servings?)(?![\p{L}\d])/gu;
+/** Nor do the two ends of a range ("60-63", "1–2"): a word joiner on each side of the dash keeps the glyphs as written. */
+const NUMBER_RANGE = /(\d)([–-])(?=\d)/g;
+
+/**
+ * Keeps amounts whole in running text: a no-break space before the unit, word joiners around a range's dash.
+ * Works on HTML, touching text only (never tags or attributes), so it runs last over rendered markup.
+ * Text inside a <button> (the timer pill) is left exactly as generated: recipe.ts reads that label back for the
+ * timer's name and announcements, and the pill already moves as one box.
+ */
+export function keepAmountsWhole(html: string): string {
+  let inButton = 0;
+  return html
+    .split(/(<[^>]*>)/)
+    .map((part, i) => {
+      if (i % 2) {
+        if (/^<button\b/i.test(part)) inButton++;
+        else if (/^<\/button>/i.test(part)) inButton--;
+        return part;
+      }
+      return inButton ? part : part.replace(NUMBER_UNIT, '$1\u00a0$2').replace(NUMBER_RANGE, '$1\u2060$2\u2060');
+    })
+    .join('');
+}
+
 export function renderInline(source: string): string {
+  return keepAmountsWhole(renderMarkup(source));
+}
+
+function renderMarkup(source: string): string {
   rejectUnknownTokens(source);
   return escapeHtml(source)
     .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), true))

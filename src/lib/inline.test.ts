@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DURATION_TOKENS, HANDS_OFF, WAITS, parseQuantity, parseTimer, plainText, renderInline, stepTimes } from './inline';
+import { DURATION_TOKENS, HANDS_OFF, WAITS, keepAmountsWhole, parseQuantity, parseTimer, plainText, renderInline, stepTimes } from './inline';
 
 describe('parseTimer', () => {
   it('parses single and compound durations with generated labels', () => {
@@ -37,7 +37,7 @@ describe('renderInline', () => {
 
   it('renders bold, amounts and timers', () => {
     expect(renderInline('Add **butter**')).toBe('Add <strong>butter</strong>');
-    expect(renderInline('{25 g}')).toBe('<span data-qty="25" data-unit="g">25</span> g');
+    expect(renderInline('{25 g}')).toBe('<span data-qty="25" data-unit="g">25</span>\u00a0g');
     expect(renderInline('{2}')).toBe('<span data-qty="2">2</span>');
     const timer = renderInline('{timer:5-10m}');
     expect(timer).toContain('data-timer="300"');
@@ -76,7 +76,7 @@ describe('renderInline', () => {
 describe('plainText', () => {
   it('strips markup for structured data', () => {
     expect(plainText('Add {25 g} **butter** and cook {timer:5-10m}.')).toBe(
-      'Add 25 g butter and cook 5–10 minutes.',
+      'Add 25\u00a0g butter and cook 5–10 minutes.',
     );
   });
 });
@@ -128,10 +128,32 @@ describe('waits', () => {
   });
 });
 
+describe('keepAmountsWhole', () => {
+  it('joins a number to its unit and the ends of a range, in text only', () => {
+    expect(keepAmountsWhole('Heat to 190 °C, then 2-3 minutes and 60–63 °C.')).toBe(
+      'Heat to 190\u00a0°C, then 2\u2060-\u20603\u00a0minutes and 60\u2060–\u206063\u00a0°C.',
+    );
+    // Attributes stay as written (they are read out, not laid out), and so does a button's label: the timer pill
+    // is read back by recipe.ts for its name and announcements.
+    expect(keepAmountsWhole('<button aria-label="Start timer: 2 minutes"><span>12\u201315 minutes</span></button>, then 2 g')).toBe(
+      '<button aria-label="Start timer: 2 minutes"><span>12\u201315 minutes</span></button>, then 2\u00a0g',
+    );
+    expect(renderInline('Simmer for {simmer:12-15m}, stirring.')).toContain('<span>12\u201315 minutes</span>');
+  });
+
+  it('leaves words that only start like a unit alone', () => {
+    expect(keepAmountsWhole('2 garlic cloves, 3 large eggs, 4 layers')).toBe('2 garlic cloves, 3 large eggs, 4 layers');
+  });
+
+  it('runs on every rendered step', () => {
+    expect(renderInline('Bring the oil to **190 °C**.')).toBe('Bring the oil to <strong>190\u00a0°C</strong>.');
+  });
+});
+
 describe('time in the fridge or freezer', () => {
   it('renders as plain text, not a timer button', () => {
-    expect(renderInline('Refrigerate for at least {chill:8h}.')).toBe('Refrigerate for at least 8 hours.');
-    expect(renderInline('Freeze for {freeze:6h}.')).toBe('Freeze for 6 hours.');
+    expect(renderInline('Refrigerate for at least {chill:8h}.')).toBe('Refrigerate for at least 8\u00a0hours.');
+    expect(renderInline('Freeze for {freeze:6h}.')).toBe('Freeze for 6\u00a0hours.');
     expect(plainText('Chill {chill:6-8h}.')).toBe('Chill 6–8 hours.');
   });
 
@@ -165,6 +187,6 @@ describe('unknown tokens', () => {
   });
 
   it('leaves amounts and ordinary braces alone', () => {
-    expect(plainText('{25 g} and {2}')).toBe('25 g and 2');
+    expect(plainText('{25 g} and {2}')).toBe('25\u00a0g and 2');
   });
 });

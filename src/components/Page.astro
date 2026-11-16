@@ -83,7 +83,7 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
           ['Light', 'Dark', 'Auto'].map((label) => (
             <label>
               <input type="radio" name="theme" value={label.toLowerCase()} checked={label === 'Auto'} />
-              <span class="segmented__item">{label}</span>
+              <span class="segmented__item" data-label={label}>{label}</span>
             </label>
           ))
         }

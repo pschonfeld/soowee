@@ -25,7 +25,7 @@
 .search {
   display: block; /* <search> is inline in browsers that predate the element */
   position: relative;
-  margin: var(--s-4) 0 var(--s-5);
+  margin: var(--s-4) 0; /* the same space above and below, as on wider screens */
   border-radius: 999px;
   background: var(--bar-fill);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -146,7 +146,7 @@
   color: var(--on-tint);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) var(--ease-out);
 }
 
 /* A hairline of light along the edge, as on iOS cards. */
@@ -223,7 +223,9 @@
 
 .feature__title {
   margin-top: var(--s-1);
-  font-size: var(--text-title1);
+  /* Grows with the text, but no wider than a share of the card (it is a container): at 200% text on a phone a
+     28px title would become 56px and break a one-word name ("Lasag/na"). Still larger than the body text. */
+  font-size: min(var(--text-title1), 13cqw);
   line-height: 1.1;
   font-weight: 700;
   letter-spacing: -0.015em;
@@ -236,6 +238,27 @@
   margin-top: var(--s-2);
   font-size: var(--text-subhead);
   color: var(--on-tint-secondary);
+}
+
+/* Each fact keeps its width instead of shrinking until "servings" breaks mid-word. */
+.feature__meta > div {
+  flex: none;
+  max-width: 100%;
+}
+
+/* Enlarged text on a phone (the card is a container; under 17rem only above 100% text): the facts stack, without a
+   separator that would otherwise start the second line. */
+@container (max-width: 17rem) {
+  .feature__meta {
+    flex-direction: column;
+  }
+
+  /* .feature …: beats the base separator rule just below by specificity. */
+  .feature .feature__meta > div + div {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
 .feature__meta > div + div {
@@ -289,18 +312,39 @@
 .items {
   display: grid;
   margin-top: var(--s-1);
+  container-type: inline-size;
+}
+
+/* Enlarged text on a phone (the list is under 16rem: from ~112% text on 320px, never at 100%): the photo goes
+   above the text, so the title gets the whole row instead of breaking mid-word beside the photo. */
+/* Written .items …, so these beat the base rules further down by specificity, not by order. */
+@container (max-width: 16rem) {
+  .items .item > a {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .items .item__media {
+    width: var(--thumb-w);
+  }
+
+  .items .item > a::before {
+    left: 0;
+  }
 }
 
 .item > a {
+  /* The photo grows with the text up to 30% of the row; enlarged text then gets the room instead of breaking
+     letter by letter beside a photo as wide as the screen. Never smaller than at 100% text (104px). */
+  --thumb-w: min(var(--thumb), max(104px, 30%));
   position: relative;
   display: grid;
-  grid-template-columns: var(--thumb) minmax(0, 1fr);
+  grid-template-columns: var(--thumb-w) minmax(0, 1fr);
   align-items: start;
   gap: var(--s-4);
   padding: var(--s-3) 0;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) var(--ease-out);
 }
 
 /* iOS-style separator: starts where the text starts, not at the photo. Above every visible row but the first;
@@ -309,7 +353,7 @@
   content: '';
   position: absolute;
   top: 0;
-  left: calc(var(--thumb) + var(--s-4));
+  left: calc(var(--thumb-w) + var(--s-4));
   right: 0;
   border-top: 0.5px solid var(--separator);
 }
@@ -371,10 +415,12 @@
   color: var(--text-secondary);
 }
 
-/* The wait follows the cooking time, as in the hero; it moves to the next line only as a whole. */
+/* The wait follows the cooking time, as in the hero; it moves to the next line as a whole, and wraps inside only
+   when even a line of its own is too narrow (enlarged text), so it never pushes the page sideways. */
 .item__wait {
+  display: inline-block;
+  max-width: 100%;
   margin-left: 0.3em;
-  white-space: nowrap;
 }
 
 .item__saved {
@@ -396,7 +442,7 @@
   overflow: hidden;
   margin-top: var(--s-1);
   font-size: var(--text-subhead);
-  line-height: 1.35;
+  line-height: var(--lh-tight);
   color: var(--text-secondary);
 }
 
@@ -407,7 +453,7 @@
 
 @media (hover: hover) {
   .item__media img {
-    transition: filter 0.2s;
+    transition: filter var(--dur-fast);
   }
 
   .item > a:hover img {
@@ -527,7 +573,7 @@
     margin-top: var(--s-4);
     max-width: 34ch;
     font-size: var(--text-subhead);
-    line-height: 1.47;
+    line-height: var(--lh-body);
     color: rgb(255 255 255 / 0.92);
   }
 
@@ -589,7 +635,7 @@
   /* Hover lifts the photo slightly; the press response stays the same as on phones. */
   @media (hover: hover) {
     .item__media {
-      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: transform var(--dur) var(--ease-out);
     }
 
     .item > a:hover .item__media {

@@ -4,7 +4,7 @@ import { Image, Picture } from 'astro:assets';
 import Page from './Page.astro';
 import '../styles/recipe.css';
 import { formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
-import { plainText, renderInline, stepTimes } from '../lib/inline';
+import { keepAmountsWhole, plainText, renderInline, stepTimes } from '../lib/inline';
 import { describeTime, heroTime, readyMinutes } from '../lib/time';
 import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
@@ -81,7 +81,8 @@ const icons = {
   save: 'M5 2.8h8a.8.8 0 0 1 .8.8v11.600L9 12.200l-4.800 3V3.600a.8.8 0 0 1 .8-.8Z',
   share: 'M9 11V2.400M6 5l3-3 3 3M5.600 8H4.400a.9.9 0 0 0-.9.900v5.700c0 .5.400.9.900.9h9.200c.5 0 .9-.4.900-.9V8.900a.9.9 0 0 0-.9-.9h-1.200',
   chevron: 'm7 3.500 5 5.500-5 5.500',
-  back: 'M11 3.500 5.500 9l5.500 5.500',
+  // Spans x 6.25–11.75, centred in the 18 box (drawn at 5.5–11 it sat 0.75 left of centre in the round button).
+  back: 'M11.750 3.500 6.250 9l5.500 5.500',
   close: 'm4.500 4.500 9 9m0-9-9 9',
   check: 'm3.500 9.500 3.500 3.500 7.500-8',
   minus: 'M4 9h10',
@@ -241,7 +242,7 @@ const icons = {
                                   {`\u00a0${item.about.unit})`}
                                 </span>
                               )}
-                              {item.note && <span class="ingredient__note">, {item.note}</span>}
+                              {item.note && <span class="ingredient__note">, {keepAmountsWhole(item.note)}</span>}
                             </span>
                             <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
                               <path d={icons.check} />
@@ -265,7 +266,7 @@ const icons = {
                   </div>
                   <ul>
                     {r.equipment.map((item) => (
-                      <li>{item}</li>
+                      <li>{keepAmountsWhole(item)}</li>
                     ))}
                   </ul>
                 </section>
@@ -279,7 +280,7 @@ const icons = {
                 <div>
                   <h2 class="section-title" id="directions-title">Directions</h2>
                   <p class="section-sub section-sub--time">
-                    {timeSentence.map((s) => (s.strong ? <strong>{s.text}</strong> : s.text))}
+                    {timeSentence.map((s) => (s.strong ? <strong>{keepAmountsWhole(s.text)}</strong> : keepAmountsWhole(s.text)))}
                   </p>
                 </div>
               </div>
@@ -349,7 +350,7 @@ const icons = {
           {r.title}
           <span>soowee</span>
         </p>
-        <button type="button" class="btn btn--round btn--glass" data-cook-close aria-label="Close cook mode">
+        <button type="button" class="btn btn--round btn--glass btn--sm" data-cook-close aria-label="Close cook mode">
           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.close} /></svg>
         </button>
       </div>
@@ -358,13 +359,14 @@ const icons = {
         <button
           type="button"
           class="segmented__item"
+          data-label="Ingredients"
           role="tab"
           id="tab-ingredients"
           aria-controls="panel-ingredients"
           aria-selected="false"
           tabindex="-1">Ingredients</button
         >
-        <button type="button" class="segmented__item" role="tab" id="tab-directions" aria-controls="panel-directions" aria-selected="true"
+        <button type="button" class="segmented__item" data-label="Directions" role="tab" id="tab-directions" aria-controls="panel-directions" aria-selected="true"
           >Directions</button
         >
       </div>
@@ -401,7 +403,7 @@ const icons = {
                           {`\u00a0${item.about.unit})`}
                         </span>
                       )}
-                      {item.note && <span class="ingredient__note">, {item.note}</span>}
+                      {item.note && <span class="ingredient__note">, {keepAmountsWhole(item.note)}</span>}
                     </span>
                   </li>
                 ))}
