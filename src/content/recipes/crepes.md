@@ -24,7 +24,7 @@ ingredients:
       - { qty: 3, name: eggs, about: { qty: 165, max: 180, unit: g }, note: "large, ideally at room temperature" }
       - { name: neutral oil, note: for the pan }
 equipment:
-  - Small saucepan
+  - Small saucepan, light inside, so you can see the butter brown
   - Fine-mesh sieve
   - Crêpe pan, 24 cm base
   - Thin spatula, for flipping
@@ -49,12 +49,12 @@ steps:
   - title: Cook the crêpes
     heat: Heat the crêpe pan over **medium-high** heat for 3–4 minutes, until a drop of water dances and vanishes in 1–2 seconds.
     text:
-      - Whisk the batter well, since the butter and flour settle. After a night in the fridge a few specks of set butter are fine, as they melt in the pan, so don’t sieve it again. It should be like pouring cream, coating a spoon thinly and running off in a quick ribbon. If it is thicker, whisk in up to {50 ml whole milk}, a tablespoon at a time.
+      - Whisk the batter well, since the butter and flour settle. After a night in the fridge a few specks of set butter are fine, as they melt in the pan, so don’t sieve it again. It should be like pouring cream, coating a spoon thinly and running off in a quick ribbon. If it is thicker, whisk in up to {50 ml whole milk}, a tablespoon at a time. Find a ladle or cup that holds about 50 ml, measured once with water, so every crêpe gets the same amount.
       - Wipe the pan with a paper towel dipped in {neutral oil}, leaving a sheen but no drops. The butter in the batter is usually enough after that; wipe again only if a crêpe sticks.
-      - Lift the pan off the heat, pour about 50 ml of batter into the centre and at once tilt and swirl the pan so the batter covers the base in one thin layer.
+      - Lift the pan off the heat, pour one ladleful of batter into the centre and at once tilt and swirl the pan so the batter covers the base in one thin layer.
+      - tip: The first crêpe is a test. If the batter sets before you can swirl it, the pan is too hot or the batter too thick; if the crêpe is still pale after a minute, turn the heat up.
       - Cook for {timer:45-60s}, until the surface looks dry, the edge lifts and turns lacy and the underside is golden in spots. Loosen the edge with the spatula, flip and cook the second side for {timer:15-20s}, until it sets.
       - Stack the crêpes on a plate under a clean tea towel, where they stay warm and supple. Serve them with the first, golden side outwards.
-      - tip: The first crêpe is a test. If the batter sets before you can swirl it, the pan is too hot or the batter too thick; if the crêpe is still pale after a minute, turn the heat up.
       - tip: For another pan, scale the batter with the base area, about 35 ml for 20 cm and 60–70 ml for 28 cm.
 ---
 
