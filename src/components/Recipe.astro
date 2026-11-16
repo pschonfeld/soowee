@@ -1,8 +1,8 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
 import { Image, Picture } from 'astro:assets';
-import '../styles/global.css';
-import Wordmark from '../assets/brand/soowee-wordmark.svg';
+import Page from './Page.astro';
+import '../styles/recipe.css';
 import { formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
 import { plainText, renderInline, stepTimes } from '../lib/inline';
 import { describeTime, heroTime, readyMinutes } from '../lib/time';
@@ -53,10 +53,8 @@ const ingredientText = (i: Ingredient) =>
     .filter(Boolean)
     .join(' ');
 
-// Absolute URLs need the production origin (`site`); without it they are left out instead of pointing at localhost.
-const origin = Astro.site;
-const canonical = origin && new URL(Astro.url.pathname, origin).href;
-const imageUrl = origin && new URL(r.image.src, origin).href;
+// Absolute URL for JSON-LD needs the production origin (`site`); without it the image is left out.
+const imageUrl = Astro.site && new URL(r.image.src, Astro.site).href;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -83,6 +81,7 @@ const icons = {
   save: 'M5 2.8h8a.8.8 0 0 1 .8.8v11.600L9 12.200l-4.800 3V3.600a.8.8 0 0 1 .8-.8Z',
   share: 'M9 11V2.400M6 5l3-3 3 3M5.600 8H4.400a.9.9 0 0 0-.9.900v5.700c0 .5.400.9.900.9h9.200c.5 0 .9-.4.900-.9V8.900a.9.9 0 0 0-.9-.9h-1.200',
   chevron: 'm7 3.500 5 5.500-5 5.500',
+  back: 'M11 3.500 5.500 9l5.500 5.500',
   close: 'm4.500 4.500 9 9m0-9-9 9',
   check: 'm3.500 9.500 3.500 3.500 7.500-8',
   minus: 'M4 9h10',
@@ -96,34 +95,15 @@ const icons = {
 };
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>{`${r.title} · soowee`}</title>
-    <meta name="description" content={r.description} />
-    <meta name="theme-color" content={backdrop?.edge ?? tint.base} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    {canonical && <link rel="canonical" href={canonical} />}
-    <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="soowee" />
-    <meta property="og:title" content={r.title} />
-    <meta property="og:description" content={r.description} />
-    {canonical && <meta property="og:url" content={canonical} />}
-    {imageUrl && <meta property="og:image" content={imageUrl} />}
-    <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
-    <script is:inline>
-      try {
-        const theme = localStorage.getItem('soowee:theme');
-        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
-      } catch {}
-    </script>
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
-  </head>
-  <body style={pageStyle}>
-    <a class="skip" href="#recipe">Skip to recipe</a>
+<Page
+  title={`${r.title} · soowee`}
+  description={r.description}
+  themeColor={backdrop?.edge ?? tint.base}
+  bodyStyle={pageStyle}
+  og={{ type: 'article', title: r.title, image: r.image }}
+  skip={{ href: '#recipe', label: 'Skip to recipe' }}
+>
+    <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
 
     <main>
       <article
@@ -133,6 +113,9 @@ const icons = {
         data-yield-unit={r.yield.unit}
       >
         <header class="hero">
+          <a class="round back" href="/" aria-label="All recipes">
+            <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.back} /></svg>
+          </a>
           <!-- The photo continues past its edge as a mirrored, blurred copy (background extension). -->
           <div class="hero__backdrop" aria-hidden="true">
             <div></div>
@@ -350,27 +333,14 @@ const icons = {
       </article>
     </main>
 
-    <footer class="footer">
-      <Wordmark class="footer__wordmark" width={91} height={15} />
-      {
-        r.imageCredit && (
-          <p>
-            Photo: <a href={r.imageCredit.url}>{r.imageCredit.author}</a>, {r.imageCredit.license}
-          </p>
-        )
-      }
-      <fieldset class="theme">
-        <legend class="sr-only">Appearance</legend>
-        {
-          ['Light', 'Dark', 'Auto'].map((label) => (
-            <label>
-              <input type="radio" name="theme" value={label.toLowerCase()} checked={label === 'Auto'} />
-              <span>{label}</span>
-            </label>
-          ))
-        }
-      </fieldset>
-    </footer>
+    {
+      r.imageCredit && (
+        <p slot="credits">
+          Photo: <a href={r.imageCredit.url}>{r.imageCredit.author}</a>, {r.imageCredit.license}
+        </p>
+      )
+    }
+    <Fragment slot="after-footer">
 
     <dialog class="cook" id="cook" aria-labelledby="cook-title">
       <div class="cook__head">
@@ -481,5 +451,5 @@ const icons = {
     <script>
       import '../scripts/recipe.ts';
     </script>
-  </body>
-</html>
+    </Fragment>
+</Page>

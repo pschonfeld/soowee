@@ -1,0 +1,67 @@
+---
+/**
+ * The owner's pick (`featured: true`): the recipe hero in miniature, with the same background extension. The photo
+ * continues as a mirrored, blurred copy of itself under the text, darkened by the scrim backdropFor() computes so
+ * every text style on it passes WCAG AA (axe cannot check text over images). The tint is the fallback.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { Picture } from 'astro:assets';
+import { formatYield } from '../lib/format';
+import { stepTimes } from '../lib/inline';
+import { heroTime } from '../lib/time';
+import { backdropFor } from '../lib/backdrop';
+import { tintFor } from '../lib/tint';
+
+interface Props {
+  entry: CollectionEntry<'recipes'>;
+}
+
+const { entry } = Astro.props;
+const r = entry.data;
+const tint = await tintFor(r.image, r.tint);
+const backdrop = await backdropFor(r.image);
+const style = [
+  `--tint:${tint.base};--tint-deep:${tint.deep}`,
+  backdrop && `--backdrop:url(${backdrop.image});--backdrop-edge:${backdrop.edge};--scrim:${backdrop.scrim}`,
+  backdrop?.accent && `--accent:${backdrop.accent}`,
+]
+  .filter(Boolean)
+  .join(';');
+const time = heroTime(r.time.total, stepTimes(r.steps));
+---
+
+<a class="feature" href={`/${entry.id}/`} style={style}>
+  <div class="feature__backdrop" aria-hidden="true">
+    <div></div>
+    <div class="is-mirror"></div>
+  </div>
+  <div class="feature__media">
+    <Picture
+      src={r.image}
+      alt=""
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1080, 1440, 1920]}
+      sizes="(min-width: 74rem) 43rem, (min-width: 48rem) 58vw, 100vw"
+      loading="eager"
+      fetchpriority="high"
+    />
+  </div>
+  <div class="feature__body">
+    {r.cuisine && <p class="feature__cuisine">{r.cuisine}</p>}
+    <h2 class="feature__title">{r.title}</h2>
+    <dl class="feature__meta">
+      <div>
+        <dt class="sr-only">Time</dt>
+        <dd>
+          {time.cook}
+          {time.wait && <span class="feature__wait">+ {time.wait}</span>}
+        </dd>
+      </div>
+      <div>
+        <dt class="sr-only">Yield</dt>
+        <dd>{formatYield(r.yield.min, r.yield.max, r.yield.unit)}</dd>
+      </div>
+    </dl>
+    <p class="feature__lede">{r.description}</p>
+  </div>
+</a>

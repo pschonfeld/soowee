@@ -1,0 +1,615 @@
+/* Home page only. Uses the tokens in global.css. */
+
+.home {
+  --pad-left: max(var(--gutter), env(safe-area-inset-left));
+  --pad-right: max(var(--gutter), env(safe-area-inset-right));
+  --thumb: 6.5rem;
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: max(var(--s-4), env(safe-area-inset-top)) var(--pad-right) var(--s-12) var(--pad-left);
+}
+
+/* ── Wordmark ── */
+.home__title {
+  padding-top: var(--s-2);
+}
+
+.home__wordmark {
+  width: auto;
+  height: 1.375rem;
+  color: var(--text);
+}
+
+/* ── Search: a glass capsule under the wordmark ──
+   It scrolls away with the wordmark, as iOS search fields do by default, instead of covering the list. */
+.search {
+  display: block; /* <search> is inline in browsers that predate the element */
+  position: relative;
+  margin: var(--s-4) 0 var(--s-5);
+  border-radius: 999px;
+  background: var(--bar-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  /* The same three layers as --glass-edge / --glass-shadow (rim, inner hairline, lift), in colours for the page
+     surface rather than a photo. */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 0 0 0.5px var(--separator),
+    0 6px 20px rgb(0 0 0 / 0.07);
+}
+
+.search__icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 2.75rem 0 2.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit; /* 17px, so iOS doesn't zoom in on focus */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* The browser's own clear control is replaced by .search__clear. */
+.search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* iOS-style clear: a filled grey circle with a thin cross, on a 44px target at the capsule's right end. */
+.search__clear {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  color: var(--text-secondary);
+}
+
+.search__clear svg {
+  width: 1.0625rem;
+  height: 1.0625rem;
+}
+
+.search__clear circle {
+  fill: currentColor;
+  opacity: 0.75;
+}
+
+.search__clear path {
+  fill: none;
+  stroke: var(--card);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.search__clear:active circle {
+  opacity: 1;
+}
+
+.search input::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+/* Text fields always show focus; a 2px ring reads as "this field is active" without shouting. */
+.search input:focus-visible {
+  outline-width: 2px;
+  outline-offset: 1px;
+  border-radius: 999px;
+}
+
+/* No blur (Reduce Transparency, or a browser without backdrop-filter): a solid capsule, so text never shows
+   through it sharp. Note: headless test screenshots never draw the blur either; real devices do. */
+@media (prefers-reduced-transparency: reduce) {
+  .search {
+    background: var(--card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .search {
+    background: var(--card);
+  }
+}
+
+/* Search needs JavaScript; without it the capsule is not shown at all. */
+@media (scripting: none) {
+  .search {
+    display: none;
+  }
+}
+
+/* ── Featured: the recipe hero in miniature, with the hero's background extension ── */
+.feature {
+  /* The photo's height, from the card's own width (4:3), so the mirror meets the photo at its edge. */
+  --media-h: calc(100cqw * 3 / 4);
+  container-type: inline-size;
+  position: relative;
+  isolation: isolate;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--backdrop-edge, var(--tint));
+  color: var(--on-tint);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* A hairline of light along the edge, as on iOS cards. */
+.feature::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 0.5px rgb(255 255 255 / 0.14);
+  pointer-events: none;
+}
+
+/* The blurred photo behind the real one, and its mirror image continuing under the text (as .hero__backdrop). */
+.feature__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.feature__backdrop > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--media-h);
+  background: var(--backdrop) center / cover no-repeat;
+}
+
+.feature__backdrop > .is-mirror {
+  top: calc(var(--media-h) - 1px); /* 1px overlap hides the subpixel seam */
+  transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(to top, #000 40%, transparent);
+  mask-image: linear-gradient(to top, #000 40%, transparent);
+}
+
+/* The scrim backdropFor() computed for this photo, full strength from where the text starts. */
+.feature__backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / calc(var(--scrim, 0) * 0.3)),
+    rgb(0 0 0 / var(--scrim, 0)) calc(var(--media-h) - 4rem)
+  );
+}
+
+.feature__media {
+  aspect-ratio: 4 / 3;
+  /* The recipe hero's eased fade: from 40% of the photo down to 1rem above its bottom edge, so the photo melts into
+     its blurred mirror without a visible band, and is fully gone before the text starts (8px above the edge). */
+  --fade: linear-gradient(rgb(0 0 0 / 1) calc(40% + (60% - 1rem) * 0), rgb(0 0 0 / 0.962) calc(40% + (60% - 1rem) * 0.125), rgb(0 0 0 / 0.854) calc(40% + (60% - 1rem) * 0.25), rgb(0 0 0 / 0.691) calc(40% + (60% - 1rem) * 0.375), rgb(0 0 0 / 0.5) calc(40% + (60% - 1rem) * 0.5), rgb(0 0 0 / 0.309) calc(40% + (60% - 1rem) * 0.625), rgb(0 0 0 / 0.146) calc(40% + (60% - 1rem) * 0.75), rgb(0 0 0 / 0.038) calc(40% + (60% - 1rem) * 0.875), rgb(0 0 0 / 0) calc(40% + (60% - 1rem) * 1));
+  -webkit-mask-image: var(--fade);
+  mask-image: var(--fade);
+}
+
+.feature__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feature__body {
+  position: relative;
+  margin-top: calc(-1 * var(--s-2));
+  padding: 0 var(--s-5) var(--s-5);
+}
+
+.feature__cuisine {
+  font-size: var(--text-subhead);
+  font-weight: 600;
+  color: var(--accent, var(--on-tint-secondary));
+}
+
+.feature__title {
+  margin-top: var(--s-1);
+  font-size: var(--text-title1);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.feature__meta {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: var(--s-2);
+  font-size: var(--text-subhead);
+  color: var(--on-tint-secondary);
+}
+
+.feature__meta > div + div {
+  margin-left: var(--s-3);
+  padding-left: var(--s-3);
+  border-left: 1px solid rgb(255 255 255 / 0.28);
+}
+
+/* As the hero's .meta__wait: on its own line under the cooking time. */
+.feature__wait {
+  display: block;
+}
+
+/* The description earns its space only beside the photo, on wider screens. */
+.feature__lede {
+  display: none;
+}
+
+.feature:focus-visible {
+  outline-offset: 3px;
+}
+
+.feature:active {
+  transform: scale(0.985);
+}
+
+/* ── All recipes ── */
+.all {
+  margin-top: var(--s-8);
+}
+
+.all__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.all__title {
+  font-size: var(--text-title2);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.all__count {
+  font-size: var(--text-footnote);
+  color: var(--text-secondary);
+}
+
+/* One list everywhere: a square photo beside the text. Phones show one column, wider screens two. */
+.items {
+  display: grid;
+  margin-top: var(--s-1);
+}
+
+.item > a {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--thumb) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* iOS-style separator: starts where the text starts, not at the photo. Above every visible row but the first;
+   data-pos is the row's position among the visible ones (home.ts keeps it current while searching). */
+.item > a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(var(--thumb) + var(--s-4));
+  right: 0;
+  border-top: 0.5px solid var(--separator);
+}
+
+.item__media {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+}
+
+.item__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Hairline inside the photo, so a white plate keeps its edge on the page. */
+.item[data-pos='0'] > a::before {
+  content: none;
+}
+
+.item__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 0.5px var(--image-edge);
+}
+
+.item__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: 0.125rem;
+}
+
+.item__cuisine {
+  font-size: var(--text-footnote);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.item__title {
+  margin-top: 0.0625rem;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.125rem;
+  font-size: var(--text-footnote);
+  color: var(--text-secondary);
+}
+
+/* The wait follows the cooking time, as in the hero; it moves to the next line only as a whole. */
+.item__wait {
+  margin-left: 0.3em;
+  white-space: nowrap;
+}
+
+.item__saved {
+  display: inline-flex;
+  margin-left: var(--s-2);
+  color: var(--text);
+}
+
+.item__saved svg {
+  width: 0.8125rem;
+  height: 0.8125rem;
+  fill: currentColor;
+}
+
+.item__lede {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: var(--s-1);
+  font-size: var(--text-subhead);
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+/* Press: the item gives a little under the finger, as iOS rows do. */
+.item > a:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .item__media img {
+    transition: filter 0.2s;
+  }
+
+  .item > a:hover img {
+    filter: brightness(1.06);
+  }
+}
+
+/* Continuous (squircle) corners where the browser can draw them, as on iOS. */
+@supports (corner-shape: squircle) {
+  .feature,
+  .feature::after,
+  .item__media,
+  .item__media::after {
+    corner-shape: squircle;
+  }
+
+  .feature {
+    border-radius: calc(var(--radius-card) * 1.6);
+  }
+
+  .item__media {
+    border-radius: calc(var(--radius-control) * 1.6);
+  }
+}
+
+/* ── No results ── */
+.empty {
+  padding: var(--s-12) 0;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty__clear {
+  margin-top: var(--s-3);
+  min-height: 2.75rem;
+  padding: 0 var(--s-5);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ── iPad and desktop ── */
+@media (min-width: 48rem) {
+  .home {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+    column-gap: var(--s-8);
+  }
+
+  .home > :not(.home__title, .search) {
+    grid-column: 1 / -1;
+  }
+
+  .home__title {
+    align-self: center;
+    padding-top: 0;
+  }
+
+  .home__wordmark {
+    height: 1.875rem;
+  }
+
+  /* The capsule floats alone at the top right. */
+  .search {
+    margin: var(--s-4) 0;
+  }
+
+  .feature {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    min-height: 22rem;
+    margin-top: var(--s-2);
+  }
+
+  /* Photo box from 5/12 to the right edge; its mirror image extends it to the left under the text. */
+  .feature__backdrop > div {
+    left: calc(100% * 5 / 12);
+    height: 100%;
+  }
+
+  .feature__backdrop > .is-mirror {
+    top: 0;
+    left: calc(100% * 5 / 12 - 100% * 7 / 12);
+    right: calc(100% * 7 / 12 - 1px);
+    transform: scaleX(-1);
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .feature__backdrop::after {
+    background: linear-gradient(
+      to right,
+      rgb(0 0 0 / var(--scrim, 0)) 45%,
+      rgb(0 0 0 / calc(var(--scrim, 0) * 0.3)) 70%,
+      transparent
+    );
+  }
+
+  /* Fades into the backdrop on its left edge only; text never sits on the photo itself. */
+  .feature__media {
+    order: 2;
+    aspect-ratio: auto;
+    /* The hero's eased curve, left to right over the first 40% of the photo box. */
+    --fade: linear-gradient(90deg, rgb(0 0 0 / 0) 0%, rgb(0 0 0 / 0.038) 5%, rgb(0 0 0 / 0.146) 10%, rgb(0 0 0 / 0.309) 15%, rgb(0 0 0 / 0.5) 20%, rgb(0 0 0 / 0.691) 25%, rgb(0 0 0 / 0.854) 30%, rgb(0 0 0 / 0.962) 35%, rgb(0 0 0 / 1) 40%);
+    -webkit-mask-image: var(--fade);
+    mask-image: var(--fade);
+  }
+
+  .feature__body {
+    order: 1;
+    align-self: center;
+    margin: 0;
+    padding: var(--s-8) 0 var(--s-8) var(--s-8);
+  }
+
+  .feature__title {
+    font-size: var(--text-large);
+  }
+
+  .feature__lede {
+    display: block;
+    margin-top: var(--s-4);
+    max-width: 34ch;
+    font-size: var(--text-subhead);
+    line-height: 1.47;
+    color: rgb(255 255 255 / 0.92);
+  }
+
+  .all {
+    margin-top: var(--s-10);
+  }
+
+  /* Editorial cards: a large 4:3 photo with the same cuisine, title, time and description under it, in the
+     same order as the phone rows (photo first), just stacked. Two columns on iPad, three on desktop. */
+  .items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-10) var(--s-6);
+    margin-top: var(--s-5);
+  }
+
+  .item > a {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* the phone rows' align-items: start would shrink photo and text to their content */
+    gap: var(--s-3);
+    padding: 0;
+  }
+
+  /* Cards are separated by space, not lines. */
+  .item > a::before {
+    content: none;
+  }
+
+  .item__media {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-card);
+  }
+
+  /* Same continuous corners as the featured card. */
+  @supports (corner-shape: squircle) {
+    .item__media {
+      border-radius: calc(var(--radius-card) * 1.6);
+    }
+  }
+
+  .item__text {
+    padding-top: 0;
+  }
+
+  .item__title {
+    font-size: var(--text-title3);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  .item__meta {
+    margin-top: var(--s-1);
+  }
+
+  .item__lede {
+    margin-top: var(--s-2);
+  }
+
+  /* Hover lifts the photo slightly; the press response stays the same as on phones. */
+  @media (hover: hover) {
+    .item__media {
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .item > a:hover .item__media {
+      transform: translateY(-2px);
+    }
+  }
+}
+
+@media (min-width: 64rem) {
+  .items {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

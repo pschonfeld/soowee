@@ -37,7 +37,7 @@ flowchart LR
   cook --> js
 ```
 
-The home page (`/`) has no gallery yet: it redirects to the first recipe with `featured: true`, or to the first recipe if none is featured.
+The home page (`/`) lists every recipe with search. The recipe with `featured: true` leads it as a large card; at most one recipe can be featured (the build fails otherwise), and with none the page simply starts with the list.
 
 ## Data model
 
@@ -117,8 +117,8 @@ classDiagram
 | Field | Type | Required | Default | Rules | Shown |
 |---|---|---|---|---|---|
 | `title` | text | yes | | | Hero heading, browser tab, cook mode, JSON-LD `name` |
-| `description` | text | yes | | One or two sentences | Lede under the hero, meta description, social preview, JSON-LD |
-| `featured` | true/false | no | `false` | | The home page redirects to the first featured recipe |
+| `description` | text | yes | | One or two sentences | Lede under the hero, home page list (cut to 3 lines on phones), meta description, social preview, JSON-LD |
+| `featured` | true/false | no | `false` | At most one recipe | Shown large at the top of the home page (and in its list) |
 | `cuisine` | text | no | | e.g. `Italian`, `British` | Small label above the title, JSON-LD `recipeCuisine` |
 | `byline` | text | no | | Currently used for origin: `Adapted from Vincenzo’s Plate` | Under the title |
 | `image` | path | yes | | Relative path to a local image; by convention in `src/assets/recipes/` | Hero photo (AVIF/WebP, 480–2560 px), source-card thumbnail, social preview; the hero colour and the blurred backdrop are computed from it |
@@ -422,7 +422,7 @@ A home cook with basic craft who wants a restaurant-level result, not a shortcut
 
 | Part | Budget |
 |---|---|
-| `description` | One or two sentences: what the dish is and what makes this version worth it. Mention a commitment the reader must plan for (“Made a day ahead”). Not a list of every component, no filler (“featuring”, “delicious”) |
+| `description` | One or two sentences: what the dish is and what makes this version worth it. Mention a commitment the reader must plan for (“Made a day ahead”). Lead with what helps someone choose: phones show only the first 3 lines on the home page. Not a list of every component, no filler (“featuring”, “delicious”) |
 | Step | One phase of the dish, about 6 paragraphs at most. Split a longer one where the cook could pause: “Brown the meat”, then “Simmer the ragù” |
 | Tip | At most two in a step, and most steps have none or one. A tip earns its place only if it adds one of: the *why* behind the step, how to tell it is going wrong, a choice at that point (a swap, what to buy), or a safety note. It never repeats its step |
 | Equipment | Only what has a size or spec that matters, or what is not in every kitchen. Not knife, board, spoon, bowl or kitchen paper |

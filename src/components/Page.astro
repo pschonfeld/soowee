@@ -1,0 +1,90 @@
+---
+/**
+ * The shell every page shares: <head>, skip link, footer (wordmark, photo credits, appearance switch).
+ * Pages put their content in the default slot, extra <head> tags (JSON-LD) in `head`, and their photo credits
+ * in `credits`.
+ */
+import '../styles/global.css';
+import Wordmark from '../assets/brand/soowee-wordmark.svg';
+
+interface Props {
+  /** Full document title. */
+  title: string;
+  description: string;
+  /** Browser UI colour: one value, or one per colour scheme. */
+  themeColor: string | { light: string; dark: string };
+  /** Custom properties for the page (per-recipe tint and backdrop). */
+  bodyStyle?: string;
+  og: { type: 'website' | 'article'; title: string; image?: ImageMetadata };
+  skip: { href: string; label: string };
+}
+
+const { title, description, themeColor, bodyStyle, og, skip } = Astro.props;
+
+// Absolute URLs need the production origin (`site`); without it they are left out instead of pointing at localhost.
+const origin = Astro.site;
+const canonical = origin && new URL(Astro.url.pathname, origin).href;
+const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {
+      typeof themeColor === 'string' ? (
+        <meta name="theme-color" content={themeColor} />
+      ) : (
+        <>
+          <meta name="theme-color" content={themeColor.light} media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content={themeColor.dark} media="(prefers-color-scheme: dark)" />
+        </>
+      )
+    }
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content={og.type} />
+    <meta property="og:site_name" content="soowee" />
+    <meta property="og:title" content={og.title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+    <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem('soowee:theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+    <slot name="head" />
+  </head>
+  <body style={bodyStyle}>
+    <a class="skip" href={skip.href}>{skip.label}</a>
+
+    <slot />
+
+    <footer class="footer">
+      <Wordmark class="footer__wordmark" width={91} height={15} />
+      <slot name="credits" />
+      <fieldset class="theme">
+        <legend class="sr-only">Appearance</legend>
+        {
+          ['Light', 'Dark', 'Auto'].map((label) => (
+            <label>
+              <input type="radio" name="theme" value={label.toLowerCase()} checked={label === 'Auto'} />
+              <span>{label}</span>
+            </label>
+          ))
+        }
+      </fieldset>
+    </footer>
+    <slot name="after-footer" />
+    <script>
+      import '../scripts/theme.ts';
+    </script>
+  </body>
+</html>

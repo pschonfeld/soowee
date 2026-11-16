@@ -14,7 +14,7 @@ Images in this folder are git-ignored: they are Apple's screens (one comes from 
 | `recipe-page/full-page-ipad.jpg` | iPad: hero text on the left over the tint, photo on the right; below it, Ingredients (white rounded rows, quantity column) and Directions side by side. Also a small iPhone News+ Food home with a featured-recipe card. |
 | `cook-mode/directions-step-iphone.jpg` | Cook mode: full-screen tint, recipe thumbnail + title + close button, Ingredients / Directions segmented control, current step large and bright, upcoming steps dimmed. |
 | `gallery/catalog-iphone.jpg` | Recipe catalog: large title, search field, round category icons, horizontal rows ("Recently Viewed", "Saved Recipes") of cards with a tinted header strip, photo, title and time. |
-| `gallery/saved-grid-iphone.jpg` | Saved recipes: two-column grid of the same cards, with search and filter. Reference for the planned home page gallery. |
+| `gallery/saved-grid-iphone.jpg` | Saved recipes: two-column grid of the same cards, with search and filter. Reference for the home page, which uses rows with a square photo beside the text on phones, and editorial cards (large photo, the same text under it) on wider screens instead of this grid (owner decision, docs/home-page-plan.md). |
 
 **Not yet captured:** dark mode, the iPhone ingredients list, a timer running, the Cook mode Ingredients tab, the Save and Share sheets.
 

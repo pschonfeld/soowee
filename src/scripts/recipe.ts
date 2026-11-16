@@ -73,24 +73,6 @@ try {
 
 for (const input of ingredientChecks) input.addEventListener('change', saveProgress);
 
-/* ── Appearance: Light / Dark / Auto (Auto follows the system) ── */
-const THEME_KEY = 'soowee:theme';
-const themeInputs = $$<HTMLInputElement>('input[name="theme"]');
-const storedTheme = document.documentElement.dataset.theme ?? 'auto';
-for (const input of themeInputs) {
-  input.checked = input.value === storedTheme;
-  input.addEventListener('change', () => {
-    if (input.value === 'auto') delete document.documentElement.dataset.theme;
-    else document.documentElement.dataset.theme = input.value;
-    try {
-      if (input.value === 'auto') localStorage.removeItem(THEME_KEY);
-      else localStorage.setItem(THEME_KEY, input.value);
-    } catch {
-      /* The choice still applies for this visit. */
-    }
-  });
-}
-
 /* ── Save (kept on this device) ── */
 const SAVED_KEY = 'soowee:saved';
 const saveButton = $('[data-save]')!;

@@ -1,0 +1,60 @@
+---
+/**
+ * One recipe on the home page: a square photo beside the text on phones; an editorial card (large photo, the
+ * same text under it) in two or three columns on wider screens.
+ * The whole item is one link. Time is heroTime(), so it reads exactly as in the recipe's hero.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { Picture } from 'astro:assets';
+import { stepTimes } from '../lib/inline';
+import { haystack } from '../lib/search';
+import { heroTime } from '../lib/time';
+import { tintFor } from '../lib/tint';
+
+interface Props {
+  entry: CollectionEntry<'recipes'>;
+  /** The first items load eagerly when there is no featured photo above them. */
+  eager?: boolean;
+  /** Position in the list; the first row has no separator. home.ts renumbers the visible rows while searching. */
+  pos: number;
+}
+
+const { entry, eager = false, pos } = Astro.props;
+const r = entry.data;
+const time = heroTime(r.time.total, stepTimes(r.steps));
+const tint = await tintFor(r.image, r.tint);
+const search = haystack([r.title, r.cuisine, ...r.ingredients.flatMap((g) => g.items.map((i) => i.name))]);
+---
+
+<li class="item" data-slug={entry.id} data-search={search} data-pos={pos}>
+  <a href={`/${entry.id}/`}>
+    <div class="item__media" style={`background:${tint.base}`}>
+      {/*
+        The ~1.5:1 photo covers its box, so it's drawn wider than the box: phones, a 6.5rem square (drawn ~10rem);
+        cards, a 4:3 box (drawn ~1.125× the card width: ~52vw on iPad's two columns, ~26rem in desktop's three).
+      */}
+      <Picture
+        src={r.image}
+        alt=""
+        formats={['avif', 'webp']}
+        widths={[160, 240, 320, 480, 640, 800, 1000]}
+        sizes="(min-width: 64rem) 26rem, (min-width: 48rem) 52vw, 10rem"
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    </div>
+    <div class="item__text">
+      {r.cuisine && <span class="item__cuisine">{r.cuisine}</span>}
+      <span class="item__title">{r.title}</span>
+      <span class="item__meta">
+        <span>{time.cook}</span>
+        {time.wait && <span class="item__wait">+ {time.wait}</span>}
+        <span class="item__saved" data-saved hidden>
+          <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M5 2.8h8a.8.8 0 0 1 .8.8v11.6L9 12.2l-4.8 3V3.6a.8.8 0 0 1 .8-.8Z" /></svg>
+          <span class="sr-only">Saved</span>
+        </span>
+      </span>
+      <span class="item__lede">{r.description}</span>
+    </div>
+  </a>
+</li>

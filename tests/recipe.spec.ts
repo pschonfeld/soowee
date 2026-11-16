@@ -246,9 +246,13 @@ test('hero text matches the Ingredients column and the photo runs to the edge at
   }
 });
 
-test('home page leads to the featured recipe', async ({ page }) => {
-  await page.goto('/');
-  await expect(page).toHaveURL(/\/lasagna\/$/);
+test('the back button leads to the home page', async ({ page }) => {
+  await page.goto('/tiramisu/');
+  const back = page.getByRole('link', { name: 'All recipes' });
+  await expect(back).toHaveAttribute('href', '/');
+  await back.click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: 'All recipes' })).toBeVisible();
 });
 
 test('appearance switch overrides the system setting and is remembered', async ({ page }) => {
@@ -598,6 +602,8 @@ test.describe('interactions', () => {
     test.skip(browserName === 'webkit', 'Safari only tabs to buttons/links with "Full Keyboard Access" enabled');
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name: 'Skip to recipe' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'All recipes' })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.locator('a.story')).toBeFocused();
     await page.keyboard.press('Tab');
