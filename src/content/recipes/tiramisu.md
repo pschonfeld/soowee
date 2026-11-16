@@ -66,7 +66,7 @@ steps:
   - title: Chill and serve
     text:
       - Cover and refrigerate overnight, for at least {chill:8h}. It is at its best after 1–2 days.
-      - Just before serving, dust the top with a little more {cocoa powder}. Slice and serve chilled
+      - Just before serving, dust the top with a little more {cocoa powder}. Slice and serve chilled.
       - tip: The cocoa on top darkens overnight as it absorbs moisture from the cream; the fresh dusting brings back the colour and the dry, bitter finish.
       - tip: The eggs are raw. For pregnant, elderly, very young or immunocompromised guests, use pasteurised eggs.
 ---
@@ -74,13 +74,13 @@ steps:
 ## Chef’s Notes
 
 - **Make ahead:** Tiramisu needs the night in the fridge to set, and it slices and tastes best after 1–2 days. Keep it covered and eat it within 3 days.
-- **To serve:** A small glass of Vin Santo or a strong espresso alongside is the classic pairing.
+- **Serve:** A small glass of Vin Santo or a strong espresso alongside is the classic pairing.
 
 ## Allergens
 
+- **Gluten:** Savoiardi biscuits. Use gluten-free ladyfingers.
 - **Egg:** raw yolks and whites in the cream.
 - **Milk:** mascarpone; some dark chocolate also contains milk, so check the label.
-- **Gluten:** Savoiardi biscuits. Substitute gluten-free ladyfingers if needed.
 
 ## Source
 
