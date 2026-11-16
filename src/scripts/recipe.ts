@@ -457,7 +457,6 @@ const lines = $$('[data-line]', cook);
 const stepEls = $$<HTMLElement>('[data-step]', cook);
 const stepLabels = $$<HTMLElement>('[data-step-label]', cook);
 const stepNumbers = [...new Set(lines.map((l) => Number(l.dataset.step)))].sort((a, b) => a - b);
-const navButtons = $$<HTMLButtonElement>('[data-cook-nav]', cook);
 const background = [$('main')!, $('.footer')!, $('.skip')!];
 /** Distance from the top of the panel to the active step; mirrors scroll-margin-top in CSS. */
 const READING_OFFSET = 72;
@@ -486,8 +485,6 @@ function setActive(index: number, scroll = true) {
     if (Number(label.dataset.step) === activeStep) label.setAttribute('aria-current', 'step');
     else label.removeAttribute('aria-current');
   }
-  navButtons[0].disabled = activeStepIndex === 0;
-  navButtons[1].disabled = activeStepIndex === stepNumbers.length - 1;
   if (scroll) {
     followScrollAfter = performance.now() + 700; // don't let our own smooth scroll re-pick the step
     const target = stepLabels.find((l) => Number(l.dataset.step) === activeStep);
@@ -502,7 +499,6 @@ function selectTab(tab: HTMLButtonElement) {
     t.tabIndex = selected ? 0 : -1;
     $(`#${t.getAttribute('aria-controls')}`)!.hidden = !selected;
   }
-  $('.cook__nav', cook)!.hidden = tab.id !== 'tab-directions';
 }
 
 function openCook() {
@@ -546,9 +542,10 @@ const LINE_STEP = 48;
 
 /**
  * Keyboard reading in cook mode, wherever focus is (it starts on the title, outside the scrolling panel, so the
- * browser's own arrow scrolling would do nothing). Directions: ↑/↓ move a step, as the on-screen arrows do;
- * Home/End go to the first/last step; Page Up/Down and Space scroll by a screen and the step follows the scroll.
- * Ingredients: the arrows scroll the list. Keys meant for the focused control are left alone.
+ * browser's own arrow scrolling would do nothing). ←/→ switch to Ingredients/Directions, as the tabs sit on screen
+ * (focus follows only if it was on a tab). Directions: ↑/↓ move a step; Home/End go to the first/last step;
+ * Page Up/Down and Space scroll by a screen and the step follows the scroll. Ingredients: ↑/↓ scroll the list.
+ * Keys meant for the focused control are left alone.
  */
 function cookKeys(event: KeyboardEvent) {
   if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -563,7 +560,11 @@ function cookKeys(event: KeyboardEvent) {
   const up = event.key === 'PageUp' || (space && event.shiftKey);
 
   let handled = true;
-  if (!directions.hidden && event.key === 'ArrowDown') setActive(activeStepIndex + 1);
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    const tab = tabs[event.key === 'ArrowLeft' ? 0 : tabs.length - 1];
+    if (tab.getAttribute('aria-selected') !== 'true') selectTab(tab);
+    if (target.closest('[role="tab"]')) tab.focus();
+  } else if (!directions.hidden && event.key === 'ArrowDown') setActive(activeStepIndex + 1);
   else if (!directions.hidden && event.key === 'ArrowUp') setActive(activeStepIndex - 1);
   else if (!directions.hidden && event.key === 'Home') setActive(0);
   else if (!directions.hidden && event.key === 'End') setActive(stepNumbers.length - 1);
@@ -577,19 +578,7 @@ function cookKeys(event: KeyboardEvent) {
   if (handled) event.preventDefault();
 }
 
-for (const tab of tabs) {
-  tab.addEventListener('click', () => selectTab(tab));
-  tab.addEventListener('keydown', (event) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-    const next = tabs[(tabs.indexOf(tab) + 1) % tabs.length];
-    selectTab(next);
-    next.focus();
-  });
-}
-
-for (const button of navButtons) {
-  button.addEventListener('click', () => setActive(activeStepIndex + Number(button.dataset.cookNav)));
-}
+for (const tab of tabs) tab.addEventListener('click', () => selectTab(tab));
 
 lines.forEach((line) => {
   line.addEventListener('click', (event) => {

@@ -87,8 +87,6 @@ const icons = {
   check: 'm3.500 9.500 3.500 3.500 7.500-8',
   minus: 'M4 9h10',
   plus: 'M4 9h10M9 4v10',
-  up: 'm4 11.500 5-5 5 5',
-  down: 'm4 6.500 5 5 5-5',
   heat: 'M9 2.200a1.800 1.800 0 0 0-1.800 1.800v6.200a3.300 3.300 0 1 0 3.600 0V4A1.800 1.800 0 0 0 9 2.200ZM9 7.200v5.600',
   bulb: 'M9 1.800a5 5 0 0 0-3 9c.5.400.800 1 .800 1.600v.4h4.400v-.4c0-.6.300-1.200.800-1.600a5 5 0 0 0-3-9ZM7.200 15.600h3.600',
   pause: 'M6.500 4.5v9M11.5 4.5v9',
@@ -345,12 +343,12 @@ const icons = {
 
     <dialog class="cook" id="cook" aria-labelledby="cook-title">
       <div class="cook__head">
-        <Image src={r.image} alt="" width={72} height={72} fit="cover" loading="eager" />
+        <Image src={r.image} alt="" width={96} height={96} fit="cover" loading="eager" />
         <p class="cook__title" id="cook-title" tabindex="-1">
           {r.title}
           <span>soowee</span>
         </p>
-        <button type="button" class="btn btn--round btn--glass btn--sm" data-cook-close aria-label="Close cook mode">
+        <button type="button" class="btn btn--round btn--scrim cook__close" data-cook-close aria-label="Close cook mode">
           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.close} /></svg>
         </button>
       </div>
@@ -434,15 +432,6 @@ const icons = {
           ))
         }
         </div>
-      </div>
-
-      <div class="cook__nav">
-        <button type="button" class="btn btn--round btn--glass" data-cook-nav="-1" aria-label="Previous step">
-          <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.up} /></svg>
-        </button>
-        <button type="button" class="btn btn--round btn--glass" data-cook-nav="1" aria-label="Next step">
-          <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.down} /></svg>
-        </button>
       </div>
     </dialog>
 

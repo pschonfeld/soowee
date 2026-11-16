@@ -247,7 +247,7 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* No double-tap zoom on controls, so quick taps (scale +/−, step arrows) never zoom the page. */
+/* No double-tap zoom on controls, so quick taps (scale +/−, timers) never zoom the page. */
 a,
 button,
 label,

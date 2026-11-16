@@ -470,7 +470,8 @@ test.describe('interactions', () => {
     await expect(lines.nth(0)).toHaveClass(/is-active/);
     await expect(lines.nth(1)).toHaveClass(/is-active/);
     await expect(stepLabels.nth(0)).toHaveClass(/is-active/);
-    await page.getByRole('button', { name: 'Next step' }).click();
+    // Tapping a line activates its step (there are no on-screen step buttons: scroll, tap or the keyboard).
+    await lines.nth(2).click();
     // Step 2 starts at the third line; all of step 1 (both lines and its label) dims together.
     await expect(lines.nth(2)).toHaveClass(/is-active/);
     await expect(lines.nth(2)).toBeInViewport();
@@ -482,7 +483,6 @@ test.describe('interactions', () => {
     await page.getByRole('tab', { name: 'Ingredients' }).click();
     await expect(page.locator('#panel-ingredients')).toBeVisible();
     await expect(page.locator('#panel-directions')).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Next step' })).toBeHidden();
     await expectNoA11yViolations(page);
 
     // Safari leaves focus on <body> after a mouse click; Escape must still close cook mode.
@@ -516,7 +516,6 @@ test.describe('interactions', () => {
     await expect(label(1)).toHaveAttribute('aria-current', 'step');
     await page.keyboard.press('End');
     await expect(label(-1)).toHaveAttribute('aria-current', 'step');
-    await expect(page.getByRole('button', { name: 'Next step' })).toBeDisabled();
     await page.keyboard.press('Home');
     await expect(label(0)).toHaveAttribute('aria-current', 'step');
 
@@ -526,8 +525,16 @@ test.describe('interactions', () => {
     await page.keyboard.press('PageDown');
     await expect.poll(top).toBeGreaterThan(before + 200);
 
+    // ←/→ switch the tabs from anywhere in cook mode, as they sit on screen; focus stays where it was.
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.locator('#panel-ingredients')).toBeVisible();
+    await expect(page.locator('#panel-directions')).toBeHidden();
+    await expect(page.locator('#cook-title')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('#panel-directions')).toBeVisible();
+
     // Ingredients: the arrows scroll the list.
-    await page.getByRole('tab', { name: 'Ingredients' }).click();
+    await page.keyboard.press('ArrowLeft');
     const list = () => page.locator('#panel-ingredients').evaluate((el) => el.scrollTop);
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
@@ -680,6 +687,28 @@ test.describe('interactions', () => {
     const overdue = page.locator('.timer-chip', { hasText: 'Done' });
     await expect(overdue).toHaveCount(1);
     await expect(overdue.locator('time')).toHaveText('Done 9m ago');
+  });
+
+  test('cook mode: Close matches the back button, and the header sits as far from the top as from the sides', async ({ page }) => {
+    const back = page.getByRole('link', { name: 'All recipes' });
+    const backBox = (await back.boundingBox())!;
+    const backClass = await back.getAttribute('class');
+    await page.getByRole('button', { name: 'Cook', exact: true }).click();
+    const close = page.getByRole('button', { name: 'Close cook mode' });
+    const closeBox = (await close.boundingBox())!;
+    const photoBox = (await page.locator('.cook__head img').boundingBox())!;
+    const width = page.viewportSize()!.width;
+
+    expect(await close.getAttribute('class')).toContain('btn--round btn--scrim');
+    expect(backClass).toContain('btn--round btn--scrim');
+    expect(closeBox.width).toBeCloseTo(backBox.width, 0);
+    expect(width - (closeBox.x + closeBox.width)).toBeCloseTo(closeBox.y, 0);
+    expect(photoBox.x).toBeCloseTo(photoBox.y, 0);
+    // The photo only gives way to the title with large text: at default text it stays even on a 320px phone.
+    await page.setViewportSize({ width: 320, height: 640 });
+    await expect(page.locator('.cook__head img')).toBeVisible();
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await expect(page.locator('.cook__head img')).toBeHidden();
   });
 
   test('the timer capsule never covers the cook-mode header or the close button', async ({ page }) => {

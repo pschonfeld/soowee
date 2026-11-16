@@ -12,7 +12,7 @@
 }
 
 /* The way home: top-left over the photo, scrolls away with the hero. A .btn--scrim (global.css): plain glass is
-   too faint on pale photos (crêpes on a white plate). */
+   too faint on pale photos (crêpes on a white plate). Cook mode's Close is the same button (.cook__close). */
 .btn.back {
   position: absolute;
   z-index: 2;
@@ -20,7 +20,8 @@
   left: max(var(--s-3), env(safe-area-inset-left));
 }
 
-.back .icon {
+.back .icon,
+.cook__close .icon {
   width: 1.25rem;
   height: 1.25rem;
   stroke-width: 1.8;
@@ -721,21 +722,35 @@ html.is-cooking {
   grid-template-rows: auto auto minmax(0, 1fr);
 }
 
+/* The photo and Close sit in the corners, as far from the top as from the side: the page gutter, so the photo
+   lines up with the text below it. Both are --tap tall, so the header is one even row. */
 .cook__head {
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  padding: max(var(--s-3), env(safe-area-inset-top)) var(--gutter) var(--s-2);
+  padding: max(var(--gutter), env(safe-area-inset-top)) max(var(--gutter), env(safe-area-inset-right)) var(--s-2)
+    max(var(--gutter), env(safe-area-inset-left));
+  container-type: inline-size;
+}
+
+/* Large text on a narrow screen: the photo and Close grow with the text and would squeeze the title to a sliver,
+   so the photo gives way. The query measures the header inside its gutters: a 320px phone at default text is 18rem
+   (photo stays), the same phone at 200% text is 8rem (photo goes). */
+@container (max-width: 14rem) {
+  .cook__head img {
+    display: none;
+  }
 }
 
 .cook__head img {
-  width: 2.25rem;
-  height: 2.25rem;
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
   border-radius: var(--radius-thumb);
   object-fit: cover;
 }
 
-/* As in the reference: the recipe leads the header at a readable size; Close is a small (36px) glass circle. */
+/* As in the reference: the recipe leads the header at a readable size. */
 .cook__title {
   flex: 1;
   min-width: 0;
@@ -753,7 +768,7 @@ html.is-cooking {
 
 .segmented.cook__tabs {
   justify-self: center;
-  flex-wrap: nowrap; /* two tabs on one row even at 200% text; wrapped, the second slides under the step arrows */
+  flex-wrap: nowrap; /* two tabs on one row even at 200% text */
   margin: var(--s-2) 0;
 }
 
@@ -761,7 +776,7 @@ html.is-cooking {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--s-6) var(--gutter) 7rem;
-  /* Text fades out under the step arrows, so a control never sits on a legible line. */
+  /* Text fades out under the timers, so a capsule never sits on a legible line. */
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 7rem), transparent calc(100% - 1rem));
   mask-image: linear-gradient(to bottom, #000 calc(100% - 7rem), transparent calc(100% - 1rem));
 }
@@ -879,14 +894,6 @@ html.is-cooking {
   font-variant-numeric: tabular-nums;
 }
 
-.cook__nav {
-  position: absolute;
-  right: max(var(--gutter), env(safe-area-inset-right));
-  bottom: max(var(--s-5), env(safe-area-inset-bottom));
-  display: flex;
-  gap: var(--s-2);
-}
-
 
 /* ───────────── Timers (a Dynamic-Island-style capsule) and the toast, one floating column ───────────── */
 .hud {
@@ -913,11 +920,11 @@ html.is-cooking {
   }
 }
 
-/* Cook mode: the capsules and the toast stack at the bottom, just above the step arrows, so they never cover the
-   active line (read near the top) and stay where a thumb already is. Upcoming steps fade out under them. */
+/* Cook mode: the capsules and the toast stack at the bottom, so they never cover the active line (read near the
+   top) and stay where a thumb already is. Upcoming steps fade out under them. */
 html.is-cooking .hud {
   top: auto;
-  bottom: calc(max(var(--s-5), env(safe-area-inset-bottom)) + var(--tap) + var(--s-3));
+  bottom: max(var(--s-5), env(safe-area-inset-bottom));
 }
 
 /* Hung from the bottom here, so the toast arrives from below. */
