@@ -536,8 +536,46 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && cook.open) {
     event.preventDefault();
     closeCook();
+    return;
   }
+  if (cook.open) cookKeys(event);
 });
+
+/** One arrow press in the ingredients list: about a row. */
+const LINE_STEP = 48;
+
+/**
+ * Keyboard reading in cook mode, wherever focus is (it starts on the title, outside the scrolling panel, so the
+ * browser's own arrow scrolling would do nothing). Directions: ↑/↓ move a step, as the on-screen arrows do;
+ * Home/End go to the first/last step; Page Up/Down and Space scroll by a screen and the step follows the scroll.
+ * Ingredients: the arrows scroll the list. Keys meant for the focused control are left alone.
+ */
+function cookKeys(event: KeyboardEvent) {
+  if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+  const target = event.target as HTMLElement;
+  if (target.closest('input, textarea, select, [contenteditable]')) return;
+  const onButton = !!target.closest('button');
+  const panel = directions.hidden ? $('#panel-ingredients')! : directions;
+  const behavior: ScrollBehavior = reducedMotion.matches ? 'auto' : 'smooth';
+  const page = panel.clientHeight * 0.85;
+  const space = event.key === ' ' && !onButton; // Space on a button presses it
+  const down = event.key === 'PageDown' || (space && !event.shiftKey);
+  const up = event.key === 'PageUp' || (space && event.shiftKey);
+
+  let handled = true;
+  if (!directions.hidden && event.key === 'ArrowDown') setActive(activeStepIndex + 1);
+  else if (!directions.hidden && event.key === 'ArrowUp') setActive(activeStepIndex - 1);
+  else if (!directions.hidden && event.key === 'Home') setActive(0);
+  else if (!directions.hidden && event.key === 'End') setActive(stepNumbers.length - 1);
+  else if (event.key === 'ArrowDown') panel.scrollBy({ top: LINE_STEP, behavior });
+  else if (event.key === 'ArrowUp') panel.scrollBy({ top: -LINE_STEP, behavior });
+  else if (event.key === 'Home') panel.scrollTo({ top: 0, behavior });
+  else if (event.key === 'End') panel.scrollTo({ top: panel.scrollHeight, behavior });
+  else if (down) panel.scrollBy({ top: page, behavior });
+  else if (up) panel.scrollBy({ top: -page, behavior });
+  else handled = false;
+  if (handled) event.preventDefault();
+}
 
 for (const tab of tabs) {
   tab.addEventListener('click', () => selectTab(tab));

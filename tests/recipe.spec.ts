@@ -493,6 +493,47 @@ test.describe('interactions', () => {
     await expect(page.locator('main')).toHaveJSProperty('inert', false);
   });
 
+  test('the keyboard reads the page and cook mode: arrows scroll, step and page', async ({ page, isMobile, browserName }) => {
+    test.skip(isMobile, 'a hardware keyboard on a phone is an edge case; desktop and iPad cover it');
+    const scrollY = () => page.evaluate(() => scrollY);
+
+    // The page scrolls with the arrows natively: nothing on it swallows them. Checked in Chromium only, because
+    // headless WebKit never scrolls a page with arrow keys, not even a blank one (Safari itself does).
+    if (browserName === 'chromium') {
+      for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowDown');
+      await expect.poll(scrollY).toBeGreaterThan(0);
+    }
+
+    // Cook mode, focus on the title (outside the scrolling panel): arrows still move between steps.
+    await page.getByRole('button', { name: 'Cook', exact: true }).click();
+    await expect(page.locator('#cook-title')).toBeFocused();
+    const label = (n: number) => page.locator('[data-step-label]').nth(n);
+    await page.keyboard.press('ArrowDown');
+    await expect(label(1)).toHaveAttribute('aria-current', 'step');
+    await page.keyboard.press('ArrowDown');
+    await expect(label(2)).toHaveAttribute('aria-current', 'step');
+    await page.keyboard.press('ArrowUp');
+    await expect(label(1)).toHaveAttribute('aria-current', 'step');
+    await page.keyboard.press('End');
+    await expect(label(-1)).toHaveAttribute('aria-current', 'step');
+    await expect(page.getByRole('button', { name: 'Next step' })).toBeDisabled();
+    await page.keyboard.press('Home');
+    await expect(label(0)).toHaveAttribute('aria-current', 'step');
+
+    // Page Down scrolls the directions by a screen.
+    const top = () => page.locator('#panel-directions').evaluate((el) => el.scrollTop);
+    const before = await top();
+    await page.keyboard.press('PageDown');
+    await expect.poll(top).toBeGreaterThan(before + 200);
+
+    // Ingredients: the arrows scroll the list.
+    await page.getByRole('tab', { name: 'Ingredients' }).click();
+    const list = () => page.locator('#panel-ingredients').evaluate((el) => el.scrollTop);
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await expect.poll(list).toBeGreaterThan(40);
+  });
+
   test('cook mode passes WCAG checks on the directions view', async ({ page }) => {
     await page.getByRole('button', { name: 'Cook', exact: true }).click();
     await expectNoA11yViolations(page);
@@ -641,7 +682,7 @@ test.describe('interactions', () => {
     await expect(overdue.locator('time')).toHaveText('Done 9m ago');
   });
 
-  test('the timer capsule sits below the cook-mode header, never over the close button', async ({ page }) => {
+  test('the timer capsule never covers the cook-mode header or the close button', async ({ page }) => {
     await page.goto('/lasagna/');
     await page.getByRole('button', { name: 'Cook', exact: true }).click();
     const dialog = page.getByRole('dialog');
