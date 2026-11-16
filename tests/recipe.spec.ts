@@ -329,7 +329,7 @@ test.describe('interactions', () => {
 
   test('says how much of the cooking time is work, as a sentence under Directions', async ({ page }) => {
     // 4 hr 30 min of cooking, minus 3 hr 5 min of {simmer:}, {bake:} and {cool:}; no wait.
-    await expect(page.locator('.meta')).toContainText(/Time\s*4 hr 30 min/);
+    await expect(page.locator('.meta')).toContainText(/Time\s*4\shr 30\smin/);
     await expect(page.locator('.meta__wait')).toHaveCount(0);
     const sentence = page.locator('.directions .section-sub');
     await expect(sentence).toHaveText(
@@ -341,6 +341,7 @@ test.describe('interactions', () => {
     await expect(page.locator('.step').last().locator('.timer')).toHaveCount(3);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
     expect(ld.totalTime).toBe('PT4H30M');
+    expect(ld.recipeYield).toBe('8–10 servings'); // plain space: the no-break one is for layout only
     expect(ld.prepTime).toBeUndefined();
     expect(ld.cookTime).toBeUndefined();
 
@@ -353,7 +354,7 @@ test.describe('interactions', () => {
   test('a wait is shown after the cooking time, on its own line, and named in the sentence', async ({ page }) => {
     await page.goto('/tiramisu/');
     const time = page.locator('.meta dd').first();
-    await expect(time).toHaveText(/^30 min\s*\+ 8 hr chilling$/);
+    await expect(time).toHaveText(/^30\smin\s*\+ 8\shr chilling$/);
     // The wait sits under the cooking time, not beside it.
     const [cookBottom, waitTop] = await time.evaluate((dd) => {
       const range = document.createRange();
@@ -373,7 +374,7 @@ test.describe('interactions', () => {
 
   test('a wait in the middle of the method is outside the cooking time and still rings', async ({ page }) => {
     await page.goto('/crepes/');
-    await expect(page.locator('.meta dd').first()).toHaveText(/^50 min\s*\+ 1 hr resting$/);
+    await expect(page.locator('.meta dd').first()).toHaveText(/^50\smin\s*\+ 1\shr resting$/);
     await expect(page.locator('.directions .section-sub')).toHaveText('50 min of work, plus 1 hr of resting.');
     await expect(page.locator('.step', { hasText: 'Rest the batter' }).locator('.timer')).toHaveCount(1);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
@@ -405,7 +406,8 @@ test.describe('interactions', () => {
   });
 
   test('ingredient names lead, qualifiers follow', async ({ page }) => {
-    const names = await page.locator('.ingredient > span:nth-of-type(2)').allInnerTexts();
+    // innerText keeps the no-break space between number and unit; this test is about word order.
+    const names = (await page.locator('.ingredient > span:nth-of-type(2)').allInnerTexts()).map((n) => n.replace(/\u00a0/g, ' '));
     expect(names).toContain('onion (about 150 g), medium, diced into small cubes');
     expect(names).toContain('g butter, unsalted');
     expect(names.some((n) => /^(medium|dry|whole|unsalted|fresh|shredded|grated)\b/i.test(n.replace(/^(g|ml|L|tbsp|tsp) /, '')))).toBe(false);
@@ -504,6 +506,7 @@ test.describe('interactions', () => {
     await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
     await expect(page.locator('.timer-chip')).toHaveCount(2);
     await page.getByRole('button', { name: 'Dismiss timer: Step 3, 1 hour' }).click();
+    await page.clock.fastForward('00:06'); // past the Undo window
 
     const chip = page.locator('.timer-chip');
     await expect(chip).toHaveCount(1);
@@ -517,6 +520,57 @@ test.describe('interactions', () => {
 
     await page.getByRole('button', { name: 'Dismiss timer: Step 2, 12–15 minutes' }).click();
     await expect(chip).toHaveCount(0);
+  });
+
+  test('a dismissed running timer can be brought back for a few seconds, without losing time', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/lasagna/');
+    await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
+    const chip = page.locator('.timer-chip');
+    await page.clock.fastForward('10:00');
+
+    await page.getByRole('button', { name: 'Dismiss timer: Step 3, 1 hour' }).click();
+    await expect(chip).toHaveText(/Timer dismissed/);
+    await expect(page.locator('[data-toast]')).toHaveText('Timer dismissed: Step 3, 1 hour');
+    const undo = page.getByRole('button', { name: 'Undo dismiss timer: Step 3, 1 hour' });
+    await expect(undo).toBeFocused();
+    await expect(page).not.toHaveTitle(/^⏱/);
+
+    await page.clock.fastForward('00:03');
+    await undo.click();
+    await expect(chip).toHaveCount(1);
+    await expect(chip.locator('time')).toHaveText('49:57'); // kept counting while dismissed
+    await expect(page.getByRole('button', { name: 'Pause timer: Step 3, 1 hour' })).toBeFocused();
+    await expect(page).toHaveTitle(/^⏱ 49:57 · /);
+
+    // Without Undo, the chip goes once the window closes; a reload doesn't bring it back.
+    await page.getByRole('button', { name: 'Dismiss timer: Step 3, 1 hour' }).click();
+    await page.clock.fastForward('00:06');
+    await expect(chip).toHaveCount(0);
+    await page.reload();
+    await expect(chip).toHaveCount(0);
+  });
+
+  test('a ringing timer can be silenced from the keyboard', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/lasagna/');
+    await page.getByRole('button', { name: 'Start timer: 1–2 minutes' }).first().click();
+    await page.clock.fastForward('02:01');
+    const silence = page.getByRole('button', { name: /^Silence timer/ });
+    await silence.focus();
+    await page.keyboard.press('Enter');
+    await expect(silence).toBeHidden();
+    await expect(page.locator('.timer-chip time')).toHaveText('Done');
+    await expect(page.getByRole('button', { name: /^Dismiss timer/ })).toBeFocused();
+  });
+
+  test('a finished timer is dismissed at once, with no Undo', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/lasagna/');
+    await page.getByRole('button', { name: 'Start timer: 1–2 minutes' }).first().click();
+    await page.clock.fastForward('02:01');
+    await page.getByRole('button', { name: /Dismiss timer/ }).click();
+    await expect(page.locator('.timer-chip')).toHaveCount(0);
   });
 
   test('a timer can be paused and resumed, and the tab title counts it down', async ({ page }) => {
@@ -548,9 +602,12 @@ test.describe('interactions', () => {
     await expect(chip).toHaveClass(/is-done/);
     await expect(chip.locator('time')).toHaveText('Done');
 
+    const silence = page.getByRole('button', { name: /^Silence timer/ });
+    await expect(silence).toBeVisible();
     await chip.locator('.timer-chip__label').click(); // tap the chip body, not a button
     await expect(chip).toHaveCount(1); // silenced, not dismissed
     await expect(chip.locator('time')).toHaveText('Done');
+    await expect(silence).toBeHidden();
 
     await page.getByRole('button', { name: /Dismiss timer/ }).click();
     await expect(chip).toHaveCount(0);

@@ -36,20 +36,20 @@ describe('formatScale / formatYield', () => {
   });
 
   it('scales single values and ranges', () => {
-    expect(formatYield(6, undefined, 'servings')).toBe('6 servings');
-    expect(formatYield(6, 8, 'servings', 0.5)).toBe('3–4 servings');
-    expect(formatYield(4, undefined, 'servings', 1.5)).toBe('6 servings');
+    expect(formatYield(6, undefined, 'servings')).toBe('6\u00a0servings');
+    expect(formatYield(6, 8, 'servings', 0.5)).toBe('3–4\u00a0servings');
+    expect(formatYield(4, undefined, 'servings', 1.5)).toBe('6\u00a0servings');
   });
 });
 
 describe('durations', () => {
   it('formats minutes', () => {
-    expect(formatMinutes(195)).toBe('3 hr 15 min');
-    expect(formatMinutes(60)).toBe('1 hr');
-    expect(formatMinutes(45)).toBe('45 min');
-    expect(formatMinutes(1440)).toBe('1 day');
-    expect(formatMinutes(1500)).toBe('1 day 1 hr');
-    expect(formatMinutes(2880 + 5)).toBe('2 days 5 min');
+    expect(formatMinutes(195)).toBe('3\u00a0hr 15\u00a0min');
+    expect(formatMinutes(60)).toBe('1\u00a0hr');
+    expect(formatMinutes(45)).toBe('45\u00a0min');
+    expect(formatMinutes(1440)).toBe('1\u00a0day');
+    expect(formatMinutes(1500)).toBe('1\u00a0day 1\u00a0hr');
+    expect(formatMinutes(2880 + 5)).toBe('2\u00a0days 5\u00a0min');
   });
 
   it('formats ISO 8601 durations', () => {

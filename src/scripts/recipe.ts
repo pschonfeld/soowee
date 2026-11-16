@@ -129,10 +129,13 @@ $('[data-share]')!.addEventListener('click', async () => {
 const PAUSE_ICON = '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.500 4.5v9M11.5 4.5v9"/></svg>';
 const PLAY_ICON =
   '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.300 4.300 13.200 9 6.300 13.700Z"/></svg>';
+const SILENCE_ICON = '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M5.500 5.500h7v7h-7Z"/></svg>';
 const DISMISS_ICON =
   '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="m4.500 4.500 9 9m0-9-9 9"/></svg>';
 /** How often a finished-but-undismissed timer repeats its alert. */
 const ALARM_REPEAT_MS = 2500;
+/** How long a dismissed running or paused timer can still be brought back. */
+const UNDO_MS = 5000;
 
 interface Timer {
   /** Absolute finish time; meaningful only while running (pausedRemaining === null). */
@@ -223,18 +226,77 @@ function updateTabTitle() {
   document.title = soonest ? `⏱ ${formatClock(Math.max(0, soonest.end - Date.now()) / 1000)} · ${originalTitle}` : originalTitle;
 }
 
+/** Keep keyboard focus somewhere sensible instead of dropping it to <body>. */
+function refocusAfterChip() {
+  // Never another chip's Undo: a stray Enter there would bring back a timer the user just dismissed.
+  (tray.querySelector<HTMLButtonElement>('.timer-chip:not(.is-dismissed) button:not([hidden])') ?? (cook.open ? $('[data-cook-close]', cook) : cookOpen))?.focus();
+}
+
 function removeTimer(timer: Timer) {
   if (timer.alarm) clearInterval(timer.alarm);
   timers.delete(timer);
-  timer.chip.remove();
   persistTimers();
   updateTabTitle();
-  // Keep keyboard focus somewhere sensible instead of dropping it to <body>.
-  (tray.querySelector('button') ?? (cook.open ? $('[data-cook-close]', cook) : cookOpen))?.focus();
+  if (timer.done) {
+    timer.chip.remove();
+    refocusAfterChip();
+  } else {
+    offerUndo(timer);
+  }
+}
+
+/**
+ * A running or paused timer is one small tap from being lost with wet hands, so dismissing it leaves the chip in
+ * place for a few seconds with Undo. The timer keeps its absolute end time, so Undo loses no countdown.
+ */
+function offerUndo(timer: Timer) {
+  const { chip, name, label, end, pausedRemaining } = timer;
+  chip.classList.add('is-dismissed');
+
+  const note = document.createElement('span');
+  note.className = 'timer-chip__label';
+  note.textContent = 'Timer dismissed';
+  const undo = document.createElement('button');
+  undo.type = 'button';
+  undo.className = 'timer-chip__undo';
+  undo.textContent = 'Undo';
+  undo.setAttribute('aria-label', `Undo dismiss timer: ${label}`);
+  chip.replaceChildren(note, undo);
+  undo.focus();
+  announce(`Timer dismissed: ${label}`);
+
+  const expire = window.setTimeout(() => {
+    const hadFocus = chip.contains(document.activeElement);
+    chip.remove();
+    if (hadFocus) refocusAfterChip();
+  }, UNDO_MS);
+
+  undo.addEventListener('click', () => {
+    clearTimeout(expire);
+    chip.remove();
+    // Not restored as overdue: if it ran out during the undo window, the next tick finishes it with its alarm.
+    const restored = buildTimer(name, label, end, pausedRemaining, false);
+    if (pausedRemaining === null) ticking ||= window.setInterval(tick, 250);
+    reorderTray();
+    persistTimers();
+    updateTabTitle();
+    restored.pauseButton.focus();
+    announce(`Timer restored: ${label}`);
+  });
+}
+
+/** Stops a finished timer's repeating alarm but keeps its "Done" chip; the dismiss button still removes it. */
+function silenceTimer(timer: Timer) {
+  if (!timer.alarm) return;
+  clearInterval(timer.alarm);
+  timer.alarm = 0;
+  const hadFocus = document.activeElement === timer.pauseButton;
+  timer.pauseButton.hidden = true;
+  if (hadFocus) timer.chip.querySelector<HTMLButtonElement>('button:not([hidden])')?.focus();
 }
 
 function togglePause(timer: Timer) {
-  if (timer.done) return;
+  if (timer.done) return silenceTimer(timer);
   if (timer.pausedRemaining !== null) {
     timer.end = Date.now() + timer.pausedRemaining;
     timer.pausedRemaining = null;
@@ -268,6 +330,10 @@ function finishTimer(timer: Timer, overdue: boolean) {
     announce(`Timer finished: ${timer.label}`);
     beep();
     timer.alarm = window.setInterval(beep, ALARM_REPEAT_MS);
+    // While it rings, the pause slot becomes Stop: a keyboard way to silence it (tapping the chip also works).
+    timer.pauseButton.innerHTML = SILENCE_ICON;
+    timer.pauseButton.setAttribute('aria-label', `Silence timer: ${timer.label}`);
+    timer.pauseButton.hidden = false;
   }
   reorderTray();
   persistTimers();
@@ -329,12 +395,9 @@ function buildTimer(name: string, label: string, end: number, pausedRemaining: n
 
   pauseButton.addEventListener('click', () => togglePause(timer));
   dismiss.addEventListener('click', () => removeTimer(timer));
-  // Silences a repeating alarm without losing the "done" chip; the dismiss button still removes it.
+  // Tapping anywhere on a ringing chip silences it, as on iOS.
   chip.addEventListener('click', () => {
-    if (timer.done && timer.alarm) {
-      clearInterval(timer.alarm);
-      timer.alarm = 0;
-    }
+    if (timer.done) silenceTimer(timer);
   });
 
   if (overdue) finishTimer(timer, true);

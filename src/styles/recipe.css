@@ -258,6 +258,7 @@
   font-size: var(--text-subhead);
   line-height: 1.47;
   color: rgb(255 255 255 / 0.92);
+  text-wrap: pretty;
 }
 
 @media (min-width: 48rem) {
@@ -519,6 +520,7 @@
 
 .step p {
   margin-top: var(--s-3);
+  text-wrap: pretty;
 }
 
 .step p + p {
@@ -627,6 +629,7 @@
 .prose p,
 .prose li {
   margin-top: var(--s-3);
+  text-wrap: pretty;
 }
 
 .prose ul {
@@ -790,6 +793,7 @@ html.is-cooking {
   color: rgb(255 255 255 / 0.58);
   cursor: pointer;
   transition: color 0.25s;
+  text-wrap: pretty;
 }
 
 .cook__step-label + .cook__line {
@@ -956,6 +960,25 @@ html.is-cooking .hud {
 .timer-chip__control .icon {
   width: 0.8125rem;
   height: 0.8125rem;
+}
+
+.timer-chip.is-dismissed {
+  padding-left: var(--s-4);
+}
+
+.timer-chip.is-dismissed .timer-chip__label {
+  flex: 1 1 auto;
+}
+
+.timer-chip__undo {
+  flex: none;
+  min-height: 2.25rem;
+  padding: 0 var(--s-4);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.16);
+  color: #ffb340;
+  font-size: var(--text-subhead);
+  font-weight: 600;
 }
 
 .timer-chip__control[hidden] {

@@ -39,8 +39,9 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
         <meta name="theme-color" content={themeColor} />
       ) : (
         <>
-          <meta name="theme-color" content={themeColor.light} media="(prefers-color-scheme: light)" />
-          <meta name="theme-color" content={themeColor.dark} media="(prefers-color-scheme: dark)" />
+          {/* data-scheme lets the appearance switch pin one of them when it overrides the system (theme.ts). */}
+          <meta name="theme-color" content={themeColor.light} media="(prefers-color-scheme: light)" data-scheme="light" />
+          <meta name="theme-color" content={themeColor.dark} media="(prefers-color-scheme: dark)" data-scheme="dark" />
         </>
       )
     }
@@ -57,7 +58,13 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
     <script is:inline>
       try {
         const theme = localStorage.getItem('soowee:theme');
-        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme;
+          // Same as applyThemeColor() in theme.ts: the browser bar follows the chosen theme, not the system.
+          for (const meta of document.querySelectorAll('meta[name="theme-color"][data-scheme]')) {
+            meta.media = meta.dataset.scheme === theme ? 'all' : 'not all';
+          }
+        }
       } catch {}
     </script>
     <slot name="head" />

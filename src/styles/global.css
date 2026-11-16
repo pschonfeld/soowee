@@ -207,6 +207,14 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* No double-tap zoom on controls, so quick taps (scale +/−, step arrows) never zoom the page. */
+a,
+button,
+label,
+summary {
+  touch-action: manipulation;
+}
+
 a {
   color: inherit;
 }
@@ -238,11 +246,14 @@ a {
   transition: box-shadow 0.15s;
 }
 
-/* Hover adds light to the rim, not to the fill, so text contrast never drops. */
-a.story:hover,
-.action:hover,
-.round:hover:not(:disabled) {
-  box-shadow: var(--glass-edge-hover), var(--glass-shadow);
+/* Hover adds light to the rim, not to the fill, so text contrast never drops. Only where hover is real: on touch
+   it would stick after a tap. */
+@media (hover: hover) {
+  a.story:hover,
+  .action:hover,
+  .round:hover:not(:disabled) {
+    box-shadow: var(--glass-edge-hover), var(--glass-shadow);
+  }
 }
 
 .action:active,

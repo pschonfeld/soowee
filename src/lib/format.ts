@@ -41,7 +41,7 @@ export function formatScale(factor: number): string {
 
 export function formatYield(min: number, max: number | undefined, unit: string, factor = 1): string {
   const n = (v: number) => formatQty(v * factor);
-  return `${max ? `${n(min)}–${n(max)}` : n(min)} ${unit}`;
+  return `${max ? `${n(min)}–${n(max)}` : n(min)}\u00a0${unit}`; // no-break: "4 servings" stays together
 }
 
 /** 195 → "3 hr 15 min", 1500 → "1 day 1 hr" */
@@ -49,7 +49,8 @@ export function formatMinutes(total: number): string {
   const d = Math.floor(total / 1440);
   const h = Math.floor((total % 1440) / 60);
   const m = total % 60;
-  return [d && `${d} day${d === 1 ? '' : 's'}`, h && `${h} hr`, m && `${m} min`].filter(Boolean).join(' ');
+  // A no-break space keeps each number on its unit's line ("3 hr" never splits); groups can still wrap.
+  return [d && `${d}\u00a0day${d === 1 ? '' : 's'}`, h && `${h}\u00a0hr`, m && `${m}\u00a0min`].filter(Boolean).join(' ');
 }
 
 /** 195 → "PT3H15M" (schema.org) */

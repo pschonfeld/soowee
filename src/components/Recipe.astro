@@ -63,7 +63,7 @@ const jsonLd = {
   description: r.description,
   image: imageUrl,
   recipeCuisine: r.cuisine,
-  recipeYield: yieldText,
+  recipeYield: yieldText.replace(/ /g, ' '), // the no-break space is for layout, not for data
   // schema.org's totalTime means until it can be served, so every wait counts here.
   totalTime: isoDuration(readyMinutes(r.time.total, times)),
   recipeIngredient: r.ingredients.flatMap((g) => g.items.map(ingredientText)),
@@ -238,7 +238,7 @@ const icons = {
                                       {formatQty(item.about.max, item.about.unit)}
                                     </span>
                                   )}
-                                  {` ${item.about.unit})`}
+                                  {`\u00a0${item.about.unit})`}
                                 </span>
                               )}
                               {item.note && <span class="ingredient__note">, {item.note}</span>}
@@ -397,7 +397,7 @@ const icons = {
                               {formatQty(item.about.max, item.about.unit)}
                             </span>
                           )}
-                          {` ${item.about.unit})`}
+                          {`\u00a0${item.about.unit})`}
                         </span>
                       )}
                       {item.note && <span class="ingredient__note">, {item.note}</span>}

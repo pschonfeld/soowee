@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { stepTimes } from './inline';
-import { describeTime, heroTime, listJoin, readyMinutes, type Segment } from './time';
+import { describeTime, heroTime as heroTimeRaw, listJoin, readyMinutes, type Segment } from './time';
 
 const times = (...paragraphs: string[]) => stepTimes([{ text: paragraphs }]);
 const sentence = (total: number, ...paragraphs: string[]) => describeTime(total, times(...paragraphs));
-const text = (segments: Segment[]) => segments.map((s) => s.text).join('');
-const bold = (segments: Segment[]) => segments.filter((s) => s.strong).map((s) => s.text);
+// Durations use no-break spaces (format.test.ts checks them); these tests are about wording, so read them as spaces.
+const sp = (s: string) => s.replace(/\u00a0/g, ' ');
+const text = (segments: Segment[]) => sp(segments.map((s) => s.text).join(''));
+const bold = (segments: Segment[]) => segments.filter((s) => s.strong).map((s) => sp(s.text));
+const heroTime = (...args: Parameters<typeof heroTimeRaw>) =>
+  Object.fromEntries(Object.entries(heroTimeRaw(...args)).map(([k, v]) => [k, typeof v === 'string' ? sp(v) : v]));
 
 describe('listJoin', () => {
   it('joins with commas and a final "and"', () => {

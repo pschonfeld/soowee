@@ -114,6 +114,30 @@ test('recipes saved on this device show a badge', async ({ page }) => {
   await expect(page.locator('[data-saved]:visible')).toHaveCount(1);
 });
 
+test('the browser bar colour follows the appearance switch, not only the system', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+  // The theme-color the browser would use: the first one whose media query matches.
+  const barColour = () =>
+    page.evaluate(
+      () =>
+        [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
+          .find((m) => !m.media || matchMedia(m.media).matches)
+          ?.content,
+    );
+  expect(await barColour()).toBe('#f2f2f7');
+
+  await page.getByRole('radio', { name: 'Dark' }).check({ force: true });
+  expect(await barColour()).toBe('#000000');
+  await page.reload(); // applied before first paint by the inline script, too
+  expect(await barColour()).toBe('#000000');
+
+  await page.getByRole('radio', { name: 'Auto' }).check({ force: true });
+  expect(await barColour()).toBe('#f2f2f7');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  expect(await barColour()).toBe('#000000');
+});
+
 test('phones: rows with a square photo beside the text; wider screens: cards with the photo above', async ({ page }) => {
   const boxes = await Promise.all([0, 1, 2].map(async (i) => (await items(page).nth(i).boundingBox())!));
   const photo = (await items(page).first().locator('.item__media').boundingBox())!;
