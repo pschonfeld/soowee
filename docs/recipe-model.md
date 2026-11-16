@@ -118,7 +118,7 @@ classDiagram
 |---|---|---|---|---|---|
 | `title` | text | yes | | | Hero heading, browser tab, cook mode, JSON-LD `name` |
 | `description` | text | yes | | One or two sentences | Lede under the hero, home page list (cut to 3 lines on phones), meta description, social preview, JSON-LD |
-| `featured` | true/false | no | `false` | At most one recipe | Shown large at the top of the home page (and in its list) |
+| `featured` | true/false | no | `false` | At most one recipe | Shown large at the top of the home page, instead of in its list (it joins the list only as a search result) |
 | `cuisine` | text | no | | e.g. `Italian`, `British` | Small label above the title, JSON-LD `recipeCuisine` |
 | `byline` | text | no | | Currently used for origin: `Adapted from Vincenzo’s Plate` | Under the title |
 | `image` | path | yes | | Relative path to a local image; by convention in `src/assets/recipes/` | Hero photo (AVIF/WebP, 480–2560 px), source-card thumbnail, social preview; the hero colour and the blurred backdrop are computed from it |

@@ -10,6 +10,8 @@ const RECIPES = [
   { slug: 'tiramisu', title: 'Tiramisu' },
 ];
 const FEATURED = 'lasagna';
+// What the list shows with no search: everything but the featured recipe, which is the card above it.
+const LISTED = RECIPES.filter((r) => r.slug !== FEATURED).map((r) => r.title);
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 const items = (page: Page) => page.locator('.item');
@@ -22,22 +24,34 @@ test.beforeEach(async ({ page }) => {
 
 test('lists every recipe once, alphabetically, each linking to its page', async ({ page }) => {
   await expect(items(page)).toHaveCount(RECIPES.length);
-  expect(await visibleTitles(page)).toEqual(RECIPES.map((r) => r.title));
+  expect(await visibleTitles(page)).toEqual(LISTED);
   for (const { slug, title } of RECIPES) {
     await expect(page.locator(`.item[data-slug="${slug}"] a`)).toHaveAttribute('href', `/${slug}/`);
     await expect(page.locator(`.item[data-slug="${slug}"] .item__title`)).toHaveText(title);
   }
 });
 
-test('the featured recipe leads the page and is also in the list', async ({ page }) => {
+test('the featured recipe leads the page, never shows twice, and search still finds it', async ({ page }) => {
   const feature = page.locator('.feature');
+  const row = page.locator(`.item[data-slug="${FEATURED}"]`);
   await expect(feature).toHaveAttribute('href', `/${FEATURED}/`);
   await expect(feature.getByRole('heading')).toHaveText('Lasagna');
-  await expect(page.locator(`.item[data-slug="${FEATURED}"]`)).toBeVisible();
+  await expect(row).toBeHidden();
+
+  await search(page).fill('lasagna');
+  await expect(feature).toBeHidden();
+  await expect(row).toBeVisible();
+  await expect.poll(() => visibleTitles(page)).toEqual(['Lasagna']);
+
+  await search(page).press('Escape');
+  await expect(feature).toBeVisible();
+  await expect(row).toBeHidden();
 });
 
 test('each time reads exactly as in its recipe hero', async ({ page }) => {
   for (const { slug } of RECIPES) {
+    // The featured row joins the list only as a search result.
+    await search(page).fill(slug === FEATURED ? 'lasagna' : '');
     const listed = (await page.locator(`.item[data-slug="${slug}"] .item__meta`).innerText()).replace(/\s+/g, ' ').trim();
     const hero = await page.context().newPage();
     await hero.goto(`/${slug}/`);
@@ -65,7 +79,7 @@ test('search filters in place, by word starts, ignoring case and accents', async
 
   await search(page).press('Escape');
   await expect(search(page)).toHaveValue('');
-  await expect(items(page).filter({ visible: true })).toHaveCount(RECIPES.length);
+  await expect.poll(() => visibleTitles(page)).toEqual(LISTED);
   await expect(page.locator('.feature')).toBeVisible();
 });
 
@@ -80,7 +94,7 @@ test('the clear button shows only with text, empties the field and keeps it focu
   await expect(search(page)).toHaveValue('');
   await expect(search(page)).toBeFocused();
   await expect(clear).toBeHidden();
-  await expect(items(page).filter({ visible: true })).toHaveCount(RECIPES.length);
+  await expect.poll(() => visibleTitles(page)).toEqual(LISTED);
 });
 
 test('no results says so and can be cleared', async ({ page }) => {
@@ -89,7 +103,7 @@ test('no results says so and can be cleared', async ({ page }) => {
   await page.getByRole('button', { name: 'Clear search' }).click();
   await expect(search(page)).toHaveValue('');
   await expect(search(page)).toBeFocused();
-  await expect(items(page).filter({ visible: true })).toHaveCount(RECIPES.length);
+  await expect.poll(() => visibleTitles(page)).toEqual(LISTED);
 });
 
 test('the search is re-applied when coming back to the page', async ({ page }) => {
@@ -100,7 +114,7 @@ test('the search is re-applied when coming back to the page', async ({ page }) =
   await page.goBack();
   // Whether the browser restores the typed query or not, the list must agree with the field.
   const query = await search(page).inputValue();
-  await expect.poll(() => visibleTitles(page)).toEqual(query ? ['Tiramisu'] : RECIPES.map((r) => r.title));
+  await expect.poll(() => visibleTitles(page)).toEqual(query ? ['Tiramisu'] : LISTED);
 });
 
 test('recipes saved on this device show a badge', async ({ page }) => {
@@ -206,7 +220,7 @@ test('screenshots for visual review', async ({ page }, testInfo) => {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
     await page.reload();
     // Lazy photos: scroll each into view and wait for it, or the full-page shot shows empty tiles.
-    for (const img of await page.locator('.feature img, .item img').all()) {
+    for (const img of await page.locator('.feature img, .item:not([hidden]) img').all()) {
       await img.scrollIntoViewIfNeeded();
       await img.evaluate((el: HTMLImageElement) => el.decode());
     }

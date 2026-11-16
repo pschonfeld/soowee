@@ -5,6 +5,7 @@ const input = document.querySelector<HTMLInputElement>('#search')!;
 const items = [...document.querySelectorAll<HTMLElement>('[data-search]')].map((item) => ({
   item,
   words: item.dataset.search!.split(' '),
+  featured: 'featured' in item.dataset,
 }));
 const feature = document.querySelector<HTMLElement>('.feature');
 const count = document.querySelector<HTMLElement>('[data-count]')!;
@@ -18,8 +19,9 @@ let announceTimer = 0;
 function filter() {
   const query = input.value.trim();
   let shown = 0;
-  for (const { item, words } of items) {
-    const hit = matches(words, query);
+  for (const { item, words, featured } of items) {
+    // The featured recipe is already the card above the list; it joins the list only as a search result.
+    const hit = matches(words, query) && !(featured && query === '');
     item.hidden = !hit;
     // Position among the visible rows: the first row (two on wide screens) draws no separator.
     if (hit) item.dataset.pos = String(shown++);

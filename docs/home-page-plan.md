@@ -145,7 +145,7 @@ The button is a plain `<a href="/" aria-label="All recipes">`, with no `history.
 
 **Featured.**
 - At most one recipe. `index.astro` fails the build if two are featured.
-- It also appears in "All recipes", so that list is complete.
+- **A recipe never shows twice.** The featured recipe is in the "All recipes" markup, but hidden until a search matches it; while searching, the card above hides and the recipe shows as a result instead. Revised by the owner: an earlier version showed it in both places to keep the list complete.
 - With no featured recipe, the zone isn't rendered and the first two list photos load eagerly.
 
 **Search.**
@@ -236,7 +236,7 @@ No schema change and no recipe edits.
 - **`home.spec.ts`:**
   - Every recipe appears once in the list and links to its page.
   - Each item's time matches its recipe hero (for example Crêpes "50 min" and "+ 1 hr resting"); the test compares the two pages rather than hard-coding values.
-  - The featured recipe appears at the top and in the list.
+  - The featured recipe appears at the top and not in the list, until a search matches it.
   - Search filters correctly, ignores accents and handles several words.
   - The no-results message and Clear search work; Escape clears.
   - The filter is re-applied after going back.
@@ -252,7 +252,7 @@ No schema change and no recipe edits.
 | Cut | Reason |
 |---|---|
 | Saved row | Not needed at 6 recipes; it's first in line later. |
-| Photo morph between pages (view transition) | The featured recipe appears twice on the page, which cancels the transition, and its effect on the hero's fade is unproven. |
+| Photo morph between pages (view transition) | Its effect on the hero's fade is unproven. |
 | Astro prefetch | A script on every page for about 100 ms on a tiny HTML file. |
 | `history.back()` on the back link | Unpredictable. |
 | JSON-LD ItemList | No search-engine goal and no `site` origin yet. |

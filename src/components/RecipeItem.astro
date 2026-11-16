@@ -17,16 +17,18 @@ interface Props {
   eager?: boolean;
   /** Position in the list; the first row has no separator. home.ts renumbers the visible rows while searching. */
   pos: number;
+  /** Shown large above the list: this item stays hidden until a search matches it, so it never shows twice. */
+  featured?: boolean;
 }
 
-const { entry, eager = false, pos } = Astro.props;
+const { entry, eager = false, pos, featured = false } = Astro.props;
 const r = entry.data;
 const time = heroTime(r.time.total, stepTimes(r.steps));
 const tint = await tintFor(r.image, r.tint);
 const search = haystack([r.title, r.cuisine, ...r.ingredients.flatMap((g) => g.items.map((i) => i.name))]);
 ---
 
-<li class="item" data-slug={entry.id} data-search={search} data-pos={pos}>
+<li class="item" data-slug={entry.id} data-search={search} data-pos={pos} data-featured={featured || undefined} hidden={featured}>
   <a href={`/${entry.id}/`}>
     <div class="item__media" style={`background:${tint.base}`}>
       {/*
