@@ -1,6 +1,6 @@
 ---
 title: Crêpes
-description: Thin, supple French crêpes with a quiet note of brown butter and no sugar, a neutral base for whatever goes with them. The batter rests for at least an hour, and is easiest made the night before.
+description: Thin, supple French crêpes with a quiet note of brown butter and only a little sugar, a neutral base for whatever goes with them. The batter rests for at least an hour, and is easiest made the night before.
 featured: false
 cuisine: French
 image: ../../assets/recipes/crepes.jpg
@@ -19,6 +19,7 @@ ingredients:
       - { qty: 35, unit: g, name: butter, note: unsalted }
       - { qty: 550, unit: ml, name: whole milk, note: "in total: 500 ml in the batter, up to 50 ml to adjust it" }
       - { qty: 225, unit: g, name: plain flour, note: "all-purpose; T45 or T55 in France" }
+      - { qty: 10, unit: g, name: sugar, note: "fine; leave out for savoury fillings" }
       - { qty: 0.5, unit: tsp, name: salt, note: fine }
       - { qty: 3, name: eggs, about: { qty: 165, max: 180, unit: g }, note: "large, ideally at room temperature" }
       - { name: neutral oil, note: for the pan }
@@ -35,7 +36,7 @@ steps:
       - tip: Warm milk carries the butter into the batter as fine droplets. Poured straight into cold milk and eggs, melted butter sets into flecks that the sieve then catches.
   - title: Mix the batter
     text:
-      - Whisk {225 g plain flour} and {0.5 tsp salt} in a large bowl and make a well in the centre.
+      - Whisk {225 g plain flour}, {10 g sugar} and {0.5 tsp salt} in a large bowl and make a well in the centre.
       - Beat {3 eggs} in a jug until no streaks of white remain, and pour them into the well.
       - Whisk from the centre outwards, drawing the flour in gradually, and add about {150 ml} of the brown-butter milk as it stiffens. Keep whisking for {timer:1m} after the flour is in, until you have a thick, completely smooth paste, like thick yoghurt.
       - tip: Lumps only break up while the paste is thick enough to resist the whisk. In a thin batter they float away from it, so add the milk only once the paste is smooth.
@@ -61,7 +62,7 @@ steps:
 
 - **Make ahead:** Make the batter the evening before and cook in the morning; it keeps up to 24 hours in the fridge. Whisk it well and adjust the thickness before cooking.
 - **Store:** Cooked crêpes keep 2 days in the fridge, stacked and wrapped, or 2 months in the freezer with baking paper between them. Warm them for 10 seconds a side in a hot, dry pan.
-- **Swap:** For the most neutral crêpe, melt the butter in the warm milk without browning it. If you fill them mostly with sweet things, 1 tbsp of sugar in the batter gives a deeper, more even colour, but no flavour of its own; vanilla, zest or liqueur belong in the filling.
+- **Swap:** For savoury fillings, leave out the sugar. For the most neutral crêpe, melt the butter in the warm milk without browning it. Vanilla, zest or liqueur belong in the filling, not the batter.
 - **Serve:** Butter and sugar, or sugar and a squeeze of lemon; jam or chestnut cream; or savoury, with ham, grated Gruyère and an egg.
 
 ## Allergens
