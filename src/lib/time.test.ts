@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { stepTimes } from './inline';
+import { directionTimes } from './inline';
 import { describeTime, heroTime as heroTimeRaw, listJoin, readyMinutes, type Segment } from './time';
 
-const times = (...paragraphs: string[]) => stepTimes([{ text: paragraphs }]);
+const times = (...paragraphs: string[]) => directionTimes([{ steps: paragraphs }]);
 const sentence = (total: number, ...paragraphs: string[]) => describeTime(total, times(...paragraphs));
 // Durations use no-break spaces (format.test.ts checks them); these tests are about wording, so read them as spaces.
 const sp = (s: string) => s.replace(/\u00a0/g, ' ');

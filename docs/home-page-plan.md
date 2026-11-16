@@ -138,7 +138,7 @@ The button is a plain `<a href="/" aria-label="All recipes">`, with no `history.
 
 **Order.** "All recipes" is alphabetical (`localeCompare(…, 'en')`).
 
-**Time.** The home page says exactly what each recipe's hero says. Both use `heroTime(r.time.total, stepTimes(r.steps))` from `src/lib/time.ts`, so nothing is computed twice and the two can never disagree (AGENTS.md decision 3).
+**Time.** The home page says exactly what each recipe's hero says. Both use `heroTime(r.time.total, directionTimes(r.directions))` from `src/lib/time.ts`, so nothing is computed twice and the two can never disagree (AGENTS.md decision 3).
 - **Featured card:** Time and Yield, as in the hero, with any wait on its own line under the time.
 - **List rows and grid tiles:** the time plus any wait on one line, such as "50 min + 1 hr resting". The wait wraps only as a whole phrase.
 - **Rows and tiles leave out yield.** With a wait, time and yield don't fit one line at 320px. The time is what helps someone choose, and yield is on the recipe page.
@@ -187,7 +187,7 @@ The button is a plain `<a href="/" aria-label="All recipes">`, with no `history.
 |---|---|
 | `src/components/Page.astro` | NEW shell: `<html>`, head (meta, theme script, icons, OG, `theme-color`), skip link, footer (wordmark, credits, theme switch). Props: title, description, OG data, body style, theme colours, credits. |
 | `src/components/Recipe.astro` | Uses Page.astro. Adds the back link in the hero. |
-| `src/components/Featured.astro` | NEW. Uses `tintFor`, `heroTime`, `stepTimes` and `formatYield`. |
+| `src/components/Featured.astro` | NEW. Uses `tintFor`, `heroTime`, `directionTimes` and `formatYield`. |
 | `src/components/RecipeItem.astro` | NEW. One `<a>` containing the photo (`alt=""`, since the title is next to it) and a text block: cuisine, title, meta (time and wait from `heroTime`, badge slot) and description. CSS switches it between list row and grid tile. |
 | `src/pages/index.astro` | Replaces the redirect. |
 | `src/scripts/home.ts` | NEW, about 1 kB: search and Saved badge |

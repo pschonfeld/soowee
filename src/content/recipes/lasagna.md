@@ -54,23 +54,24 @@ equipment:
   - Pot, heavy-bottomed, 5 L
   - Baking dish, porcelain, 38 × 26 × 7 cm (4.5 L)
   - Instant-read thermometer
-steps:
+directions:
   - title: Prepare the cheeses
-    text:
+    steps:
       - Start here, so the mozzarella drains while the ragù cooks. Tear {250 g mozzarella fior di latte} into small pieces and drain on kitchen paper for at least {timer:30m}, ideally for the whole time the ragù simmers or overnight in the fridge.
       - tip: Use fior di latte, not mozzarella di bufala, which releases too much water in the oven and turns the layers wet.
       - Grate {80 g Pecorino Romano} and set {30 g} aside for the top. Shred {100 g Provolone Piccante}.
       - tip: Parmigiano Reggiano can replace the Pecorino Romano. If only Provolone dolce is available, use it and add {20 g} more Pecorino Romano for bite.
   - title: Make the soffritto and brown the meat
-    text:
-      - Heat {2 tbsp extra virgin olive oil} in a large heavy-bottomed pot over medium-low heat. Add the {onion}, {carrot}, {celery} and {1 g salt} and cook gently, stirring now and then, for {timer:12-15m}, until soft, sweet and translucent.
+    steps:
+      - Heat {2 tbsp extra virgin olive oil} in a large heavy-bottomed pot over medium-low heat.
+      - Add the {onion}, {carrot}, {celery} and {1 g salt} and cook gently, stirring now and then, for {timer:12-15m}, until soft, sweet and translucent.
       - tip: Do not let the vegetables brown. The salt draws out moisture so they sweat instead of frying.
       - Turn the heat up to high and add {500 g ground beef} and {500 g ground pork}. Spread the meat over the soffritto, leave it untouched for 2–3 minutes, then break it up with a wooden spoon.
       - Keep cooking, stirring now and then, for {timer:12-15m}, until the water the meat releases has cooked off and the meat sizzles in its own fat and browns in places.
       - tip: Do not stop when the meat is no longer pink. Until its water has gone it is boiling, not browning, and that browning is where the ragù gets its depth. The sizzle tells you it has turned.
       - Season with {8 g salt}, pour in {240 ml red wine} and simmer, scraping the base of the pot, until the smell of alcohol is gone and the liquid has almost evaporated.
   - title: Simmer the ragù
-    text:
+    steps:
       - Stir in {1.4 L passata}. Reduce the heat to medium-low, cover the pot and simmer gently, with a bubble breaking the surface only now and then, for {simmer:1h}, stirring occasionally.
       - Remove the lid, add {240 ml water} and simmer uncovered on low heat for {simmer:1h} more, stirring occasionally. Add a splash of water if it thickens, so it stays loose and spoonable.
       - tip: Fresh pasta sheets take their moisture from the sauce. A thick ragù leaves them dry and chewy.
@@ -78,14 +79,14 @@ steps:
       - tip: Keep the seasoning slightly under. The Pecorino Romano and Provolone bring salt of their own.
   - title: Make the béchamel
     heat: Preheat the oven to **180 °C**, conventional top and bottom heat, with a rack in the lower-middle position. Allow about 20 minutes. Avoid the fan setting, which dries the surface and edges before the centre is hot.
-    text:
+    steps:
       - While the ragù finishes, melt {40 g butter} in a saucepan over low heat.
       - Whisk in {40 g flour} and cook for {timer:1-2m} until the raw flour smell is gone, without letting it colour.
       - Add {400 ml milk} gradually, a little at a time, whisking constantly so no lumps form.
       - Cook over low heat, whisking, until the sauce comes to a gentle bubble, then keep cooking for {timer:3-5m} until it is smooth and as thick as pouring custard.
       - Season with a pinch of {salt} and a few gratings of {nutmeg}, remove from the heat and keep warm. You should have about 440 ml.
   - title: Assemble the lasagna
-    text:
+    steps:
       - Grease the baking dish with {extra virgin olive oil} using a pastry brush and stand it on the baking tray.
       - Trim {600 g egg pasta sheets} to fit the dish, in 4 portions of about {150 g}, each enough to cover the base once.
       - tip: There is no need to boil fresh sheets. They cook in the sauce. Butt the edges together rather than overlapping them, because a double thickness stays doughy.
@@ -95,7 +96,7 @@ steps:
       - tip: Keep every layer even and not too wet. Too much sauce and the lasagna loses shape and slides apart when served. Any ragù left over (you should have a little) goes on the table or in the freezer.
       - Spread {300 ml} ragù over the top sheet, then the remaining béchamel (about 200 ml) from edge to edge so no pasta is exposed.
   - title: Bake
-    text:
+    steps:
       - Cover the dish with foil, without letting it touch the surface, and bake for {bake:30m}.
       - Remove the foil, sprinkle with the reserved {30 g} {Pecorino Romano} and bake uncovered for {bake:20-25m} until the top is golden, the edges are bubbling and the centre reads at least 75 °C on an instant-read thermometer.
       - Leave it to cool for {cool:15-20m} before slicing.

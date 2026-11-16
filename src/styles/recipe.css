@@ -528,40 +528,29 @@
   line-height: var(--lh-tight);
 }
 
-/* Directions */
-.step + .step {
+/* Directions: sections are headed by their title alone; steps are paragraphs in an ordered list, so the order is
+   announced without numbers on screen. */
+.directions__section + .directions__section {
   margin-top: var(--s-8);
 }
 
-/* "STEP 1" is the quiet locator; the step's own title carries the meaning, so it gets the primary colour. */
-.step__label {
-  font-size: var(--text-footnote);
-  font-weight: 700;
-  letter-spacing: var(--caps-tracking);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.step__title {
-  display: block;
-  margin-top: var(--s-1);
+.directions__title {
   font-size: var(--text-body);
   font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--text);
+  line-height: var(--lh-tight);
 }
 
-/* Plain wrapping (see .cook__line): WebKit's text-wrap: pretty leaves a ragged column here. */
-.step p {
+/* Plain wrapping (see .cook__step): WebKit's text-wrap: pretty leaves a ragged column here. */
+.directions__title + * {
   margin-top: var(--s-3);
 }
 
-.step p + p {
+.heat + .directions__steps,
+.directions__steps > li + li {
   margin-top: var(--s-4);
 }
 
-.step strong,
+.directions__section strong,
 .prose strong {
   font-weight: 700;
 }
@@ -601,11 +590,11 @@
 }
 
 /* Invisible 44px-tall touch area; the pill itself keeps its size in the sentence. */
-.step .timer {
+.directions__section .timer {
   position: relative;
 }
 
-.step .timer::after {
+.directions__section .timer::after {
   content: '';
   position: absolute;
   inset: -0.5rem 0; /* taller only, so it never reaches words beside the pill */
@@ -719,7 +708,7 @@ html.is-cooking {
 
 .cook[open] {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 
 /* The photo and Close sit in the corners, as far from the top as from the side: the page gutter, so the photo
@@ -773,6 +762,7 @@ html.is-cooking {
 }
 
 .cook__panel {
+  grid-row: 4;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--s-6) var(--gutter) 7rem;
@@ -794,39 +784,43 @@ html.is-cooking {
 
 #panel-directions {
   padding-bottom: 80svh; /* lets the last line scroll up to the reading position */
+  /* Text also fades out at the top, so it never slides flush under the section title above the panel. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--s-6), #000 calc(100% - 7rem), transparent calc(100% - 1rem));
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--s-6), #000 calc(100% - 7rem), transparent calc(100% - 1rem));
 }
 
-.cook__step-label {
-  margin-top: var(--s-12);
+/* The section being cooked, fixed above the scrolling text. The count is quiet: where you are, not what to do. */
+/* Lines up with the text column below it (.cook__inner inside the panel's gutters), not with the screen edge. */
+.cook__context {
+  grid-row: 3;
+  justify-self: center;
+  width: min(100%, 44rem + 2 * var(--gutter));
+  padding: var(--s-2) var(--gutter) var(--s-3);
   font-size: var(--text-body);
-  font-weight: 700;
-  letter-spacing: var(--caps-tracking);
-  text-transform: uppercase;
-  /* Dims with the rest of its step; already validated at 4.5:1 regardless of size (HERO_TEXT 0.78/1). */
-  color: var(--on-tint-secondary);
-  transition: color var(--dur) var(--ease-out);
+  font-weight: 600;
+  line-height: var(--lh-tight);
 }
 
-.cook__step-label.is-active {
-  color: var(--on-tint);
-}
-
-.cook__step-label:first-child {
-  margin-top: 0;
-}
-
-.cook__step-label span {
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
+.cook__count {
+  white-space: nowrap; /* "2 of 6" moves to the next line whole */
+  font-weight: 400;
   color: var(--on-tint-secondary);
 }
 
-/* Plain wrapping, not text-wrap: pretty: WebKit's pretty evens lines like balance and leaves a ragged column on
+.cook__count::before {
+  content: '· ';
+}
+
+/* Sections are told apart by space and by the title above; their headings are for screen readers. */
+.cook__section + .cook__section {
+  margin-top: var(--s-16);
+}
+
+/* One stop of cook mode: a step with its tips, or a heat line.
+   Plain wrapping, not text-wrap: pretty: WebKit's pretty evens lines like balance and leaves a ragged column on
    iPhone (twice the unused width per line at 393px, for the same number of lines). */
-.cook__line {
-  margin-top: var(--s-8);
-  scroll-margin-top: 4.5rem; /* keeps the step label visible above the active line */
+.cook__step {
+  scroll-margin-top: var(--s-6);
   font-size: clamp(1.625rem, 1.2rem + 2.2vw, 2.375rem);
   line-height: 1.24;
   letter-spacing: -0.012em;
@@ -835,34 +829,35 @@ html.is-cooking {
   transition: color var(--dur) var(--ease-out);
 }
 
-.cook__step-label + .cook__line {
-  margin-top: var(--s-4);
+.cook__step + .cook__step {
+  margin-top: var(--s-8);
 }
 
-.cook__line.is-active {
+.cook__step.is-active {
   color: var(--on-tint);
 }
 
-.cook__line strong {
+.cook__step strong {
   font-weight: 700;
 }
 
-.cook__line .timer {
+.cook__step .timer {
   background: rgb(255 255 255 / 0.2);
   color: inherit;
   padding-inline: 0.5rem 0.625rem;
 }
 
-.cook__line--tip {
+.cook__tip {
+  margin-top: var(--s-4);
   font-size: var(--text-title3);
   line-height: 1.4;
-  cursor: default;
-  /* Smaller than step lines, so it dims only to the secondary tone, never below normal-text contrast. */
+  letter-spacing: 0;
+  /* Smaller than step text, so it dims only to the secondary tone, never below normal-text contrast. */
   color: var(--on-tint-secondary);
   transition: color var(--dur) var(--ease-out);
 }
 
-.cook__line--tip.is-active {
+.cook__step.is-active .cook__tip {
   color: var(--on-tint);
 }
 

@@ -4,7 +4,7 @@ import { checkMentions, resolveMention } from './mentions';
 type Item = { name: string; qty?: number; unit?: 'g' | 'kg' | 'ml' | 'L' | 'tsp' | 'tbsp' };
 const recipe = (items: Item[], ...text: (string | { tip: string })[]) => ({
   ingredients: [{ items }],
-  steps: [{ text }],
+  directions: [{ steps: text }],
 });
 const messages = (r: Parameters<typeof checkMentions>[0]) => checkMentions(r).map((i) => i.message);
 
@@ -45,7 +45,7 @@ describe('checkMentions', () => {
         { items: [{ name: 'all-purpose flour', qty: 120, unit: 'g' as const }] },
         { items: [{ name: 'all-purpose flour', qty: 40, unit: 'g' as const }] },
       ],
-      steps: [{ heat: 'Dust with {40 g flour}.', text: ['Whisk {120 g all-purpose flour}.'] }],
+      directions: [{ heat: 'Dust with {40 g flour}.', steps: ['Whisk {120 g all-purpose flour}.'] }],
     };
     expect(checkMentions(r)).toEqual([]);
   });
@@ -78,7 +78,7 @@ describe('checkMentions', () => {
 
   it('reports unknown and ambiguous mentions with the step path', () => {
     const r = recipe([{ name: 'fine sea salt', qty: 3, unit: 'g' }, { name: 'flaky sea salt' }], 'Add {3 g salt}, {flaky sea salt}, {fine sea salt} and {2 cups}.');
-    expect(checkMentions(r).map((i) => i.path)).toEqual([['steps', 0, 'text', 0], ['steps', 0, 'text', 0]]);
+    expect(checkMentions(r).map((i) => i.path)).toEqual([['directions', 0, 'steps', 0], ['directions', 0, 'steps', 0]]);
     expect(messages(r)).toEqual([expect.stringMatching(/more than one ingredient/), expect.stringMatching(/"\{cups\}" matches no ingredient/)]);
   });
 

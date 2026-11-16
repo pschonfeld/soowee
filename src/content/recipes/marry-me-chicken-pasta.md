@@ -44,26 +44,28 @@ equipment:
   - Sauté pan, stainless steel or cast iron, 28–30 cm
   - Pot, 4 L
   - Instant-read thermometer
-steps:
+directions:
   - title: Get ready
-    text:
+    steps:
       - Bring {3 L water} to a boil in the pot with {30 g salt}, so it is ready when the sauce is.
       - Pat the {chicken thighs} dry, cut them into 3–4 cm pieces and season with {4 g salt} and {black pepper}.
-      - Grate {80 g Parmigiano Reggiano} and set {20 g} aside to serve. Chop the {garlic} and drain and slice the {sun-dried tomatoes}, keeping their oil.
+      - Grate {80 g Parmigiano Reggiano} and set {20 g} aside to serve.
+      - Chop the {garlic} and drain and slice the {sun-dried tomatoes}, keeping their oil.
   - title: Brown the chicken
-    text:
-      - Heat {1 tbsp olive oil} in the sauté pan over high heat until it shimmers. Add half the chicken in a single layer, leave it untouched for 2 minutes, then turn it and brown the other side for {timer:2m}, until deep golden. It does not need to be cooked through.
+    steps:
+      - Heat {1 tbsp olive oil} in the sauté pan over high heat until it shimmers.
+      - Add half the chicken in a single layer, leave it untouched for 2 minutes, then turn it and brown the other side for {timer:2m}, until deep golden. It does not need to be cooked through.
       - tip: Brown in two batches. In a crowded pan the chicken steams and turns grey, and the browned film it leaves on the pan is the base of the sauce.
       - Move it to a plate and brown the rest the same way with the remaining {1 tbsp olive oil}.
   - title: Build the sauce
-    text:
+    steps:
       - Lower the heat to medium. Melt {30 g butter} in the pan, add the {garlic}, {dried thyme} and {chilli flakes} and stir for 30–40 seconds, until fragrant but not coloured.
       - Add the {sun-dried tomatoes} and {2 tsp sun-dried tomato oil} and stir for {timer:1m}.
       - Pour in {150 ml chicken stock} and boil for {timer:3-4m}, scraping up the browned bits, until it has reduced by about a third.
       - tip: From a cube, make the stock with twice the water the packet says. Reducing it concentrates the salt, and the tomatoes and Parmigiano add more, so do not salt the sauce yet.
       - Stir in {250 ml whipping cream} and {1 tsp Dijon mustard} and bring it back to a gentle simmer.
   - title: Finish the chicken and cook the pasta
-    text:
+    steps:
       - Return the chicken with any juices from the plate and simmer gently for {simmer:5m}, until the sauce coats a spoon thinly and the chicken reads at least 80 °C in the centre of the largest piece.
       - tip: Keep it at a lazy bubble. A hard boil can split the cream, and thighs stay juicy well above the 74 °C needed for safety.
       - Meanwhile, cook the {250 g egg tagliatelle} in the boiling water for 1–2 minutes less than the packet says, timing it to be ready with the sauce.
@@ -71,9 +73,11 @@ steps:
       - tip: If the sauce turns grainy or oily, it is too hot. Take it off the heat and stir in a splash of the pasta water.
       - Add the {baby spinach} and stir until just wilted, 30–60 seconds.
   - title: Toss and serve
-    text:
-      - Scoop out {200 ml} of the pasta water and drain the pasta. Add it to the pan and toss over low heat for 1–2 minutes, adding pasta water a splash at a time, until the sauce clings and slides rather than sits.
-      - Take the pan off the heat and stir in the {15 g butter}. Now taste, and adjust with {salt}, {black pepper} and a few drops of {lemon juice} if the sauce tastes too rich.
+    steps:
+      - Scoop out {200 ml} of the pasta water and drain the pasta.
+      - Add it to the pan and toss over low heat for 1–2 minutes, adding pasta water a splash at a time, until the sauce clings and slides rather than sits.
+      - Take the pan off the heat and stir in the {15 g butter}.
+      - Taste and adjust with {salt}, {black pepper} and a few drops of {lemon juice} if the sauce tastes too rich.
       - tip: The sauce thickens as it cools, so leave it a little looser than you want it on the plate.
       - Twist the pasta into nests on warm plates and set the chicken on top. Finish with the reserved {20 g} {Parmigiano Reggiano}, {1 tsp sun-dried tomato oil} and more {black pepper}.
 ---

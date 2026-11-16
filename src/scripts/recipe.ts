@@ -440,10 +440,11 @@ restoreTimers();
 document.addEventListener('click', (event) => {
   const button = (event.target as Element).closest<HTMLElement>('.timer');
   if (!button) return;
-  const step = button.closest<HTMLElement>('[data-step]')?.dataset.step;
+  // Named by its section ("Make the béchamel, 5 minutes"), so the tray tells running timers apart.
+  const section = button.closest<HTMLElement>('[data-section]')?.dataset.section;
   const text = button.textContent!.trim();
   unlockAudio();
-  startTimer(Number(button.dataset.timer), text, step ? `Step ${step}, ${text}` : text);
+  startTimer(Number(button.dataset.timer), text, section ? `${section}, ${text}` : text);
 });
 
 /* ── Cook mode ── */
@@ -451,15 +452,14 @@ const cook = $<HTMLDialogElement>('#cook')!;
 const cookOpen = $('[data-cook-open]')!;
 const tabs = $$<HTMLButtonElement>('[role="tab"]', cook);
 const directions = $('#panel-directions')!;
-/** Scroll/click anchors: the heat line and each paragraph of a step (not its tips or label). */
-const lines = $$('[data-line]', cook);
-/** Everything that dims with its step: lines, tips and the step label. */
-const stepEls = $$<HTMLElement>('[data-step]', cook);
-const stepLabels = $$<HTMLElement>('[data-step-label]', cook);
-const stepNumbers = [...new Set(lines.map((l) => Number(l.dataset.step)))].sort((a, b) => a - b);
+/** Where cook mode stops, in order: each section's `heat` line, then each step with its tips. */
+const steps = $$<HTMLElement>('[data-step]', cook);
+const context = $('[data-cook-context]', cook)!;
+const contextTitle = $('[data-context-title]', context)!;
+const contextCount = $('[data-context-count]', context)!;
 const background = [$('main')!, $('.footer')!, $('.skip')!];
-/** Distance from the top of the panel to the active step; mirrors scroll-margin-top in CSS. */
-const READING_OFFSET = 72;
+/** Distance from the top of the panel to the active step; mirrors scroll-margin-top of .cook__step in CSS. */
+const READING_OFFSET = 24;
 let activeStepIndex = 0;
 let followScrollAfter = 0;
 let wakeLock: WakeLockSentinel | null = null;
@@ -475,20 +475,26 @@ async function keepAwake() {
   }
 }
 
-/** Highlights the whole step (its label, lines and tips together), as Apple does, not one line at a time. */
+/**
+ * Moves cook mode to one step: a screenful that belongs together, as the reference highlights one part of a step at
+ * a time. The section it belongs to is shown above the text.
+ */
 function setActive(index: number, scroll = true) {
-  if (!stepNumbers.length) return;
-  activeStepIndex = Math.min(stepNumbers.length - 1, Math.max(0, index));
-  const activeStep = stepNumbers[activeStepIndex];
-  for (const el of stepEls) el.classList.toggle('is-active', Number(el.dataset.step) === activeStep);
-  for (const label of stepLabels) {
-    if (Number(label.dataset.step) === activeStep) label.setAttribute('aria-current', 'step');
-    else label.removeAttribute('aria-current');
+  if (!steps.length) return;
+  activeStepIndex = Math.min(steps.length - 1, Math.max(0, index));
+  const active = steps[activeStepIndex];
+  for (const step of steps) {
+    const current = step === active;
+    step.classList.toggle('is-active', current);
+    if (current) step.setAttribute('aria-current', 'step');
+    else step.removeAttribute('aria-current');
   }
+  const section = active.closest<HTMLElement>('[data-section]')!;
+  contextTitle.textContent = section.dataset.section!;
+  contextCount.textContent = section.dataset.count!;
   if (scroll) {
     followScrollAfter = performance.now() + 700; // don't let our own smooth scroll re-pick the step
-    const target = stepLabels.find((l) => Number(l.dataset.step) === activeStep);
-    target?.scrollIntoView({ block: 'start', behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+    active.scrollIntoView({ block: 'start', behavior: reducedMotion.matches ? 'auto' : 'smooth' });
   }
 }
 
@@ -499,6 +505,7 @@ function selectTab(tab: HTMLButtonElement) {
     t.tabIndex = selected ? 0 : -1;
     $(`#${t.getAttribute('aria-controls')}`)!.hidden = !selected;
   }
+  context.hidden = directions.hidden;
 }
 
 function openCook() {
@@ -507,8 +514,7 @@ function openCook() {
   for (const el of background) el.inert = true;
   selectTab(tabs[1]);
   setActive(activeStepIndex, false);
-  const activeStep = stepNumbers[activeStepIndex];
-  stepLabels.find((l) => Number(l.dataset.step) === activeStep)?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  steps[activeStepIndex]?.scrollIntoView({ block: 'start', behavior: 'auto' });
   // Focus the title, not the Close button: Safari would draw a focus ring after a tap or click.
   // Tab from here reaches Close first, as before.
   $('#cook-title', cook)!.focus();
@@ -567,7 +573,7 @@ function cookKeys(event: KeyboardEvent) {
   } else if (!directions.hidden && event.key === 'ArrowDown') setActive(activeStepIndex + 1);
   else if (!directions.hidden && event.key === 'ArrowUp') setActive(activeStepIndex - 1);
   else if (!directions.hidden && event.key === 'Home') setActive(0);
-  else if (!directions.hidden && event.key === 'End') setActive(stepNumbers.length - 1);
+  else if (!directions.hidden && event.key === 'End') setActive(steps.length - 1);
   else if (event.key === 'ArrowDown') panel.scrollBy({ top: LINE_STEP, behavior });
   else if (event.key === 'ArrowUp') panel.scrollBy({ top: -LINE_STEP, behavior });
   else if (event.key === 'Home') panel.scrollTo({ top: 0, behavior });
@@ -580,15 +586,14 @@ function cookKeys(event: KeyboardEvent) {
 
 for (const tab of tabs) tab.addEventListener('click', () => selectTab(tab));
 
-lines.forEach((line) => {
-  line.addEventListener('click', (event) => {
+steps.forEach((step, index) => {
+  step.addEventListener('click', (event) => {
     if ((event.target as Element).closest('.timer')) return;
-    const index = stepNumbers.indexOf(Number(line.dataset.step));
-    if (index !== -1) setActive(index);
+    setActive(index);
   });
 });
 
-/* Follow manual scrolling: the step whose nearest line sits at the reading position becomes active. */
+/* Follow manual scrolling: the step whose top sits nearest the reading position becomes active. */
 directions.addEventListener(
   'scroll',
   () => {
@@ -596,14 +601,13 @@ directions.addEventListener(
     scrollFrame = requestAnimationFrame(() => {
       if (performance.now() < followScrollAfter) return;
       const anchor = directions.getBoundingClientRect().top + READING_OFFSET;
-      let bestLine = 0;
+      let best = 0;
       let distance = Infinity;
-      lines.forEach((line, i) => {
-        const d = Math.abs(line.getBoundingClientRect().top - anchor);
-        if (d < distance) [bestLine, distance] = [i, d];
+      steps.forEach((step, i) => {
+        const d = Math.abs(step.getBoundingClientRect().top - anchor);
+        if (d < distance) [best, distance] = [i, d];
       });
-      const bestStep = stepNumbers.indexOf(Number(lines[bestLine].dataset.step));
-      if (bestStep !== -1 && bestStep !== activeStepIndex) setActive(bestStep, false);
+      if (best !== activeStepIndex) setActive(best, false);
     });
   },
   { passive: true },

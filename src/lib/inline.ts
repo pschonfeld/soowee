@@ -232,10 +232,10 @@ export function plainText(source: string): string {
     .replace(TIMER, (_, token: string, value: string) => parseTimer(value, token).label);
 }
 
-type Steps = { text: (string | { tip: string })[] }[];
+type Directions = { steps: (string | { tip: string })[] }[];
 
-/** What the step paragraphs say about time. Tips and `heat` are not counted. */
-export interface StepTimes {
+/** What the steps say about time. Tips and `heat` are not counted. */
+export interface DirectionTimes {
   /** Minutes of hands-off time, part of time.total. */
   handsOff: number;
   /** The hands-off verbs used, in the order they first appear, without repeats. */
@@ -248,12 +248,12 @@ export interface StepTimes {
 }
 
 /** Sums are made in seconds and rounded to minutes once, as shown on the page. A range counts at its lower bound. */
-export function stepTimes(steps: Steps): StepTimes {
-  const paragraphs = steps.flatMap((s) => s.text).filter((p): p is string => typeof p === 'string');
+export function directionTimes(directions: Directions): DirectionTimes {
+  const steps = directions.flatMap((s) => s.steps).filter((p): p is string => typeof p === 'string');
   let handsOff = 0;
   const activities = new Set<HandsOffToken>();
   const waits = new Map<WaitToken, number>();
-  for (const p of paragraphs) {
+  for (const p of steps) {
     for (const [, token, value] of p.matchAll(HANDS_OFF_PATTERN)) {
       handsOff += parseTimer(value, token).seconds;
       activities.add(token as HandsOffToken);

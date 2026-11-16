@@ -24,7 +24,7 @@ describe('docs/recipe-model.md', () => {
   it('has a table row for every field of the recipe schema', () => {
     expect(schemaFields.size).toBeGreaterThan(25);
     expect(schemaFields).toContain('image');
-    // `tip` is a paragraph form, documented in the Step table and the markup table rather than as its own row.
+    // `tip` is a form of step, documented in the Directions table and the markup table rather than as its own row.
     expect([...schemaFields].filter((f) => f !== 'tip' && !rowFields.has(f))).toEqual([]);
     expect(doc).toContain('`tip`');
   });

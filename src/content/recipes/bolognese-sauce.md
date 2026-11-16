@@ -45,23 +45,25 @@ ingredients:
 equipment:
   - Pot, heavy-bottomed, 5 L
   - Pot, 7–8 L, for the pasta
-steps:
+directions:
   - title: Make the soffritto
-    text:
-      - Heat {3 tbsp extra virgin olive oil} in the heavy-bottomed pot over medium-low heat. Add the {red onion}, {carrots}, {celery} and {1 g fine sea salt} and cook gently, stirring now and then, for {timer:12-15m}, until soft, sweet and translucent.
+    steps:
+      - Heat {3 tbsp extra virgin olive oil} in the heavy-bottomed pot over medium-low heat.
+      - Add the {red onion}, {carrots}, {celery} and {1 g fine sea salt} and cook gently, stirring now and then, for {timer:12-15m}, until soft, sweet and translucent.
       - tip: Chop the vegetables small, about 3 mm, so they melt into the sauce; a food processor is fine if you pulse it rather than purée. Do not let them brown.
   - title: Brown the meat
-    text:
+    steps:
       - Turn the heat up to high and add the {ground pork}, {ground beef} and {ground veal}. Spread the meat over the soffritto, leave it untouched for 2–3 minutes, then break it up finely with a wooden spoon.
-      - Keep cooking, stirring now and then, for {timer:15-20m}, until the water the meat releases has cooked off and the meat sizzles in its own fat and browns lightly in places, without turning crisp. Season with {10 g fine sea salt} and {black pepper}.
+      - Keep cooking, stirring now and then, for {timer:15-20m}, until the water the meat releases has cooked off and the meat sizzles in its own fat and browns lightly in places, without turning crisp.
       - tip: Do not stop when the meat is no longer pink. Until its water has gone it is boiling, not browning, and that browning is where the ragù gets its depth. The sizzle tells you it has turned.
+      - Season with {10 g fine sea salt} and {black pepper}.
   - title: Add the wine and tomatoes
-    text:
+    steps:
       - Push the meat to the sides, add the {70 g tomato paste} to the cleared base and fry it in the fat for {timer:2m}, stirring, until it turns a shade darker, then stir it through the meat.
       - Pour in {240 ml red wine} and simmer, scraping the base of the pot, until the smell of alcohol is gone and the liquid has almost evaporated.
       - Stir in {1 L passata}. Crush the {400 g peeled tomatoes} by hand into the pot and rinse the tin with a splash of hot {water}.
   - title: Simmer the ragù
-    text:
+    steps:
       - Bring it to a bare simmer, set the lid ajar and cook on the lowest heat, with a bubble breaking the surface only now and then, for {simmer:1h}. Stir every 30 minutes, scraping the base.
       - Stir in {240 ml milk} and {500 ml water} from the kettle and simmer, lid ajar, for {simmer:1h} more, until the milk has disappeared into the sauce.
       - tip: Part-way through, as the Bologna recipe has it, the milk has time to be absorbed and softens the acidity of the wine and tomatoes. Stirred in during the last minutes, it mostly thins the sauce.
@@ -69,9 +71,10 @@ steps:
       - tip: If it catches on the base, the heat is too high. Move the pot to the smallest burner or use a heat diffuser.
       - Skim off some of the pooled fat, leaving a little for shine. Taste and adjust with up to {4 g fine sea salt} and {black pepper}.
   - title: Cook the pasta and serve
-    text:
+    steps:
       - About 20 minutes before the ragù is ready, bring {5 L water} to a boil in the large pot with {50 g coarse salt}.
-      - Cook the {500 g egg tagliatelle} for 1–2 minutes less than the packet says. Scoop out {250 ml} of the pasta water and drain.
+      - Cook the {500 g egg tagliatelle} for 1–2 minutes less than the packet says.
+      - Scoop out {250 ml} of the pasta water and drain.
       - Return the pasta to the empty large pot with about half of the ragù and a splash of pasta water. Toss over low heat for {timer:1-2m}, adding more water if needed, until every strand is coated and glossy.
       - tip: The pasta finishes cooking in the sauce and its starch binds the two, so the ragù clings instead of sitting on top.
       - Serve in warm bowls with a spoonful more ragù on top and the {Parmigiano Reggiano} at the table. The rest of the ragù is for another meal.

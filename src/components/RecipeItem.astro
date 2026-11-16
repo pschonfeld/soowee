@@ -6,7 +6,7 @@
  */
 import type { CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';
-import { stepTimes } from '../lib/inline';
+import { directionTimes } from '../lib/inline';
 import { haystack } from '../lib/search';
 import { heroTime } from '../lib/time';
 import { tintFor } from '../lib/tint';
@@ -23,7 +23,7 @@ interface Props {
 
 const { entry, eager = false, pos, featured = false } = Astro.props;
 const r = entry.data;
-const time = heroTime(r.time.total, stepTimes(r.steps));
+const time = heroTime(r.time.total, directionTimes(r.directions));
 const tint = await tintFor(r.image, r.tint);
 const search = haystack([r.title, r.cuisine, ...r.ingredients.flatMap((g) => g.items.map((i) => i.name))]);
 ---

@@ -7,7 +7,7 @@
  * sentence under Directions says how they break down.
  */
 import { formatMinutes } from './format';
-import { HANDS_OFF, PLACES, WAITS, isPlace, type StepTimes } from './inline';
+import { HANDS_OFF, PLACES, WAITS, isPlace, type DirectionTimes } from './inline';
 
 /** A piece of the sentence; `strong` marks the numbers. */
 export type Segment = { text: string; strong?: true };
@@ -18,7 +18,7 @@ export function listJoin(words: readonly string[]): string {
 }
 
 /** The hero's Time: { cook: "30 min", wait: "8 hr chilling" }; `wait` only when the method has one. */
-export function heroTime(totalMinutes: number, times: StepTimes): { cook: string; wait?: string } {
+export function heroTime(totalMinutes: number, times: DirectionTimes): { cook: string; wait?: string } {
   const cook = formatMinutes(totalMinutes);
   if (!times.waits.length) return { cook };
   const minutes = times.waits.reduce((sum, w) => sum + w.minutes, 0);
@@ -26,7 +26,7 @@ export function heroTime(totalMinutes: number, times: StepTimes): { cook: string
 }
 
 /** All of it, until the dish can be served: cooking time plus every wait, for schema.org's totalTime. */
-export function readyMinutes(totalMinutes: number, times: StepTimes): number {
+export function readyMinutes(totalMinutes: number, times: DirectionTimes): number {
   return times.waits.reduce((sum, w) => sum + w.minutes, totalMinutes);
 }
 
@@ -34,7 +34,7 @@ export function readyMinutes(totalMinutes: number, times: StepTimes): number {
  * e.g. "4 hr 30 min in total: 1 hr 25 min of work and 3 hr 5 min of simmering, baking and cooling." or
  * "30 min of work, plus at least 8 hr in the fridge." "In total" only when nothing is waited on after it.
  */
-export function describeTime(totalMinutes: number, times: StepTimes): Segment[] {
+export function describeTime(totalMinutes: number, times: DirectionTimes): Segment[] {
   const n = (minutes: number): Segment => ({ text: formatMinutes(minutes), strong: true });
   const waits = times.waits;
 

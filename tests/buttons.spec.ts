@@ -92,7 +92,7 @@ test('recipe page, cook mode and timers: every control follows the button system
   // Once the toast clears, the chips move up to the top of the screen.
   await expect(page.locator('[data-toast]')).toHaveText('', { timeout: 5000 });
   check(await controls(page));
-  await page.getByRole('button', { name: 'Dismiss timer: Step 3, 1 hour' }).click();
+  await page.getByRole('button', { name: 'Dismiss timer: Simmer the ragù, 1 hour' }).click();
   await expect(page.getByRole('button', { name: /^Undo/ })).toBeVisible();
   check(await controls(page));
 

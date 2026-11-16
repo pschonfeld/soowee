@@ -14,7 +14,7 @@ interface Ingredient {
 }
 interface Recipe {
   ingredients: { items: Ingredient[] }[];
-  steps: { heat?: string; text: (string | { tip: string })[] }[];
+  directions: { heat?: string; steps: (string | { tip: string })[] }[];
 }
 export interface MentionIssue {
   path: (string | number)[];
@@ -69,14 +69,14 @@ export function checkMentions(recipe: Recipe): MentionIssue[] {
   const used = new Set<string>();
   const measured = new Map<string, { dimension: string; qty: number; path: (string | number)[] }[]>();
 
-  recipe.steps.forEach((step, i) => {
+  recipe.directions.forEach((section, i) => {
     const texts: { text: string; path: (string | number)[]; tip: boolean }[] = [];
-    if (step.heat !== undefined) texts.push({ text: step.heat, path: ['steps', i, 'heat'], tip: false });
-    step.text.forEach((p, j) =>
+    if (section.heat !== undefined) texts.push({ text: section.heat, path: ['directions', i, 'heat'], tip: false });
+    section.steps.forEach((p, j) =>
       texts.push(
         typeof p === 'string'
-          ? { text: p, path: ['steps', i, 'text', j], tip: false }
-          : { text: p.tip, path: ['steps', i, 'text', j, 'tip'], tip: true },
+          ? { text: p, path: ['directions', i, 'steps', j], tip: false }
+          : { text: p.tip, path: ['directions', i, 'steps', j, 'tip'], tip: true },
       ),
     );
 

@@ -18,7 +18,7 @@
   /* Line height and tracking: body text, and tight for dense blocks (callouts, rows, short titles). */
   --lh-body: 1.47;
   --lh-tight: 1.3;
-  /* Uppercase labels (TIME, STEP 1, FOR THE CHIPS): one tracking for all of them. */
+  /* Uppercase labels (TIME, FOR THE CHIPS): one tracking for all of them. */
   --caps-tracking: 0.05em;
 
   /* Spacing: 4pt grid */

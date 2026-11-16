@@ -2,7 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { UNITS } from './lib/format';
-import { plainText, stepTimes } from './lib/inline';
+import { directionTimes, plainText } from './lib/inline';
 import { checkMentions } from './lib/mentions';
 
 /**
@@ -10,7 +10,7 @@ import { checkMentions } from './lib/mentions';
  * (so it can be scaled, timed and exported as JSON-LD), free-form notes
  * in the Markdown body. docs/recipe-model.md explains every field.
  *
- * Inline markup allowed in step text:
+ * Inline markup allowed in `heat`, steps and tips:
  *   **bold**                      – ingredient mentions
  *   {timer:20m} {timer:5-10m}     – tappable timer; the label ("5–10 minutes") is generated so wording
  *                                   stays consistent, and a range rings at its lower bound (time to check)
@@ -85,42 +85,55 @@ const recipes = defineCollection({
         .array(z.strictObject({ group: z.string().optional(), items: z.array(ingredient).min(1) }))
         .min(1),
       equipment: z.array(z.string()).default([]),
-      steps: z
+      /**
+       * The method, in sections: a section is a phase with a title ("Make the béchamel"), a step is one action that
+       * ends in a state the cook can check. Cook mode stops on `heat` and on each step; a tip belongs to the step
+       * before it, so a section starts with a step.
+       */
+      directions: z
         .array(
-          z
-            .strictObject({
-              title: z.string().optional(),
-              /** Oven or oil to get hot: shown first and highlighted, so it is started in time. */
-              heat: z.string().optional(),
-              text: z.array(paragraph).min(1),
-            })
-            // Cook mode scrolls/highlights by step using its non-tip lines (`heat` plus string `text`
-            // entries) as anchors; a step made only of `tip:` paragraphs would have none to land on.
-            .refine((step) => step.heat !== undefined || step.text.some((p) => typeof p === 'string'), {
-              message: 'A step needs a `heat` line or at least one non-tip `text` entry to anchor cook mode on',
-            }),
+          z.strictObject({
+            title: z.string(),
+            /** Oven or oil to get hot: shown first and highlighted, so it is started in time. */
+            heat: z.string().optional(),
+            steps: z
+              .array(paragraph)
+              .min(1)
+              .refine((steps) => typeof steps[0] === 'string', {
+                message: 'A section starts with a step, not a tip: a tip belongs to the step before it',
+                path: [0],
+              }),
+          }),
         )
         .min(1),
     })
       // Reported against the recipe file at validation time, not while rendering the page.
       .superRefine((r, ctx) => {
-        // Every piece of step text: unknown tokens, malformed durations and units are reported with their path.
+        // Every piece of method text: unknown tokens, malformed durations and units are reported with their path.
         let valid = true;
-        r.steps.forEach((step, i) => {
-          const texts: [string, (string | number)[]][] = step.heat !== undefined ? [[step.heat, ['heat']]] : [];
-          step.text.forEach((p, j) => texts.push(typeof p === 'string' ? [p, ['text', j]] : [p.tip, ['text', j, 'tip']]));
+        r.directions.forEach((section, i) => {
+          const texts: [string, (string | number)[]][] = section.heat !== undefined ? [[section.heat, ['heat']]] : [];
+          section.steps.forEach((p, j) => texts.push(typeof p === 'string' ? [p, ['steps', j]] : [p.tip, ['steps', j, 'tip']]));
           for (const [text, path] of texts) {
             try {
               plainText(text);
             } catch (error) {
               valid = false;
-              ctx.addIssue({ code: 'custom', path: ['steps', i, ...path], message: (error as Error).message });
+              ctx.addIssue({ code: 'custom', path: ['directions', i, ...path], message: (error as Error).message });
             }
           }
         });
+        // Section titles name the timers ("Make the béchamel, 5 minutes"), so two equal ones could not be told apart.
+        const titles = new Set<string>();
+        r.directions.forEach((section, i) => {
+          if (titles.has(section.title)) {
+            ctx.addIssue({ code: 'custom', path: ['directions', i, 'title'], message: `Another section is already called "${section.title}"` });
+          }
+          titles.add(section.title);
+        });
         if (!valid) return;
         for (const issue of checkMentions(r)) ctx.addIssue({ code: 'custom', ...issue });
-        const { handsOff } = stepTimes(r.steps);
+        const { handsOff } = directionTimes(r.directions);
         if (r.time.total - handsOff <= 0) {
           ctx.addIssue({
             code: 'custom',

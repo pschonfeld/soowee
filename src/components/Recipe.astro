@@ -4,7 +4,7 @@ import { Image, Picture } from 'astro:assets';
 import Page from './Page.astro';
 import '../styles/recipe.css';
 import { formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
-import { keepAmountsWhole, plainText, renderInline, stepTimes } from '../lib/inline';
+import { directionTimes, keepAmountsWhole, plainText, renderInline } from '../lib/inline';
 import { describeTime, heroTime, readyMinutes } from '../lib/time';
 import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
@@ -34,9 +34,20 @@ const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
 // The hero shows the cooking time, then the wait ("30 min" / "+ 8 hr chilling"); the Directions header says how
 // they break down in one generated sentence (lib/time.ts).
 // content.config.ts guarantees the hands-off time leaves a positive amount of work.
-const times = stepTimes(r.steps);
+const times = directionTimes(r.directions);
 const time = heroTime(r.time.total, times);
 const timeSentence = describeTime(r.time.total, times);
+
+// Each step with the tips that follow it: a tip belongs to the step before it, and the schema makes every section
+// start with a step. The page and cook mode both render steps from this.
+const sections = r.directions.map((section) => ({
+  ...section,
+  steps: section.steps.reduce<{ text: string; tips: string[] }[]>((steps, p) => {
+    if (typeof p === 'string') steps.push({ text: p, tips: [] });
+    else steps.at(-1)!.tips.push(p.tip);
+    return steps;
+  }, []),
+}));
 
 type Ingredient = { qty?: number; unit?: string; name: string; about?: { qty: number; max?: number; unit: string }; note?: string };
 /** "g flour" / "onion": the unit (if any) and name, as shown after the quantity. */
@@ -67,10 +78,10 @@ const jsonLd = {
   // schema.org's totalTime means until it can be served, so every wait counts here.
   totalTime: isoDuration(readyMinutes(r.time.total, times)),
   recipeIngredient: r.ingredients.flatMap((g) => g.items.map(ingredientText)),
-  recipeInstructions: r.steps.map((s, i) => ({
+  recipeInstructions: r.directions.map((s) => ({
     '@type': 'HowToSection',
-    name: s.title ?? `Step ${i + 1}`,
-    itemListElement: [s.heat, ...s.text]
+    name: s.title,
+    itemListElement: [s.heat, ...s.steps]
       .filter((p): p is string => typeof p === 'string')
       .map((p) => ({ '@type': 'HowToStep', text: plainText(p) })),
   })),
@@ -283,37 +294,37 @@ const icons = {
                 </div>
               </div>
 
-              <ol>
+              <ol class="directions__sections" role="list">
                 {
-                  r.steps.map((step, i) => (
-                    <li class="step" data-step={i + 1}>
-                      <h3 class="step__label">
-                        Step {i + 1}
-                        {step.title && <span class="step__title">{step.title}</span>}
-                      </h3>
-                      {step.heat && (
+                  sections.map((section) => (
+                    <li class="directions__section" data-section={section.title}>
+                      <h3 class="directions__title">{section.title}</h3>
+                      {section.heat && (
                         <p class="heat">
                           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
                             <path d={icons.heat} />
                           </svg>
-                          <span set:html={renderInline(step.heat)} />
+                          <span set:html={renderInline(section.heat)} />
                         </p>
                       )}
-                      {step.text.map((p) =>
-                        typeof p === 'string' ? (
-                          <p set:html={renderInline(p)} />
-                        ) : (
-                          <p class="tip">
-                            <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
-                              <path d={icons.bulb} />
-                            </svg>
-                            <span>
-                              <span class="sr-only">Tip: </span>
-                              <Fragment set:html={renderInline(p.tip)} />
-                            </span>
-                          </p>
-                        ),
-                      )}
+                      <ol class="directions__steps" role="list">
+                        {section.steps.map((step) => (
+                          <li>
+                            <p set:html={renderInline(step.text)} />
+                            {step.tips.map((tip) => (
+                              <p class="tip">
+                                <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
+                                  <path d={icons.bulb} />
+                                </svg>
+                                <span>
+                                  <span class="sr-only">Tip: </span>
+                                  <Fragment set:html={renderInline(tip)} />
+                                </span>
+                              </p>
+                            ))}
+                          </li>
+                        ))}
+                      </ol>
                     </li>
                   ))
                 }
@@ -412,23 +423,29 @@ const icons = {
         </div>
       </div>
 
+      <!-- The section being cooked, outside the scrolling text so it stays in view. Visual only: the headings in the
+           panel carry the structure for screen readers, and the active step has aria-current. -->
+      <p class="cook__context" aria-hidden="true" data-cook-context>
+        <span data-context-title>{sections[0].title}</span>{' '}
+        <span class="cook__count" data-context-count>1 of {sections.length}</span>
+      </p>
+
       <div class="cook__panel" id="panel-directions" role="tabpanel" aria-labelledby="tab-directions" tabindex="0">
         <div class="cook__inner">
         {
-          r.steps.map((step, i) => (
-            <>
-              <h3 class="cook__step-label" data-step-label data-step={i + 1}>
-                Step {i + 1} {step.title && <span>· {step.title}</span>}
-              </h3>
-              {step.heat && <p class="cook__line" data-line data-step={i + 1} set:html={renderInline(step.heat)} />}
-              {step.text.map((p) =>
-                typeof p === 'string' ? (
-                  <p class="cook__line" data-line data-step={i + 1} set:html={renderInline(p)} />
-                ) : (
-                  <p class="cook__line cook__line--tip" data-step={i + 1} set:html={`Tip: ${renderInline(p.tip)}`} />
-                ),
-              )}
-            </>
+          sections.map((section, i) => (
+            <div class="cook__section" data-section={section.title} data-count={`${i + 1} of ${sections.length}`}>
+              <h3 class="sr-only">{section.title}</h3>
+              {section.heat && <p class="cook__step" data-step set:html={renderInline(section.heat)} />}
+              {section.steps.map((step) => (
+                <div class="cook__step" data-step>
+                  <p set:html={renderInline(step.text)} />
+                  {step.tips.map((tip) => (
+                    <p class="cook__tip" set:html={`Tip: ${renderInline(tip)}`} />
+                  ))}
+                </div>
+              ))}
+            </div>
           ))
         }
         </div>

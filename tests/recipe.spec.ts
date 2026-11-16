@@ -4,12 +4,12 @@ import sharp from 'sharp';
 import { parseTimer } from '../src/lib/inline';
 
 const RECIPES = [
-  { path: '/lasagna/', title: 'Lasagna', ingredients: 21, steps: 6 },
-  { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 21, steps: 7 },
-  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 8, steps: 4 },
-  { path: '/marry-me-chicken-pasta/', title: 'Marry Me Chicken Pasta', ingredients: 19, steps: 5 },
-  { path: '/bolognese-sauce/', title: 'Bolognese Sauce', ingredients: 19, steps: 5 },
-  { path: '/crepes/', title: 'Crêpes', ingredients: 7, steps: 4 },
+  { path: '/lasagna/', title: 'Lasagna', ingredients: 21, sections: 6 },
+  { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 20, sections: 7 },
+  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 8, sections: 4 },
+  { path: '/marry-me-chicken-pasta/', title: 'Marry Me Chicken Pasta', ingredients: 19, sections: 5 },
+  { path: '/bolognese-sauce/', title: 'Bolognese Sauce', ingredients: 19, sections: 5 },
+  { path: '/crepes/', title: 'Crêpes', ingredients: 7, sections: 4 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -25,7 +25,7 @@ for (const recipe of RECIPES) {
       await page.goto(recipe.path);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(recipe.title);
       await expect(page.locator('.ingredient')).toHaveCount(recipe.ingredients);
-      await expect(page.locator('.step')).toHaveCount(recipe.steps);
+      await expect(page.locator('.directions__section')).toHaveCount(recipe.sections);
       await expect(page.locator('.hero__media img')).toHaveJSProperty('complete', true);
       expect(await page.locator('.hero__media img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
     });
@@ -185,7 +185,7 @@ test('a long timer label fits at 320px with 200% text', async ({ page }, testInf
   await page.goto('/lasagna/');
   await page.addStyleTag({ content: 'html { font-size: 200% }' });
   await page.locator('.timer span').evaluateAll((spans, text) => spans.forEach((s) => (s.textContent = text)), label);
-  const pill = page.locator('.step .timer').first();
+  const pill = page.locator('.directions__section .timer').first();
   for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme });
     await pill.locator('xpath=..').screenshot({ path: `screenshots/${testInfo.project.name}/long-timer-${scheme}.png` });
@@ -194,7 +194,7 @@ test('a long timer label fits at 320px with 200% text', async ({ page }, testInf
   // The pill stays inside the step column, so its label wrapped rather than spilling out.
   const { pillRight, stepRight } = await pill.evaluate((el) => ({
     pillRight: el.getBoundingClientRect().right,
-    stepRight: el.closest('.step')!.getBoundingClientRect().right,
+    stepRight: el.closest('.directions__section')!.getBoundingClientRect().right,
   }));
   expect(pillRight).toBeLessThanOrEqual(stepRight + 0.5);
   // The cook view's panel scrolls on its own, so its overflow never reaches #cook or the page: measure the panel.
@@ -286,16 +286,16 @@ test.describe('interactions', () => {
     await expect(oil).toHaveText('3');
     await expect(beef).toHaveText('750');
     // Amounts mentioned inside the steps scale too, each from its own base value.
-    await expect(page.locator('.step p', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
-    await expect(page.locator('.step p', { hasText: 'red wine' })).toContainText('pour in 360\u00a0ml red wine');
-    await expect(page.locator('[data-line]', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
+    await expect(page.locator('.directions__section p', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
+    await expect(page.locator('.directions__section p', { hasText: 'red wine' })).toContainText('pour in 360\u00a0ml red wine');
+    await expect(page.locator('#panel-directions [data-step]', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
     await expect(page.locator('.hero [data-yield]')).toHaveText('12–15 servings');
     // The approximate weight of a counted ingredient scales with it.
     await expect(page.locator('.ingredient', { hasText: 'onion' })).toContainText('onion (about 225 g)');
     // One ingredient split across steps: 80 g Pecorino in the list, 50 g for the layers and 30 g for the top.
     await expect(page.locator('.ingredient', { hasText: 'Pecorino Romano' }).locator('[data-qty]')).toHaveText('120');
-    await expect(page.locator('.step p', { hasText: 'Grate' })).toContainText('Grate 120\u00a0g Pecorino Romano and set 45\u00a0g aside');
-    await expect(page.locator('.step p', { hasText: 'Remove the foil' })).toContainText('the reserved 45\u00a0g Pecorino Romano');
+    await expect(page.locator('.directions__section p', { hasText: 'Grate' })).toContainText('Grate 120\u00a0g Pecorino Romano and set 45\u00a0g aside');
+    await expect(page.locator('.directions__section p', { hasText: 'Remove the foil' })).toContainText('the reserved 45\u00a0g Pecorino Romano');
 
     await page.getByRole('button', { name: 'Scale down' }).click();
     await page.getByRole('button', { name: 'Scale down' }).click();
@@ -338,7 +338,7 @@ test.describe('interactions', () => {
     await expect(sentence.locator('strong')).toHaveText(['4 hr 30 min', '1 hr 25 min', '3 hr 5 min']);
     // Hands-off verbs are timers, like {timer:}.
     // The last step, "Bake": {bake:30m}, {bake:20-25m}, {cool:15-20m}.
-    await expect(page.locator('.step').last().locator('.timer')).toHaveCount(3);
+    await expect(page.locator('.directions__section').last().locator('.timer')).toHaveCount(3);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
     expect(ld.totalTime).toBe('PT4H30M');
     expect(ld.recipeYield).toBe('8–10 servings'); // plain space: the no-break one is for layout only
@@ -347,7 +347,7 @@ test.describe('interactions', () => {
 
     await page.goto('/fish-and-chips/');
     await expect(page.locator('.directions .section-sub')).toHaveText(
-      '1 hr 35 min in total: 55 min of work and 40 min of soaking and drying.',
+      '45 min in total: 25 min of work and 20 min of baking.',
     );
   });
 
@@ -365,7 +365,7 @@ test.describe('interactions', () => {
     expect(waitTop).toBeGreaterThanOrEqual(cookBottom - 1);
     await expect(page.locator('.directions .section-sub')).toHaveText('30 min of work, plus at least 8 hr in the fridge.');
     // Plain text in the step, not a timer button.
-    const chill = page.locator('.step', { hasText: 'Chill and serve' });
+    const chill = page.locator('.directions__section', { hasText: 'Chill and serve' });
     await expect(chill).toContainText('at least 8 hours');
     await expect(chill.locator('.timer')).toHaveCount(0);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
@@ -376,7 +376,7 @@ test.describe('interactions', () => {
     await page.goto('/crepes/');
     await expect(page.locator('.meta dd').first()).toHaveText(/^50\smin\s*\+ 1\shr resting$/);
     await expect(page.locator('.directions .section-sub')).toHaveText('50 min of work, plus 1 hr of resting.');
-    await expect(page.locator('.step', { hasText: 'Rest the batter' }).locator('.timer')).toHaveCount(1);
+    await expect(page.locator('.directions__section', { hasText: 'Rest the batter' }).locator('.timer')).toHaveCount(1);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
     expect(ld.totalTime).toBe('PT1H50M');
   });
@@ -393,14 +393,14 @@ test.describe('interactions', () => {
     expect(ld.recipeIngredient).toContain('36 Savoiardi biscuits (about 300–360 g), ladyfingers, half for each layer');
   });
 
-  test('preheating is the first, highlighted line of its step', async ({ page }) => {
-    const step = page.locator('.step', { hasText: 'Make the béchamel' });
+  test('preheating is the first, highlighted line of its section', async ({ page }) => {
+    const step = page.locator('.directions__section', { hasText: 'Make the béchamel' });
     await expect(step.locator('p').first()).toHaveClass(/heat/);
     await expect(step.locator('.heat')).toHaveText(
       'Preheat the oven to 180 °C, conventional top and bottom heat, with a rack in the lower-middle position. Allow about 20 minutes. Avoid the fan setting, which dries the surface and edges before the centre is hot.',
     );
-    // [data-step="4"] also matches the step label and tips now that they carry it too, for step-level dimming.
-    await expect(page.locator('#panel-directions .cook__line[data-step="4"]').first()).toContainText(
+    // In cook mode the heat line is the section's first stop, before its steps.
+    await expect(page.locator('#panel-directions [data-section="Make the béchamel"] [data-step]').first()).toContainText(
       'Preheat the oven',
     );
   });
@@ -414,7 +414,7 @@ test.describe('interactions', () => {
   });
 
   test('timer wording is generated and consistent', async ({ page }) => {
-    const labels = await page.locator('.step .timer').allInnerTexts();
+    const labels = await page.locator('.directions__section .timer').allInnerTexts();
     expect(labels.map((l) => l.trim())).toEqual([
       '30 minutes',
       '12–15 minutes',
@@ -464,21 +464,21 @@ test.describe('interactions', () => {
     }
     await expect(page.locator('main')).toHaveJSProperty('inert', true);
 
-    const lines = page.locator('[data-line]');
-    const stepLabels = page.locator('[data-step-label]');
-    // The whole step is highlighted together: step 1 has two lines, both active, not just the first.
-    await expect(lines.nth(0)).toHaveClass(/is-active/);
-    await expect(lines.nth(1)).toHaveClass(/is-active/);
-    await expect(stepLabels.nth(0)).toHaveClass(/is-active/);
-    // Tapping a line activates its step (there are no on-screen step buttons: scroll, tap or the keyboard).
-    await lines.nth(2).click();
-    // Step 2 starts at the third line; all of step 1 (both lines and its label) dims together.
-    await expect(lines.nth(2)).toHaveClass(/is-active/);
-    await expect(lines.nth(2)).toBeInViewport();
-    await expect(lines.nth(0)).not.toHaveClass(/is-active/);
-    await expect(lines.nth(1)).not.toHaveClass(/is-active/);
-    await expect(stepLabels.nth(0)).not.toHaveClass(/is-active/);
-    await expect(stepLabels.nth(1)).toHaveClass(/is-active/);
+    const steps = page.locator('#panel-directions [data-step]');
+    const context = page.locator('[data-cook-context]');
+    // One step at a time, with its tip, not the whole section; the section is named above the text.
+    await expect(steps.nth(0)).toHaveClass(/is-active/);
+    await expect(steps.nth(0)).toHaveAttribute('aria-current', 'step');
+    await expect(steps.nth(0).locator('.cook__tip')).toHaveCount(1);
+    await expect(steps.nth(1)).not.toHaveClass(/is-active/);
+    await expect(context).toHaveText(/^\s*Prepare the cheeses\s+1 of 6\s*$/);
+    // Tapping a step activates it (there are no on-screen step buttons: scroll, tap or the keyboard).
+    await steps.nth(2).click();
+    await expect(steps.nth(2)).toHaveClass(/is-active/);
+    await expect(steps.nth(2)).toBeInViewport();
+    await expect(steps.nth(0)).not.toHaveClass(/is-active/);
+    await expect(steps.nth(0)).not.toHaveAttribute('aria-current');
+    await expect(context).toHaveText(/^\s*Make the soffritto and brown the meat\s+2 of 6\s*$/);
 
     await page.getByRole('tab', { name: 'Ingredients' }).click();
     await expect(page.locator('#panel-ingredients')).toBeVisible();
@@ -504,20 +504,25 @@ test.describe('interactions', () => {
       await expect.poll(scrollY).toBeGreaterThan(0);
     }
 
-    // Cook mode, focus on the title (outside the scrolling panel): arrows still move between steps.
+    // Cook mode, focus on the title (outside the scrolling panel): arrows still move from step to step.
     await page.getByRole('button', { name: 'Cook', exact: true }).click();
     await expect(page.locator('#cook-title')).toBeFocused();
-    const label = (n: number) => page.locator('[data-step-label]').nth(n);
+    const step = (n: number) => page.locator('#panel-directions [data-step]').nth(n);
+    const context = page.locator('[data-cook-context]');
     await page.keyboard.press('ArrowDown');
-    await expect(label(1)).toHaveAttribute('aria-current', 'step');
+    await expect(step(1)).toHaveAttribute('aria-current', 'step');
+    await expect(context).toContainText('Prepare the cheeses');
     await page.keyboard.press('ArrowDown');
-    await expect(label(2)).toHaveAttribute('aria-current', 'step');
+    await expect(step(2)).toHaveAttribute('aria-current', 'step');
+    await expect(context).toContainText('Make the soffritto and brown the meat');
     await page.keyboard.press('ArrowUp');
-    await expect(label(1)).toHaveAttribute('aria-current', 'step');
+    await expect(step(1)).toHaveAttribute('aria-current', 'step');
+    await expect(context).toContainText('Prepare the cheeses');
     await page.keyboard.press('End');
-    await expect(label(-1)).toHaveAttribute('aria-current', 'step');
+    await expect(step(-1)).toHaveAttribute('aria-current', 'step');
+    await expect(context).toContainText('6 of 6');
     await page.keyboard.press('Home');
-    await expect(label(0)).toHaveAttribute('aria-current', 'step');
+    await expect(step(0)).toHaveAttribute('aria-current', 'step');
 
     // Page Down scrolls the directions by a screen.
     const top = () => page.locator('#panel-directions').evaluate((el) => el.scrollTop);
@@ -553,7 +558,7 @@ test.describe('interactions', () => {
 
     await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
     await expect(page.locator('.timer-chip')).toHaveCount(2);
-    await page.getByRole('button', { name: 'Dismiss timer: Step 3, 1 hour' }).click();
+    await page.getByRole('button', { name: 'Dismiss timer: Simmer the ragù, 1 hour' }).click();
     await page.clock.fastForward('00:06'); // past the Undo window
 
     const chip = page.locator('.timer-chip');
@@ -564,9 +569,9 @@ test.describe('interactions', () => {
     await expect(chip.locator('time')).toHaveText(/^(09|10):\d\d$/);
     await page.clock.fastForward('10:01');
     await expect(chip.locator('time')).toHaveText('Done');
-    await expect(page.locator('[data-toast]')).toHaveText('Timer finished: Step 2, 12–15 minutes');
+    await expect(page.locator('[data-toast]')).toHaveText('Timer finished: Make the soffritto and brown the meat, 12–15 minutes');
 
-    await page.getByRole('button', { name: 'Dismiss timer: Step 2, 12–15 minutes' }).click();
+    await page.getByRole('button', { name: 'Dismiss timer: Make the soffritto and brown the meat, 12–15 minutes' }).click();
     await expect(chip).toHaveCount(0);
   });
 
@@ -577,10 +582,10 @@ test.describe('interactions', () => {
     const chip = page.locator('.timer-chip');
     await page.clock.fastForward('10:00');
 
-    await page.getByRole('button', { name: 'Dismiss timer: Step 3, 1 hour' }).click();
+    await page.getByRole('button', { name: 'Dismiss timer: Simmer the ragù, 1 hour' }).click();
     await expect(chip).toHaveText(/Timer dismissed/);
-    await expect(page.locator('[data-toast]')).toHaveText('Timer dismissed: Step 3, 1 hour');
-    const undo = page.getByRole('button', { name: 'Undo dismiss timer: Step 3, 1 hour' });
+    await expect(page.locator('[data-toast]')).toHaveText('Timer dismissed: Simmer the ragù, 1 hour');
+    const undo = page.getByRole('button', { name: 'Undo dismiss timer: Simmer the ragù, 1 hour' });
     await expect(undo).toBeFocused();
     await expect(page).not.toHaveTitle(/^⏱/);
 
@@ -588,11 +593,11 @@ test.describe('interactions', () => {
     await undo.click();
     await expect(chip).toHaveCount(1);
     await expect(chip.locator('time')).toHaveText('49:57'); // kept counting while dismissed
-    await expect(page.getByRole('button', { name: 'Pause timer: Step 3, 1 hour' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Pause timer: Simmer the ragù, 1 hour' })).toBeFocused();
     await expect(page).toHaveTitle(/^⏱ 49:57 · /);
 
     // Without Undo, the chip goes once the window closes; a reload doesn't bring it back.
-    await page.getByRole('button', { name: 'Dismiss timer: Step 3, 1 hour' }).click();
+    await page.getByRole('button', { name: 'Dismiss timer: Simmer the ragù, 1 hour' }).click();
     await page.clock.fastForward('00:06');
     await expect(chip).toHaveCount(0);
     await page.reload();
@@ -629,12 +634,12 @@ test.describe('interactions', () => {
     await expect(chip.locator('time')).toHaveText('1:00:00');
     await expect(page).toHaveTitle(/^⏱ 1:00:00 · /);
 
-    await page.getByRole('button', { name: 'Pause timer: Step 3, 1 hour' }).click();
+    await page.getByRole('button', { name: 'Pause timer: Simmer the ragù, 1 hour' }).click();
     await page.clock.fastForward('10:00');
     await expect(chip.locator('time')).toHaveText('1:00:00'); // frozen while paused
     await expect(page).not.toHaveTitle(/^⏱/); // no countdown in the tab title while nothing is running
 
-    await page.getByRole('button', { name: 'Resume timer: Step 3, 1 hour' }).click();
+    await page.getByRole('button', { name: 'Resume timer: Simmer the ragù, 1 hour' }).click();
     await page.clock.fastForward('10:00');
     await expect(chip.locator('time')).toHaveText('50:00');
     await expect(page).toHaveTitle(/^⏱ 50:00 · /);
@@ -680,7 +685,7 @@ test.describe('interactions', () => {
       const end = Date.now() - 9 * 60 * 1000;
       localStorage.setItem(
         `soowee:timers:${recipe}`,
-        JSON.stringify([{ end, remaining: null, name: '1 hour', label: 'Step 3, 1 hour' }]),
+        JSON.stringify([{ end, remaining: null, name: '1 hour', label: 'Simmer the ragù, 1 hour' }]),
       );
     });
     await page.reload();

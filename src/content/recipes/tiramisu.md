@@ -42,12 +42,12 @@ equipment:
   - Fine-mesh sieve
   - Fine grater
   - Rectangular dish
-steps:
+directions:
   - title: Make the coffee
-    text:
+    steps:
       - Brew {400 ml strong coffee or espresso}, pour it into a shallow dish and let it cool completely while you make the cream.
   - title: Make the cream
-    text:
+    steps:
       - Separate {6 eggs}, putting the whites in one large, clean bowl and the yolks in another.
       - Add a pinch of {salt} to the whites and whisk until glossy and thick. When you lift the beaters, the peaks should hold, with the tips just bending over (soft peaks). Stop before they look dry or grainy.
       - tip: Whip the whites first. The same beaters can then go straight into the yolks without washing; the other way round, a trace of yolk fat would stop the whites from whipping.
@@ -56,7 +56,7 @@ steps:
       - tip: Stop as soon as the mascarpone is smooth. Overbeaten, it turns grainy and can split.
       - Stir a large spoonful of the whites into the cream to loosen it, then fold in the rest in two additions, cutting down through the middle and turning the bowl, until no streaks remain.
   - title: Assemble
-    text:
+    steps:
       - Dip {18 Savoiardi biscuits}, one at a time, 1–2 seconds a side in the cooled {coffee}, and lay them in a single, snug layer in the dish. The centre should still feel firm; it softens overnight.
       - tip: The biscuits decide the dish. Pick one that half of them cover in a single snug layer, and trim them to fit if needed.
       - Spread half of the cream over the biscuits and smooth it to the edges.
@@ -64,7 +64,7 @@ steps:
       - Dip the remaining {18 Savoiardi biscuits} in the {coffee} the same way, lay them on top and spread over the rest of the cream, smoothing the top.
       - Dust the top with an even layer of {cocoa powder}.
   - title: Chill and serve
-    text:
+    steps:
       - Cover and refrigerate overnight, for at least {chill:8h}. It is at its best after 1–2 days.
       - Just before serving, dust the top with a little more {cocoa powder}. Slice and serve chilled.
       - tip: The cocoa on top darkens overnight as it absorbs moisture from the cream; the fresh dusting brings back the colour and the dry, bitter finish.

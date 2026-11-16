@@ -30,7 +30,7 @@ flowchart LR
   schema -->|invalid| fail["Build fails<br/>with the field path"]
   schema -->|valid| page["Recipe.astro"]
   page --> html["Recipe page<br/>hero, ingredients, equipment,<br/>directions, notes"]
-  page --> cook["Cook mode<br/>step by step"]
+  page --> cook["Cook mode<br/>one step at a time"]
   page --> ld["JSON-LD<br/>schema.org Recipe"]
   page --> pic["Photo in AVIF/WebP,<br/>hero tint and backdrop"]
   html --> js["recipe.ts in the browser<br/>scaling, timers, checklist"]
@@ -90,12 +90,12 @@ classDiagram
     max number
     unit* g kg ml L tsp tbsp
   }
-  class Step {
-    title string
+  class Section {
+    title* string
     heat string
-    text* Paragraph[] min 1
+    steps* Step[] min 1
   }
-  class Paragraph {
+  class Step {
     string with inline markup
     or tip: string
   }
@@ -106,8 +106,8 @@ classDiagram
   Recipe --> "1..*" IngredientGroup : ingredients
   IngredientGroup --> "1..*" Ingredient : items
   Ingredient --> "0..1" About : about
-  Recipe --> "1..*" Step : steps
-  Step --> "1..*" Paragraph : text
+  Recipe --> "1..*" Section : directions
+  Section --> "1..*" Step : steps
 ```
 
 ## Field reference
@@ -130,7 +130,7 @@ classDiagram
 | `time` | object | yes | | See [Time](#time) | Hero, directions header, JSON-LD |
 | `ingredients` | list of groups | yes | | At least one group | Ingredients list, cook-mode ingredients tab, JSON-LD |
 | `equipment` | list of text | no | `[]` | One item per line: `Fine-mesh sieve, for dusting cocoa` | Equipment section; hidden when empty |
-| `steps` | list | yes | | At least one step | Directions, cook mode, JSON-LD |
+| `directions` | list of sections | yes | | At least one section. See [Directions](#directions) | Directions, cook mode, JSON-LD |
 
 ### Image credit
 
@@ -189,19 +189,35 @@ Rendered as `36 Savoiardi biscuits (about 300–360 g), ladyfingers, half for ea
 
 The units are metric only, by design. Imperial is an [open decision](#open-decisions).
 
-### Step
+### Directions
+
+The method has two levels, with one name each, used the same way in the YAML, the code, the page and this document:
+
+- A **section** is a phase of the dish with a title: `Make the béchamel`. On the page its title is the heading; in cook mode it stays above the text.
+- A **step** is one action the cook does, ending in a state they can check. It is one paragraph on the page and one stop in cook mode.
+- A **tip** belongs to the step before it and is shown with that step.
+
+This is the shape schema.org uses too: each section becomes a `HowToSection`, each step and `heat` line a `HowToStep`. Tips are left out of JSON-LD.
+
+```yaml
+directions:
+  - title: Make the béchamel
+    heat: Preheat the oven to **180 °C**, conventional top and bottom heat.
+    steps:
+      - Melt {40 g butter} in a saucepan over low heat.
+      - Whisk in {40 g flour} and cook for {timer:1-2m}, without letting it colour.
+      - tip: The roux should smell of biscuits, not of raw flour.
+```
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `title` | text | no | Short, imperative: `Make the cream` |
-| `heat` | text with inline markup | no | Oven or oil to get hot, e.g. `Preheat the **oven** to **180 °C**`. Shown first in the step with a thermometer icon and highlighted, so it is started in time |
-| `text` | list of paragraphs | yes | At least one. A paragraph is either text with [inline markup](#inline-markup-in-steps) or a `tip`, written `- tip: …` |
-
-A step needs at least one line that is not a tip (`heat` or a text paragraph), because cook mode lands on those lines.
+| `title` | text | yes | Short, imperative, naming what the section makes or does: `Make the cream`, `Fry the fish`. Unique within the recipe, since it also names the section’s timers |
+| `heat` | text with inline markup | no | Oven or oil to get hot, e.g. `Preheat the **oven** to **180 °C**`. Shown first in the section with a thermometer icon and highlighted, so it is started in time. Its own stop in cook mode |
+| `steps` | list | yes | At least one. Each entry is a step, text with [inline markup](#inline-markup-in-steps), or a `tip`, written `- tip: …`. The first entry is a step, because a tip belongs to the step before it |
 
 ## Inline markup in steps
 
-Allowed in `heat`, step paragraphs and tips. Raw HTML is escaped, not rendered.
+Allowed in `heat`, steps and tips. Raw HTML is escaped, not rendered.
 
 | Markup | Meaning | Rendered as | Scales | Counts towards |
 |---|---|---|---|---|
@@ -213,20 +229,20 @@ Allowed in `heat`, step paragraphs and tips. Raw HTML is escaped, not rendered.
 | `{simmer:1h}`, `{bake:30m}`, `{cool:15-20m}` … | Hands-off time while cooking: the dish works on its own, the cook stays in the process. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Tappable timer, like `{timer:}` | | Cooking time, not work |
 | `{rest:1h}`, `{rise:2h}`, `{marinate:4h}` | A wait the cook can walk away from, see [Wait verbs](#wait-verbs) | Tappable timer, like `{timer:}` | | The wait, outside the cooking time |
 | `{chill:8h}`, `{freeze:6h}` | A wait in the fridge or freezer, at least this long | Plain text `8 hours`, not a timer | | The wait, outside the cooking time |
-| `tip: …` | A callout between paragraphs | Bulb icon; “Tip:” for screen readers | | |
+| `tip: …` | A callout after its step | Bulb icon; “Tip:” for screen readers | | |
 
 Durations are written as `45s`, `20m`, `1h`, `1h30m` or a range `5-10m`. The label is generated (“1 hour 30 minutes”), so durations read the same everywhere; write the sentence around it: “bake for {bake:10m} more”. Amount units must be from the unit list, and a token that is not in the lists (`{wait:1h}`, `{steam:5m}`) fails the build instead of being printed raw.
 
 Use `{timer:}` when the cook is busy (stirring, frying, whisking) and a hands-off verb when they are free to do something else. A bake the cook has to watch closely is still `{bake:}`; the difference is only whether the time counts as work.
 
-Only step paragraphs count towards time: a duration inside `heat` or a tip is shown, and validated, but not counted.
+Only steps count towards time: a duration inside `heat` or a tip is shown, and validated, but not counted.
 
 ### Ingredient mentions
 
 Steps name the ingredients of the list with `{…}`, so the build can check them against the list. Bold is only for emphasis, and an ingredient written in bold fails the build.
 
 - **Which ingredient.** The text in the braces is the ingredient’s `name`, or whole words of it that fit only one ingredient: `{Provolone}` for `Provolone Piccante`, `{celery}` for `celery stick`. A plural is fine: `{2 lemons}` for `lemon`. A complete name wins over a partial one, so `{water}` is `water`, not `sparkling water`. Where a recipe has two salts, `{salt}` fails and the full name is needed. Lines with the same name in different groups are one ingredient.
-- **Every ingredient is used.** Each ingredient of the list is mentioned at least once in a step paragraph or a `heat` line.
+- **Every ingredient is used.** Each ingredient of the list is mentioned at least once in a step or a `heat` line.
 - **Measured once.** An amount inside the braces, `{250 g ground beef}`, is taken from the list at this point. For each ingredient these amounts add up exactly to its amount in the list (lines of the same name added together; `g` and `kg`, `ml` and `L` converted, spoons and counts only with themselves). A portion measured out earlier is mentioned with the amount on its own: “Grate {80 g Pecorino Romano} and set {30 g} aside”, later “the reserved {30 g} {Pecorino Romano}”. An amount added to taste is still written in: “adjust with up to {3 g salt}”. An ingredient mentioned only without an amount is used whole at that point, “Add the {onion}”, so nothing is added up; that is also how an ingredient without `qty` (“a pinch”) is mentioned.
 - **Tips stay plain.** Tips mention ingredients in plain text, without `{…}` or bold, and their amounts (`{20 g}`) scale but do not count.
 
@@ -240,7 +256,7 @@ All times are whole minutes.
 |---|---|---|
 | `total` | yes | The cooking time: start to finish of the cooking, **including** hands-off time (`{simmer:}`, `{bake:}` …) and **excluding** every wait (`{rest:}`, `{rise:}`, `{marinate:}`, `{chill:}`, `{freeze:}`) |
 
-`total` is the only time written by hand. Everything else is derived from the duration tokens in the step paragraphs, so the page cannot show times that contradict the method. There is no separate prep time: it would be a second, unchecked source for the same thing.
+`total` is the only time written by hand. Everything else is derived from the duration tokens in the steps, so the page cannot show times that contradict the method. There is no separate prep time: it would be a second, unchecked source for the same thing.
 
 ### The rule: cooking time, then the wait
 
@@ -305,9 +321,9 @@ Meat resting for a few minutes before carving is part of serving, not a wait: wr
 ```mermaid
 flowchart TD
   total["time.total<br/>written by hand"] --> work["Work = total − hands-off"]
-  off["Hands-off verbs in step paragraphs<br/>{simmer:} {bake:} {cool:} …"] --> handsoff["Hands-off minutes<br/>+ verbs in order of first use"]
+  off["Hands-off verbs in steps<br/>{simmer:} {bake:} {cool:} …"] --> handsoff["Hands-off minutes<br/>+ verbs in order of first use"]
   handsoff --> work
-  after["Wait verbs in step paragraphs<br/>{rest:} {rise:} {chill:} …"] --> afterOut["Minutes per kind"]
+  after["Wait verbs in steps<br/>{rest:} {rise:} {chill:} …"] --> afterOut["Minutes per kind"]
   total --> hero["Hero<br/>Time (cooking + wait) and Yield"]
   afterOut --> hero
   total --> sentence["Directions sentence"]
@@ -379,9 +395,9 @@ The build fails in two places, and `pnpm test` adds one more check.
 - an ingredient or `about` `unit` is not in the unit list;
 - `qty`, `about.qty`, `about.max` or a `yield` number is zero or negative, or `about.max` is not larger than `about.qty`;
 - `time.total` is not a positive whole number of minutes, or the hands-off verbs add up to `time.total` or more (there would be no work left);
-- any step text (`heat`, a paragraph or a tip) has a malformed duration (`{chill:overnight}`), an unknown token (`{wait:1h}`) or a malformed amount (`{25gr}`); the path points to the exact line, e.g. `steps.3.text.1`;
+- any text of the method (`heat`, a step or a tip) has a malformed duration (`{chill:overnight}`), an unknown token (`{wait:1h}`) or a malformed amount (`{25gr}`); the path points to the exact line, e.g. `directions.3.steps.1`;
 - an [ingredient mention](#ingredient-mentions) fits no ingredient or more than one (`{2 cups}` fits none), an ingredient is never mentioned, the measured amounts of an ingredient do not add up to the list, an ingredient is written in bold, or a tip uses `{…}` for an ingredient;
-- a step has only tips and no `heat`;
+- a section has no title, shares its title with another section, or its first entry is a tip;
 - `tint` is not a `#rrggbb` colour, or a URL is not a URL;
 - the `image` file does not exist.
 
@@ -423,12 +439,13 @@ A home cook with basic craft who wants a restaurant-level result, not a shortcut
 | Part | Budget |
 |---|---|
 | `description` | One or two sentences: what the dish is and what makes this version worth it. Mention a commitment the reader must plan for (“Made a day ahead”). Lead with what helps someone choose: phones show only the first 3 lines on the home page. Not a list of every component, no filler (“featuring”, “delicious”) |
-| Step | One phase of the dish, about 6 paragraphs at most. Split a longer one where the cook could pause: “Brown the meat”, then “Simmer the ragù” |
-| Tip | At most two in a step, and most steps have none or one. A tip earns its place only if it adds one of: the *why* behind the step, how to tell it is going wrong, a choice at that point (a swap, what to buy), or a safety note. It never repeats its step |
+| Section | One phase of the dish, about 6 steps at most. Split a longer one where the cook could pause: “Brown the meat”, then “Simmer the ragù” |
+| Step | One action, ending in a state the cook can check. Short enough to read at a glance from the stove: it should fit one cook-mode screen on a phone, together with its tip |
+| Tip | At most two in a section, and most sections have none or one. A tip earns its place only if it adds one of: the *why* behind the step, how to tell it is going wrong, a choice at that point (a swap, what to buy), or a safety note. It never repeats its step |
 | Equipment | Only what has a size or spec that matters, or what is not in every kitchen. Not knife, board, spoon, bowl or kitchen paper |
 | Chef’s Notes | One bullet per label, see [Chef’s Notes](#chefs-notes) |
 
-Planning (“start here”, “while the ragù simmers”) goes in the step text as an instruction, not in a tip. A tip about the oven or the oil goes in that step’s `heat` line.
+Planning (“start here”, “while the ragù simmers”) goes in a step as an instruction, not in a tip. A tip about the oven or the oil goes in that section’s `heat` line.
 
 ### Ingredients
 
@@ -438,7 +455,14 @@ Planning (“start here”, “while the ragù simmers”) goes in the step text
 - Something counted in pieces gets an `about` weight when its size changes the result: `1 onion (about 150 g)`.
 - Quote a `note` that contains a comma: `note: "large, separated"`. Unquoted, YAML cuts the note at the comma and the rest is silently dropped.
 
-### Steps and tips
+### Sections, steps and tips
+
+Where one ends and the next begins:
+
+- **A new section** starts where the dish moves on to a new part (the ragù, the béchamel), a new place (from the hob to the oven) or a point where the cook could stop. The title says what comes out of it.
+- **A new step** starts where the cook does something different. A step ends at a state they can check: a sensory cue (“until golden”), a temperature or a timer. A timer usually ends its step; a second one belongs in the same step only when it follows at once (“flip and cook the second side for {timer:15-20s}”).
+- **Not a step:** a reason, a warning or a choice. That is a tip, after the step it concerns. A note on the oven or the oil is the `heat` line.
+- Keep steps in the order the cook does them. Something done in parallel (“while the ragù simmers”) is said at the start of the step that is done meanwhile.
 
 - Mention every ingredient from the list with `{…}` in the step where it is used, every time, with its amount where it is measured out: see [Ingredient mentions](#ingredient-mentions). Intermediate preparations (egg whites, the cream, the ragù), the oven and equipment are plain text. Tips mention ingredients in plain text.
 - Sensory cues next to times: “until pale, thick and creamy”, not only “for 5 minutes”.
@@ -471,7 +495,7 @@ One bullet per allergen, named as in the EU list of 14, in this order: **Gluten*
 
 - Typographic apostrophes and quotes: `Chef’s`, `Vincenzo’s`.
 - An en dash for ranges in plain text, as the generated labels have: `2–3 minutes`, `60–63 °C`.
-- Every paragraph and tip ends with a full stop.
+- Every step and tip ends with a full stop.
 - English, metric units, `°C`, with a space before the unit: `180 °C`, `1.5 cm`.
 
 ## Examples
@@ -492,8 +516,9 @@ ingredients:
   - items:
       - { qty: 2, name: slices of bread }
       - { qty: 10, unit: g, name: butter }
-steps:
-  - text:
+directions:
+  - title: Make the toast
+    steps:
       - Toast {2 slices of bread} for {timer:2-3m}, until golden, and spread with {10 g butter}.
 ---
 ```
