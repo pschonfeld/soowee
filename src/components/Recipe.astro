@@ -3,9 +3,9 @@ import { render, type CollectionEntry } from 'astro:content';
 import { Image, Picture } from 'astro:assets';
 import '../styles/global.css';
 import Wordmark from '../assets/brand/soowee-wordmark.svg';
-import { formatMinutes, formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
+import { formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
 import { plainText, renderInline, stepTimes } from '../lib/inline';
-import { describeTime } from '../lib/time';
+import { describeTime, heroTime, readyMinutes } from '../lib/time';
 import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
 
@@ -31,12 +31,12 @@ const pageStyle = [
 const SourceTag = r.source?.url ? 'a' : 'div';
 
 const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
-// The hero shows only the total; the Directions header says the rest in one generated sentence (lib/time.ts).
+// The hero shows the cooking time, then the wait ("30 min" / "+ 8 hr chilling"); the Directions header says how
+// they break down in one generated sentence (lib/time.ts).
 // content.config.ts guarantees the hands-off time leaves a positive amount of work.
-const totalTime = formatMinutes(r.time.total);
 const times = stepTimes(r.steps);
+const time = heroTime(r.time.total, times);
 const timeSentence = describeTime(r.time.total, times);
-const afterMinutes = times.after.reduce((sum, a) => sum + a.minutes, 0);
 
 type Ingredient = { qty?: number; unit?: string; name: string; about?: { qty: number; max?: number; unit: string }; note?: string };
 /** "g flour" / "onion": the unit (if any) and name, as shown after the quantity. */
@@ -66,8 +66,8 @@ const jsonLd = {
   image: imageUrl,
   recipeCuisine: r.cuisine,
   recipeYield: yieldText,
-  // schema.org's totalTime means until it can be served, so time in the fridge or freezer counts here.
-  totalTime: isoDuration(r.time.total + afterMinutes),
+  // schema.org's totalTime means until it can be served, so every wait counts here.
+  totalTime: isoDuration(readyMinutes(r.time.total, times)),
   recipeIngredient: r.ingredients.flatMap((g) => g.items.map(ingredientText)),
   recipeInstructions: r.steps.map((s, i) => ({
     '@type': 'HowToSection',
@@ -155,11 +155,18 @@ const icons = {
             <h1>{r.title}</h1>
             {r.byline && <p class="byline">{r.byline}</p>}
 
-            {/* Two facts only, so the row stays on one line on phones; the rest of the time is the sentence under Directions. */}
+            {/*
+              Two facts only, so the row stays on one line on phones. Time is the cooking time with the wait on a
+              line of its own under it, so the cell never gets wider than its longer line; the breakdown is the
+              sentence under Directions.
+            */}
             <dl class="meta">
               <div>
-                <dt>Total time</dt>
-                <dd>{totalTime}</dd>
+                <dt>Time</dt>
+                <dd>
+                  {time.cook}
+                  {time.wait && <span class="meta__wait">+ {time.wait}</span>}
+                </dd>
               </div>
               <div>
                 <dt>Yield</dt>

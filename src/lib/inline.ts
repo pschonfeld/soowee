@@ -6,46 +6,61 @@
 import { UNITS, formatQty } from './format';
 
 /**
- * Hands-off time: the dish works on its own while the cook is free. Rendered as a timer like {timer:…},
- * counted in time.total, subtracted from it to get the work time, and named in the time summary
- * ("3 hr 5 min of simmering, baking and resting"). The value is the word used in that sentence.
- * Add a verb here when a recipe needs one; an unknown token fails the build.
+ * Hands-off time while cooking: the dish works on its own, but the cook is still in the process and nearby.
+ * Rendered as a timer like {timer:…}, counted in time.total (the cooking time), subtracted from it to get the
+ * work time, and named in the time summary ("3 hr 5 min of simmering, baking and cooling"). The value is the
+ * word used in that sentence. Add a verb here when a recipe needs one; an unknown token fails the build.
  */
 export const HANDS_OFF = {
   simmer: 'simmering',
   bake: 'baking',
   roast: 'roasting',
-  rest: 'resting',
-  rise: 'rising',
   cool: 'cooling',
   dry: 'drying',
   drain: 'draining',
   soak: 'soaking',
-  marinate: 'marinating',
 } as const;
 
 /**
- * Time after the dish is finished, when it only has to set: plain text (not a timer), kept OUT of
- * time.total and named in the time summary ("then at least 8 hr in the fridge"). The value is that place.
+ * Waiting: time the cook can walk away from (a batter resting, a dough rising, a tiramisu setting). Kept OUT of
+ * time.total and shown after it: "30 min + 8 hr chilling" in the hero, "plus at least 8 hr in the fridge" in
+ * the time summary. The value is the word used in the hero, and in the summary for waits without a place.
  */
-export const AFTER = {
+export const WAITS = {
+  rest: 'resting',
+  rise: 'rising',
+  marinate: 'marinating',
+  chill: 'chilling',
+  freeze: 'freezing',
+} as const;
+
+/**
+ * Waits in the fridge or freezer: plain text (not a timer, since longer is fine), named by the place in the time
+ * summary ("at least 8 hr in the fridge") and listed after the other waits, the fridge first.
+ */
+export const PLACES = {
   chill: 'in the fridge',
   freeze: 'in the freezer',
 } as const;
 
 export type HandsOffToken = keyof typeof HANDS_OFF;
-export type AfterToken = keyof typeof AFTER;
+export type WaitToken = keyof typeof WAITS;
+export type PlaceToken = keyof typeof PLACES;
+
+export const isPlace = (token: WaitToken): token is PlaceToken => token in PLACES;
 
 /** Every duration token, for error messages and the docs check. */
-export const DURATION_TOKENS = ['timer', ...Object.keys(HANDS_OFF), ...Object.keys(AFTER)] as const;
+export const DURATION_TOKENS = ['timer', ...Object.keys(HANDS_OFF), ...Object.keys(WAITS)] as const;
 
 // Each duration pattern captures (token, value), so errors name the token that was mistyped.
 // The value may be empty, so `{bake:}` reaches parseTimer and fails instead of being printed raw.
 const alternation = (tokens: readonly string[]) => new RegExp(`\\{(${tokens.join('|')}):([^}]*)\\}`, 'g');
-/** {timer:…} needs attention when it rings; the hands-off verbs ring too. */
-const TIMER = alternation(['timer', ...Object.keys(HANDS_OFF)]);
-const WAIT = alternation(Object.keys(HANDS_OFF));
-const AFTER_PATTERN = alternation(Object.keys(AFTER));
+const TIMED_WAITS = Object.keys(WAITS).filter((token) => !(token in PLACES));
+/** {timer:…} needs attention when it rings; the hands-off verbs and the waits outside the fridge ring too. */
+const TIMER = alternation(['timer', ...Object.keys(HANDS_OFF), ...TIMED_WAITS]);
+const HANDS_OFF_PATTERN = alternation(Object.keys(HANDS_OFF));
+const WAIT_PATTERN = alternation(Object.keys(WAITS));
+const PLACE_PATTERN = alternation(Object.keys(PLACES));
 /**
  * Anything that looks like a duration token, so a misspelt or retired one ({wait:1h}, {Bake:5m}, {pre-heat:5m},
  * { bake :5m}) is not printed raw. Amounts ({25 g}) have no colon and never match.
@@ -167,7 +182,7 @@ export function renderInline(source: string): string {
   return escapeHtml(source)
     .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), true))
     .replace(BOLD, '<strong>$1</strong>')
-    .replace(AFTER_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
+    .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
     .replace(TIMER, (_, token: string, value: string) => {
       const { seconds, label } = parseTimer(value, token);
       return `<button type="button" class="timer" data-timer="${seconds}" aria-label="Start timer: ${label}">${TIMER_ICON}<span>${label}</span></button>`;
@@ -179,7 +194,7 @@ export function plainText(source: string): string {
   return source
     .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), false))
     .replace(BOLD, '$1')
-    .replace(AFTER_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
+    .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
     .replace(TIMER, (_, token: string, value: string) => parseTimer(value, token).label);
 }
 
@@ -191,8 +206,11 @@ export interface StepTimes {
   handsOff: number;
   /** The hands-off verbs used, in the order they first appear, without repeats. */
   activities: HandsOffToken[];
-  /** Time after the dish is finished, outside time.total, in the order of AFTER (fridge before freezer). */
-  after: { token: AfterToken; minutes: number }[];
+  /**
+   * Waits, outside time.total, one entry per verb: those without a place in the order they first appear, then
+   * the fridge, then the freezer.
+   */
+  waits: { token: WaitToken; minutes: number }[];
 }
 
 /** Sums are made in seconds and rounded to minutes once, as shown on the page. A range counts at its lower bound. */
@@ -200,21 +218,22 @@ export function stepTimes(steps: Steps): StepTimes {
   const paragraphs = steps.flatMap((s) => s.text).filter((p): p is string => typeof p === 'string');
   let handsOff = 0;
   const activities = new Set<HandsOffToken>();
-  const after = new Map<AfterToken, number>();
+  const waits = new Map<WaitToken, number>();
   for (const p of paragraphs) {
-    for (const [, token, value] of p.matchAll(WAIT)) {
+    for (const [, token, value] of p.matchAll(HANDS_OFF_PATTERN)) {
       handsOff += parseTimer(value, token).seconds;
       activities.add(token as HandsOffToken);
     }
-    for (const [, token, value] of p.matchAll(AFTER_PATTERN)) {
-      after.set(token as AfterToken, (after.get(token as AfterToken) ?? 0) + parseTimer(value, token).seconds);
+    for (const [, token, value] of p.matchAll(WAIT_PATTERN)) {
+      waits.set(token as WaitToken, (waits.get(token as WaitToken) ?? 0) + parseTimer(value, token).seconds);
     }
   }
+  const order: WaitToken[] = [...[...waits.keys()].filter((token) => !isPlace(token)), ...(Object.keys(PLACES) as PlaceToken[])];
   return {
     handsOff: Math.round(handsOff / 60),
     activities: [...activities],
-    after: (Object.keys(AFTER) as AfterToken[])
-      .map((token) => ({ token, minutes: Math.round((after.get(token) ?? 0) / 60) }))
+    waits: order
+      .map((token) => ({ token, minutes: Math.round((waits.get(token) ?? 0) / 60) }))
       .filter(({ minutes }) => minutes > 0),
   };
 }

@@ -389,7 +389,7 @@ a.story:hover,
 }
 
 /*
- * 320px-wide phones (iPhone SE 1st gen, Display Zoom): tighter gaps keep Total time and Yield on one row
+ * 320px-wide phones (iPhone SE 1st gen, Display Zoom): tighter gaps keep Time and Yield on one row
  * up to about "12 hr 45 min" + "10–12 servings". Anything longer wraps under, which flex-wrap handles.
  */
 @media (max-width: 22.5rem) {
@@ -422,6 +422,14 @@ a.story:hover,
   font-size: var(--text-title3);
   font-weight: 500;
   line-height: 1.3;
+}
+
+/* The wait after the cooking time: always on its own line, so it reads second and never widens the row. */
+.meta__wait {
+  display: block;
+  font-size: var(--text-subhead);
+  font-weight: 400;
+  color: var(--on-tint-secondary);
 }
 
 .story {

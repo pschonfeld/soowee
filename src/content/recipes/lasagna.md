@@ -98,8 +98,8 @@ steps:
     text:
       - Cover the dish with foil, without letting it touch the surface, and bake for {bake:30m}.
       - Remove the foil, sprinkle with the reserved {30 g} {Pecorino Romano} and bake uncovered for {bake:20-25m} until the top is golden, the edges are bubbling and the centre reads at least 75 °C on an instant-read thermometer.
-      - Rest for {rest:15-20m} before slicing.
-      - tip: Resting lets the béchamel and cheese set so the slices hold their shape.
+      - Leave it to cool for {cool:15-20m} before slicing.
+      - tip: Cooling lets the béchamel and cheese set so the slices hold their shape.
 ---
 
 ## Chef’s Notes

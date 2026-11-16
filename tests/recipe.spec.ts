@@ -311,28 +311,29 @@ test.describe('interactions', () => {
     await expect(first.locator('input')).not.toBeChecked();
   });
 
-  test('the hero shows only total time and yield, on one row even at 320px', async ({ page }) => {
+  test('the hero shows only time and yield, on one row even at 320px', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     for (const recipe of RECIPES) {
       await page.goto(recipe.path);
       const meta = page.locator('.meta');
-      await expect(meta.locator('dt')).toHaveText(['Total time', 'Yield']);
+      await expect(meta.locator('dt')).toHaveText(['Time', 'Yield']);
       // One row: both facts share the same top edge.
       const tops = await meta.locator('dt').evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
       expect(new Set(tops).size).toBe(1);
     }
   });
 
-  test('says how much of the total time is work, as a sentence under Directions', async ({ page }) => {
-    // 4 hr 30 min total, minus 3 hr 5 min of {simmer:}, {bake:} and {rest:}.
-    await expect(page.locator('.meta')).toContainText(/Total time\s*4 hr 30 min/);
+  test('says how much of the cooking time is work, as a sentence under Directions', async ({ page }) => {
+    // 4 hr 30 min of cooking, minus 3 hr 5 min of {simmer:}, {bake:} and {cool:}; no wait.
+    await expect(page.locator('.meta')).toContainText(/Time\s*4 hr 30 min/);
+    await expect(page.locator('.meta__wait')).toHaveCount(0);
     const sentence = page.locator('.directions .section-sub');
     await expect(sentence).toHaveText(
-      '4 hr 30 min in total: 1 hr 25 min of work and 3 hr 5 min of simmering, baking and resting.',
+      '4 hr 30 min in total: 1 hr 25 min of work and 3 hr 5 min of simmering, baking and cooling.',
     );
     await expect(sentence.locator('strong')).toHaveText(['4 hr 30 min', '1 hr 25 min', '3 hr 5 min']);
     // Hands-off verbs are timers, like {timer:}.
-    // The last step, "Bake": {bake:30m}, {bake:20-25m}, {rest:15-20m}.
+    // The last step, "Bake": {bake:30m}, {bake:20-25m}, {cool:15-20m}.
     await expect(page.locator('.step').last().locator('.timer')).toHaveCount(3);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
     expect(ld.totalTime).toBe('PT4H30M');
@@ -345,16 +346,34 @@ test.describe('interactions', () => {
     );
   });
 
-  test('chilling is kept out of the total and named in the sentence', async ({ page }) => {
+  test('a wait is shown after the cooking time, on its own line, and named in the sentence', async ({ page }) => {
     await page.goto('/tiramisu/');
-    await expect(page.locator('.meta')).toContainText(/Total time\s*30 min/);
-    await expect(page.locator('.directions .section-sub')).toHaveText('30 min of work, then at least 8 hr in the fridge.');
+    const time = page.locator('.meta dd').first();
+    await expect(time).toHaveText(/^30 min\s*\+ 8 hr chilling$/);
+    // The wait sits under the cooking time, not beside it.
+    const [cookBottom, waitTop] = await time.evaluate((dd) => {
+      const range = document.createRange();
+      range.setStart(dd.firstChild!, 0);
+      range.setEnd(dd.firstChild!, dd.firstChild!.textContent!.trim().length);
+      return [range.getBoundingClientRect().bottom, dd.querySelector('.meta__wait')!.getBoundingClientRect().top];
+    });
+    expect(waitTop).toBeGreaterThanOrEqual(cookBottom - 1);
+    await expect(page.locator('.directions .section-sub')).toHaveText('30 min of work, plus at least 8 hr in the fridge.');
     // Plain text in the step, not a timer button.
     const chill = page.locator('.step', { hasText: 'Chill and serve' });
     await expect(chill).toContainText('at least 8 hours');
     await expect(chill.locator('.timer')).toHaveCount(0);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
     expect(ld.totalTime).toBe('PT8H30M');
+  });
+
+  test('a wait in the middle of the method is outside the cooking time and still rings', async ({ page }) => {
+    await page.goto('/crepes/');
+    await expect(page.locator('.meta dd').first()).toHaveText(/^50 min\s*\+ 1 hr resting$/);
+    await expect(page.locator('.directions .section-sub')).toHaveText('50 min of work, plus 1 hr of resting.');
+    await expect(page.locator('.step', { hasText: 'Rest the batter' }).locator('.timer')).toHaveCount(1);
+    const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    expect(ld.totalTime).toBe('PT1H50M');
   });
 
   test('a weight range on a counted ingredient scales at both ends', async ({ page }) => {

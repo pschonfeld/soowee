@@ -13,7 +13,7 @@ yield:
   min: 16
   unit: crêpes
 time:
-  total: 110
+  total: 50
 ingredients:
   - items:
       - { qty: 35, unit: g, name: butter, note: unsalted }

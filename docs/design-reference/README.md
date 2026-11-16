@@ -9,7 +9,7 @@ Images in this folder are git-ignored: they are Apple's screens (one comes from 
 | File | Shows |
 |---|---|
 | `recipe-page/hero-time-yield-iphone.jpg` | Hero on iPhone: photo fades into a tint taken from the photo; source, title, byline; **Total time + Yield**; story card; Cook / Save / Share; description; scroll chevron. Closest to our hero. |
-| `recipe-page/hero-yield-only-iphone.jpg` | Same hero with a dark blue tint, Yield only. Note: our model always shows Total time + Yield. |
+| `recipe-page/hero-yield-only-iphone.jpg` | Same hero with a dark blue tint, Yield only. Note: our model always shows Time (cooking time, with any wait under it) + Yield. |
 | `recipe-page/hero-directions-more-info-iphone.webp` | Three iPhone screens: hero; Directions with a sticky header (thumbnail + title) and Ingredients / Directions / More Info tabs, "STEP n" labels, bold amounts and ingredients, inline orange timer chip; More Info with tag chips and "More Like This" cards. |
 | `recipe-page/full-page-ipad.jpg` | iPad: hero text on the left over the tint, photo on the right; below it, Ingredients (white rounded rows, quantity column) and Directions side by side. Also a small iPhone News+ Food home with a featured-recipe card. |
 | `cook-mode/directions-step-iphone.jpg` | Cook mode: full-screen tint, recipe thumbnail + title + close button, Ingredients / Directions segmented control, current step large and bright, upcoming steps dimmed. |

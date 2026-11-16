@@ -14,10 +14,12 @@ import { checkMentions } from './lib/mentions';
  *   **bold**                      – ingredient mentions
  *   {timer:20m} {timer:5-10m}     – tappable timer; the label ("5–10 minutes") is generated so wording
  *                                   stays consistent, and a range rings at its lower bound (time to check)
- *   {simmer:1h} {bake:30m} …      – hands-off time: a timer too, but subtracted from the total to get the
- *                                   work time and named in the time summary (list: HANDS_OFF in lib/inline.ts)
- *   {chill:6h} {freeze:4h}        – minimum time in the fridge/freezer after the dish is finished; plain text,
- *                                   not a timer, and NOT part of time.total (named in the Directions sentence)
+ *   {simmer:1h} {bake:30m} …      – hands-off time while cooking: a timer too, part of time.total but subtracted
+ *                                   from it to get the work time (list: HANDS_OFF in lib/inline.ts)
+ *   {rest:1h} {rise:2h} …         – a wait the cook can walk away from: a timer, NOT part of time.total, shown
+ *                                   after it in the hero ("+ 1 hr resting") (list: WAITS in lib/inline.ts)
+ *   {chill:6h} {freeze:4h}        – a wait in the fridge/freezer, at least this long; plain text, not a timer,
+ *                                   NOT part of time.total
  *   {25 g} or {2}                 – an amount used in this step, not linked to an ingredient; scales with the recipe
  *   {750 g mascarpone} {6 eggs}   – an ingredient measured out here: the amount scales, the name is bold
  *   {cocoa powder}                – an ingredient used here, without an amount
@@ -75,7 +77,7 @@ const recipes = defineCollection({
         max: z.number().positive().optional(),
         unit: z.string().default('servings'),
       }),
-      /** Minutes, start to finish: includes hands-off time ({simmer:…}), excludes {chill:…}/{freeze:…}. */
+      /** Cooking time in minutes: includes hands-off time ({simmer:…}), excludes waits ({rest:…}, {chill:…} …). */
       time: z.strictObject({
         total: z.number().int().positive(),
       }),

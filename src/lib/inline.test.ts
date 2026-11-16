@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DURATION_TOKENS, HANDS_OFF, parseQuantity, parseTimer, plainText, renderInline, stepTimes } from './inline';
+import { DURATION_TOKENS, HANDS_OFF, WAITS, parseQuantity, parseTimer, plainText, renderInline, stepTimes } from './inline';
 
 describe('parseTimer', () => {
   it('parses single and compound durations with generated labels', () => {
@@ -83,16 +83,42 @@ describe('hands-off time', () => {
       { text: ['Simmer {simmer:1h}, check {timer:5m}', { tip: 'A {bake:30m} in a tip is ignored' }] },
       { text: ['Bake {bake:20m}', 'Simmer {simmer:10s}'] },
     ];
-    expect(stepTimes(steps)).toEqual({ handsOff: 80, activities: ['simmer', 'bake'], after: [] });
+    expect(stepTimes(steps)).toEqual({ handsOff: 80, activities: ['simmer', 'bake'], waits: [] });
   });
 
   it('lists each activity once, in order of first appearance', () => {
-    const steps = [{ text: ['{rest:5m}', '{bake:5m}', '{rest:5m}'] }];
-    expect(stepTimes(steps).activities).toEqual(['rest', 'bake']);
+    const steps = [{ text: ['{cool:5m}', '{bake:5m}', '{cool:5m}'] }];
+    expect(stepTimes(steps).activities).toEqual(['cool', 'bake']);
   });
 });
 
-describe('time after the dish is finished', () => {
+describe('waits', () => {
+  it('ring as timers outside the fridge and freezer', () => {
+    for (const token of ['rest', 'rise', 'marinate']) {
+      expect(renderInline(`{${token}:10m}`)).toContain('data-timer="600"');
+    }
+  });
+
+  it('are counted on their own, never as hands-off time: others in order of first use, then fridge, then freezer', () => {
+    const steps = [{ text: ['Freeze {freeze:2h}', 'Chill {chill:1h}', 'Rise {rise:1h}', 'Rest {rest:30m}', 'Rise {rise:30m}', 'Bake {bake:20m}'] }];
+    expect(stepTimes(steps)).toEqual({
+      handsOff: 20,
+      activities: ['bake'],
+      waits: [
+        { token: 'rise', minutes: 90 },
+        { token: 'rest', minutes: 30 },
+        { token: 'chill', minutes: 60 },
+        { token: 'freeze', minutes: 120 },
+      ],
+    });
+  });
+
+  it('no verb is both hands-off and a wait', () => {
+    expect(Object.keys(HANDS_OFF).filter((token) => token in WAITS)).toEqual([]);
+  });
+});
+
+describe('time in the fridge or freezer', () => {
   it('renders as plain text, not a timer button', () => {
     expect(renderInline('Refrigerate for at least {chill:8h}.')).toBe('Refrigerate for at least 8 hours.');
     expect(renderInline('Freeze for {freeze:6h}.')).toBe('Freeze for 6 hours.');
@@ -103,7 +129,7 @@ describe('time after the dish is finished', () => {
     const steps = [
       { text: ['Simmer {simmer:1h}', 'Chill {chill:8h}', 'Chill {chill:30m} more', { tip: 'A {chill:2h} in a tip is ignored' }] },
     ];
-    expect(stepTimes(steps)).toEqual({ handsOff: 60, activities: ['simmer'], after: [{ token: 'chill', minutes: 510 }] });
+    expect(stepTimes(steps)).toEqual({ handsOff: 60, activities: ['simmer'], waits: [{ token: 'chill', minutes: 510 }] });
   });
 
   it('names the token when the duration is invalid', () => {

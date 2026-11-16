@@ -210,8 +210,9 @@ Allowed in `heat`, step paragraphs and tips. Raw HTML is escaped, not rendered.
 | `{300 ml}`, `{2 tbsp}`, `{6}` | An amount not linked to an ingredient: an intermediate preparation (“{300 ml} ragù”) or a portion measured out earlier | `300 ml` | yes | |
 | `**180 °C**` | Emphasis that is not an ingredient: the temperature in a `heat` line | Bold | | |
 | `{timer:20m}`, `{timer:5-10m}` | Something the cook does or checks on | Tappable timer, label `5–10 minutes`; a range rings at its lower bound | | Work |
-| `{simmer:1h}`, `{bake:30m}`, `{rest:15-20m}` … | Hands-off time: the dish works on its own. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Tappable timer, like `{timer:}` | | Total time, not work |
-| `{chill:8h}`, `{freeze:6h}` | Minimum time in the fridge or freezer after the dish is finished | Plain text `8 hours`, not a timer | | Outside the total |
+| `{simmer:1h}`, `{bake:30m}`, `{cool:15-20m}` … | Hands-off time while cooking: the dish works on its own, the cook stays in the process. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Tappable timer, like `{timer:}` | | Cooking time, not work |
+| `{rest:1h}`, `{rise:2h}`, `{marinate:4h}` | A wait the cook can walk away from, see [Wait verbs](#wait-verbs) | Tappable timer, like `{timer:}` | | The wait, outside the cooking time |
+| `{chill:8h}`, `{freeze:6h}` | A wait in the fridge or freezer, at least this long | Plain text `8 hours`, not a timer | | The wait, outside the cooking time |
 | `tip: …` | A callout between paragraphs | Bulb icon; “Tip:” for screen readers | | |
 
 Durations are written as `45s`, `20m`, `1h`, `1h30m` or a range `5-10m`. The label is generated (“1 hour 30 minutes”), so durations read the same everywhere; write the sentence around it: “bake for {bake:10m} more”. Amount units must be from the unit list, and a token that is not in the lists (`{wait:1h}`, `{steam:5m}`) fails the build instead of being printed raw.
@@ -237,9 +238,18 @@ All times are whole minutes.
 
 | Field under `time` | Required | Meaning |
 |---|---|---|
-| `total` | yes | Start to finish, **including** hands-off time (`{simmer:}`, `{bake:}` …) and **excluding** `{chill:}` and `{freeze:}` |
+| `total` | yes | The cooking time: start to finish of the cooking, **including** hands-off time (`{simmer:}`, `{bake:}` …) and **excluding** every wait (`{rest:}`, `{rise:}`, `{marinate:}`, `{chill:}`, `{freeze:}`) |
 
-`total` is the only time written by hand. Everything else is derived from the duration tokens in the step paragraphs, so the page cannot show times that contradict the method. There is no separate prep or cook time: it would be a second, unchecked source for the same thing.
+`total` is the only time written by hand. Everything else is derived from the duration tokens in the step paragraphs, so the page cannot show times that contradict the method. There is no separate prep time: it would be a second, unchecked source for the same thing.
+
+### The rule: cooking time, then the wait
+
+A cook plans in that order: how long does it take to make, and how long until we can eat? So every recipe splits its time the same way:
+
+- **Cooking time** is everything the cook is in the process for: the work at the counter and the hands-off time in between (a ragù simmering, a lasagna baking, a cake cooling before it is iced). The cook can step away for a minute, but not leave.
+- **The wait** is time the cook can walk away from: a batter resting, a dough rising, meat marinating, a tiramisu setting in the fridge. It can be in the middle of the method (crêpe batter) or at the end (tiramisu).
+
+**Choosing the verb** decides which side a duration lands on. Ask: *can the cook leave the kitchen, or go to bed?* Yes → a wait verb. No → a hands-off verb, or `{timer:}` if they are busy.
 
 ### Terms
 
@@ -247,83 +257,94 @@ One vocabulary on every recipe:
 
 | Term | Where | Meaning |
 |---|---|---|
-| **Total time** | Hero; repeated in the Directions sentence (“4 hr 30 min in total”, or “30 min of work” when all of it is work) | `time.total`: start to finish, until the dish is ready or goes into the fridge. Never includes the fridge or freezer |
-| **Work** | Directions sentence (“1 hr 25 min of work”) | The part of the total the cook is busy: total minus hands-off time |
-| **Hands-off** | This document only | Time the dish works on its own: the verbs below. Named by what happens (“simmering, baking”), never by this word on the page |
-| **In the fridge / freezer** | Directions sentence (“then at least 8 hr in the fridge”) | Time after the dish is finished, on top of the total |
+| **Time** | Hero: the cooking time, with the wait on a line under it (“30 min”, “+ 8 hr chilling”) | `time.total`, then the sum of the waits |
+| **In total** | Directions sentence (“4 hr 30 min in total”) | The cooking time, when the recipe has no wait. With a wait it reads “of cooking”, since it is not the whole time |
+| **Work** | Directions sentence (“1 hr 25 min of work”) | The part of the cooking time the cook is busy: total minus hands-off time |
+| **Hands-off** | This document only | Time the dish works on its own while the cook stays in the process: the verbs below. Named by what happens (“simmering, baking”), never by this word on the page |
+| **Wait** | This document only | Time the cook can walk away from, on top of the cooking time. Named by what happens (“resting”, “in the fridge”) |
 
-The hero shows exactly two facts, **Total time** and **Yield**, on every recipe. A third column wrapped onto a second row on narrow phones, and a fridge time next to the total read as if it were part of it. Everything else about time is in the Directions sentence, the one place that can say how the parts relate. This follows the “25 minutes, plus 4 hours’ chilling” convention of NYT Cooking, America’s Test Kitchen and BBC Good Food, rather than Food Network’s total that includes “inactive” time.
+The hero shows exactly two facts on every recipe, **Time** and **Yield**. The wait sits on its own line under the cooking time rather than in a third column: a third column wrapped onto a second row on narrow phones, and a line of its own reads second, after the cooking time, and never widens the row. A recipe without a wait shows only the cooking time. This follows the “25 minutes, plus 4 hours’ chilling” convention of NYT Cooking and America’s Test Kitchen, rather than a single total that hides how much of it is waiting.
 
 ### Hands-off verbs
 
-Each verb is a timer that counts as hands-off time. The word in the second column is used in the Directions sentence. To add one, add it to `HANDS_OFF` in [`src/lib/inline.ts`](../src/lib/inline.ts) and a row here (a test checks both).
+Part of the cooking time. Each verb is a timer. The word in the second column is used in the Directions sentence. To add one, add it to `HANDS_OFF` in [`src/lib/inline.ts`](../src/lib/inline.ts) and a row here (a test checks both).
 
 | Token | In the sentence | Use for |
 |---|---|---|
 | `{simmer:}` | simmering | A sauce, stew or ragù cooking on its own |
 | `{bake:}` | baking | Anything in the oven that is not a roast: lasagna, bread, cakes |
 | `{roast:}` | roasting | Meat and vegetables in the oven |
-| `{rest:}` | resting | Meat, a baked dish or dough left to settle before the next step or before slicing |
-| `{rise:}` | rising | Yeast dough |
-| `{cool:}` | cooling | Cooling at room temperature before the next step: a cake before icing |
+| `{cool:}` | cooling | Cooling or settling at room temperature before the next step or before slicing: a cake before icing, a lasagna before it is cut |
 | `{dry:}` | drying | Steam-drying, air-drying: parboiled chips on a rack |
 | `{drain:}` | draining | Liquid running off: mozzarella, yoghurt, salted vegetables |
 | `{soak:}` | soaking | In water, as part of the method: potatoes, short soaks |
-| `{marinate:}` | marinating | In a marinade, as part of the method |
 
-Time after the dish is finished, outside the total:
+### Wait verbs
 
-| Token | In the sentence | Use for |
+Outside the cooking time. The word in the second column is used in the hero (“+ 1 hr resting”) and, for waits without a place, in the Directions sentence (“1 hr of resting”). To add one, add it to `WAITS` in [`src/lib/inline.ts`](../src/lib/inline.ts) and a row here (a test checks both).
+
+| Token | In the hero | Use for |
 |---|---|---|
-| `{chill:}` | in the fridge | Setting: tiramisu, panna cotta, terrines |
-| `{freeze:}` | in the freezer | Ice cream, semifreddo |
+| `{rest:}` | resting | A batter or dough left to relax: crêpes, pastry. A timer |
+| `{rise:}` | rising | Yeast dough. A timer |
+| `{marinate:}` | marinating | In a marinade. A timer |
+| `{chill:}` | chilling | In the fridge: setting a tiramisu or panna cotta, chilling a dough. Plain text, not a timer |
+| `{freeze:}` | freezing | In the freezer: ice cream, semifreddo. Plain text, not a timer |
 
-`{chill:}` is for a dish that is done and only has to set. Cooling a component before the next step is `{cool:}`, and resting a lasagna before slicing is `{rest:}`: both are part of the total.
+The fridge and the freezer are named by their place in the Directions sentence, with “at least”, because longer is fine there:
+
+| Token | In the sentence |
+|---|---|
+| `{chill:}` | in the fridge |
+| `{freeze:}` | in the freezer |
+
+Meat resting for a few minutes before carving is part of serving, not a wait: write it as `{cool:}` or a `{timer:}`.
 
 ### How the times are derived
 
 ```mermaid
 flowchart TD
   total["time.total<br/>written by hand"] --> work["Work = total − hands-off"]
-  off["Hands-off verbs in step paragraphs<br/>{simmer:} {bake:} {rest:} …"] --> handsoff["Hands-off minutes<br/>+ verbs in order of first use"]
+  off["Hands-off verbs in step paragraphs<br/>{simmer:} {bake:} {cool:} …"] --> handsoff["Hands-off minutes<br/>+ verbs in order of first use"]
   handsoff --> work
-  after["{chill:} {freeze:} in step paragraphs"] --> afterOut["Minutes per kind"]
-  total --> hero["Hero<br/>Total time and Yield only"]
+  after["Wait verbs in step paragraphs<br/>{rest:} {rise:} {chill:} …"] --> afterOut["Minutes per kind"]
+  total --> hero["Hero<br/>Time (cooking + wait) and Yield"]
+  afterOut --> hero
   total --> sentence["Directions sentence"]
   work --> sentence
   handsoff --> sentence
   afterOut --> sentence
-  total --> ld["JSON-LD totalTime<br/>= total + chill + freeze"]
+  total --> ld["JSON-LD totalTime<br/>= total + every wait"]
   afterOut --> ld
 ```
 
-The sentence is built by `describeTime` in [`src/lib/time.ts`](../src/lib/time.ts), with a unit test for every case below. JSON-LD is the one place where the fridge and freezer are added to the total, because schema.org’s `totalTime` means “until it can be served”.
+The hero and the sentence are built by `heroTime` and `describeTime` in [`src/lib/time.ts`](../src/lib/time.ts), with a unit test for every case below. JSON-LD is the one place where the waits are added to the cooking time, because schema.org’s `totalTime` means “until it can be served”.
 
 ### The Directions sentence
 
 Generated, never written by hand. The numbers are bold.
 
-| The recipe has | Directions sentence |
-|---|---|
-| Only work | **25 min** from start to finish. |
-| Hands-off time | **4 hr 30 min** in total: **1 hr 25 min** of work and **3 hr 5 min** of simmering, baking and resting. |
-| Fridge time | **30 min** of work, then at least **8 hr** in the fridge. |
-| Both | **45 min** in total: **30 min** of work and **15 min** of cooling, then at least **4 hr** in the fridge. |
-| Fridge and freezer | **40 min** of work, then at least **2 hr** in the fridge and **6 hr** in the freezer. |
-
-The hero is the same in every case: Total time and Yield.
+| The recipe has | Hero | Directions sentence |
+|---|---|---|
+| Only work | 25 min | **25 min** from start to finish. |
+| Hands-off time | 4 hr 30 min | **4 hr 30 min** in total: **1 hr 25 min** of work and **3 hr 5 min** of simmering, baking and cooling. |
+| A wait | 50 min<br/>+ 1 hr resting | **50 min** of work, plus **1 hr** of resting. |
+| Fridge time | 30 min<br/>+ 8 hr chilling | **30 min** of work, plus at least **8 hr** in the fridge. |
+| Both | 45 min<br/>+ 4 hr chilling | **45 min** of cooking: **30 min** of work and **15 min** of cooling, plus at least **4 hr** in the fridge. |
+| Several waits | 40 min<br/>+ 8 hr rising and chilling | **40 min** of work, plus **2 hr** of rising and at least **6 hr** in the fridge. |
 
 Rules:
 
-- The verbs are listed in the order they first appear in the method, each once, joined as “a, b and c”.
-- Hands-off time gets its own number instead of “the rest is …”, so the reader can see that work and hands-off time add up to the total.
+- The verbs are listed in the order they first appear in the method, each once, joined as “a, b and c”. Waits follow the same rule, except that the fridge and then the freezer always come last.
+- Hands-off time gets its own number instead of “the rest is …”, so the reader can see that work and hands-off time add up to the cooking time.
+- The waits are joined with “plus”, never “then”: a wait can sit in the middle of the method.
+- The hero adds the waits into one number, named by their verbs: “+ 8 hr rising and chilling”.
 - “At least” is used only for the fridge and freezer, where longer is fine. A bake should not run longer.
-- The fridge always comes before the freezer, whatever the order in the method.
 - A day or more is written in days: `1 day 2 hr`.
 
 How the sums are made:
 
-- A range counts at its **lower bound**: `{bake:20-25m}` adds 20 minutes, `{chill:8-12h}` reads “8–12 hours” but adds 8 hours. Write `time.total` with the same lower bounds, or the work time comes out too long.
+- A range counts at its **lower bound**: `{bake:20-25m}` adds 20 minutes, `{chill:8-12h}` reads “8–12 hours” but adds 8 hours. Write `time.total` with the same lower bounds, or the work time comes out too long. The hero’s wait is the lower bound too: “+ 8 hr chilling” means at least 8 hours.
 - The sums are made in seconds and rounded to whole minutes once, so hands-off time shorter than 30 seconds in total counts as none.
 
 Known simplification: work done *during* hands-off time (making the béchamel while the ragù simmers) is not counted as work. Work is the time the recipe needs the cook at the counter, not every minute they spend in the kitchen.
@@ -477,7 +498,7 @@ steps:
 ---
 ```
 
-For a full recipe with groups, `about`, `heat`, tips, hands-off verbs and `{chill:}`, see [`lasagna.md`](../src/content/recipes/lasagna.md) and [`tiramisu.md`](../src/content/recipes/tiramisu.md).
+For a full recipe with groups, `about`, `heat`, tips, hands-off verbs and a wait (`{chill:}`), see [`lasagna.md`](../src/content/recipes/lasagna.md) and [`tiramisu.md`](../src/content/recipes/tiramisu.md).
 
 ## Open decisions
 
@@ -488,6 +509,6 @@ Not decided yet; listed so they are not lost. None of them exists in the code to
 | Unit system | Metric only | Metric stays the default. A reader toggle to imperial later needs conversions for `g`/`ml` and a decision on `tsp`/`tbsp` (already shared) and on oven temperatures, which are plain text today |
 | `byline` | Used for the recipe’s origin (“Adapted from …”) | Decide whether it is the author, the origin, or both, and whether origin moves to `source` |
 | Size and preparation | Both in `note`: `medium, diced into small cubes` | Separate `size` and `prep` fields for a consistent order |
-| Time before starting | Not supported: every hands-off verb is part of the total | Overnight soaking of pulses, an overnight marinade or a cold rise happen before the cook starts. They would sit outside the total like `{chill:}` and open the sentence: “Start the night before: at least **12 hr** of soaking, then …” |
+| Time before starting | A marinade or a rise is a wait (`{marinate:}`, `{rise:}`); `{soak:}` is still part of the cooking time | Overnight soaking of pulses happens before the cook starts. It would need a wait verb for long soaks, or the sentence could open with it: “Start the night before: at least **12 hr** of soaking, then …” |
 | Heat | Free text; the temperature is bold text | A structured temperature (`temp: 180`), needed for a °F toggle and a preheat timer |
 | First-time guidance | One level of detail for everyone: a home cook with basic craft who wants a restaurant-level result | Extra guidance marked in the recipe (more cues, the *why*, common mistakes), shown to a reader cooking the dish for the first time and hideable by everyone else. It would keep the default recipe lean instead of adding tips for every reader. Backlog idea, to explore later |
