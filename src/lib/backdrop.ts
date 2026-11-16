@@ -37,6 +37,7 @@ const COOK_TEXT: [number, number, number][] = [
   ...HERO_TEXT,
   [0.58, 3, 0], // inactive cook-mode steps: large text (≥ 26 px)
   [0.58, 3, 0.2], // timer pill inside an inactive cook-mode step
+  [1, 4.5, 0.24], // selected segment of the Ingredients / Directions control (--glass-selected)
 ];
 
 const toLinear = (c: number) => {

@@ -258,7 +258,7 @@ function offerUndo(timer: Timer) {
   note.textContent = 'Timer dismissed';
   const undo = document.createElement('button');
   undo.type = 'button';
-  undo.className = 'timer-chip__undo';
+  undo.className = 'btn btn--capsule btn--glass btn--sm';
   undo.textContent = 'Undo';
   undo.setAttribute('aria-label', `Undo dismiss timer: ${label}`);
   chip.replaceChildren(note, undo);
@@ -369,7 +369,7 @@ function buildTimer(name: string, label: string, end: number, pausedRemaining: n
 
   const pauseButton = document.createElement('button');
   pauseButton.type = 'button';
-  pauseButton.className = 'timer-chip__control';
+  pauseButton.className = 'btn btn--round btn--glass btn--sm timer-chip__control';
   pauseButton.innerHTML = pausedRemaining !== null ? PLAY_ICON : PAUSE_ICON;
   pauseButton.setAttribute('aria-label', `${pausedRemaining !== null ? 'Resume' : 'Pause'} timer: ${label}`);
 
@@ -383,7 +383,7 @@ function buildTimer(name: string, label: string, end: number, pausedRemaining: n
 
   const dismiss = document.createElement('button');
   dismiss.type = 'button';
-  dismiss.className = 'timer-chip__control';
+  dismiss.className = 'btn btn--round btn--glass btn--sm timer-chip__control';
   dismiss.setAttribute('aria-label', `Dismiss timer: ${label}`);
   dismiss.innerHTML = DISMISS_ICON;
 

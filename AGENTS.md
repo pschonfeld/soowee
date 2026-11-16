@@ -29,3 +29,4 @@ Everything below is binding. If a task conflicts with any of it, stop and say so
 - **Don't edit recipe content** (`src/content/recipes/`) unless asked. It is curated by hand.
 - **Schema changes travel together:** schema, [docs/recipe-model.md](docs/recipe-model.md) and every affected recipe change in the same commit. `src/lib/docs.test.ts` enforces part of this.
 - Before writing or editing a recipe, read [docs/recipe-model.md](docs/recipe-model.md), including its writing conventions.
+- **Buttons come from one system:** `.btn` + one shape + one surface, and `.segmented` for a choice between options. The spec is the Buttons section of `src/styles/global.css`; read it before adding or restyling a control. Components set layout only, never a button's surface, radius, size or states. A new kind of button extends that section. `tests/buttons.spec.ts` enforces the classes and the 44px hit area.

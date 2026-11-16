@@ -11,21 +11,13 @@
   background: var(--backdrop-edge, var(--tint-deep));
 }
 
-/* The way home: top-left over the photo, scrolls away with the hero. The same glass as Cook / Save / Share
-   (blur, light rim, shadow from .round), tinted darker: plain glass is too faint on pale photos (crêpes on a
-   white plate), and the icon needs 3:1 against whatever is behind it. */
-/* .round.back, not .back: wins over the .round glass group by specificity, not by stylesheet order. */
-.round.back {
+/* The way home: top-left over the photo, scrolls away with the hero. A .btn--scrim (global.css): plain glass is
+   too faint on pale photos (crêpes on a white plate). */
+.btn.back {
   position: absolute;
   z-index: 2;
   top: max(var(--s-3), env(safe-area-inset-top));
   left: max(var(--s-3), env(safe-area-inset-left));
-  color: var(--on-tint);
-  background: rgb(0 0 0 / 0.34); /* ~3.6:1 for the icon on the palest photo (crêpes) */
-}
-
-.round.back:active {
-  background: rgb(0 0 0 / 0.45);
 }
 
 .back .icon {
@@ -237,16 +229,9 @@
   margin-top: var(--s-2);
 }
 
-.action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  min-height: var(--tap);
-  padding: 0 var(--s-2);
-  border-radius: 999px; /* capsules, like the home search and iOS glass buttons */
-  font-size: var(--text-body);
-  font-weight: 600;
+.btn.action {
+  /* Narrower than a capsule's default padding, so all three fit across a 320px phone. */
+  padding-inline: var(--s-2);
 }
 
 .action[data-saved] .icon {
@@ -374,19 +359,6 @@
   align-items: center;
   border-radius: var(--radius-control);
   background: var(--card);
-}
-
-.scale button {
-  display: grid;
-  place-items: center;
-  width: var(--tap);
-  height: var(--tap);
-  border-radius: var(--radius-control);
-}
-
-.scale button:disabled {
-  opacity: 0.3;
-  cursor: default;
 }
 
 .scale output {
@@ -701,40 +673,10 @@ html.is-cooking {
   color: var(--on-tint-secondary);
 }
 
-.round {
-  display: grid;
-  place-items: center;
-  width: var(--tap);
-  height: var(--tap);
-  border-radius: 50%;
-}
-
-.round:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.segmented {
+.segmented.cook__tabs {
   justify-self: center;
-  display: flex;
+  flex-wrap: nowrap; /* two tabs on one row even at 200% text; wrapped, the second slides under the step arrows */
   margin: var(--s-2) 0 var(--s-3);
-  padding: 3px;
-  border-radius: 999px;
-}
-
-.segmented button {
-  min-height: 2.25rem;
-  padding: 0 var(--s-5);
-  border-radius: 999px;
-  font-size: var(--text-subhead);
-  font-weight: 600;
-  color: rgb(255 255 255 / 0.85);
-}
-
-.segmented button[aria-selected='true'] {
-  background: rgb(255 255 255 / 0.92);
-  color: #1c1c1e;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
 }
 
 .cook__panel {
@@ -801,7 +743,7 @@ html.is-cooking {
 }
 
 .cook__line.is-active {
-  color: #fff;
+  color: var(--on-tint);
 }
 
 .cook__line strong {
@@ -882,6 +824,14 @@ html.is-cooking {
 }
 
 /* Below the cook-mode header instead of over it, so it never covers the title or Close. */
+/* Phones: the capsule is as wide as the screen, so it starts below the back button instead of over it. Wider
+   screens leave room beside it (the capsule tops out at 23rem, centred). */
+@media (max-width: 31rem) {
+  .hud {
+    top: calc(max(var(--s-3), env(safe-area-inset-top)) + var(--tap) + var(--s-2));
+  }
+}
+
 html.is-cooking .hud {
   /* Clears the header and the Ingredients/Directions tabs, measured at ~7.4rem; 7.75rem leaves a gap. */
   top: calc(env(safe-area-inset-top, 0px) + 7.75rem);
@@ -906,7 +856,7 @@ html.is-cooking .hud {
   background: var(--glass-dark);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  color: #fff;
+  color: var(--on-glass);
   pointer-events: auto;
   box-shadow: inset 0 1px 0.5px rgb(255 255 255 / 0.14), 0 6px 24px rgb(0 0 0 / 0.28);
   transition: background-color 0.2s;
@@ -935,31 +885,16 @@ html.is-cooking .hud {
   font-size: var(--text-title3);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #ffb340;
+  color: var(--timer-accent);
 }
 
 .timer-chip.is-done {
-  background: #b25000;
+  background: var(--timer-done);
 }
 
 .timer-chip.is-done .timer-chip__label,
 .timer-chip.is-done time {
-  color: #fff;
-}
-
-.timer-chip__control {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.16);
-}
-
-.timer-chip__control .icon {
-  width: 0.8125rem;
-  height: 0.8125rem;
+  color: var(--on-glass);
 }
 
 .timer-chip.is-dismissed {
@@ -970,19 +905,11 @@ html.is-cooking .hud {
   flex: 1 1 auto;
 }
 
-.timer-chip__undo {
-  flex: none;
-  min-height: 2.25rem;
-  padding: 0 var(--s-4);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.16);
-  color: #ffb340;
-  font-size: var(--text-subhead);
-  font-weight: 600;
-}
-
-.timer-chip__control[hidden] {
-  visibility: hidden; /* keeps the dismiss button from drifting when pause disappears on done */
+/* Keeps the slot, so the dismiss button doesn't drift when pause disappears on done. Must beat
+   [hidden] { display: none !important } in global.css; visibility: hidden still removes it from focus and AT. */
+.btn.timer-chip__control[hidden] {
+  display: inline-flex !important;
+  visibility: hidden;
 }
 
 .toast {
@@ -994,11 +921,11 @@ html.is-cooking .hud {
   background: var(--glass-dark);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  color: #fff;
+  color: var(--on-glass);
   font-size: var(--text-subhead);
   font-weight: 600;
   box-shadow: inset 0 1px 0.5px rgb(255 255 255 / 0.14), 0 6px 24px rgb(0 0 0 / 0.28);
-  pointer-events: auto;
+  pointer-events: none; /* a status message with nothing to press: taps go through to the page (the back button) */
 }
 
 /* Stays rendered (never display:none) so the status live region announces reliably;
@@ -1013,31 +940,24 @@ html.is-cooking .hud {
 
 /* Windows High Contrast and other forced-colour modes drop backgrounds: draw control edges instead. */
 @media (forced-colors: active) {
+  /* Buttons and segments are covered in global.css. */
   .timer,
-  .action,
   .story,
-  .round,
   .scale,
-  .segmented button,
   .ingredient,
   .heat,
   .tip,
-  .timer-chip,
-  .timer-chip__control {
+  .timer-chip {
     border: 1px solid ButtonText;
-  }
-
-  .segmented button[aria-selected='true'] {
-    border-width: 3px;
   }
 }
 
 /* Reduce Transparency: same tints, no blur; dark chips become solid. */
 @media (prefers-reduced-transparency: reduce) {
   .story,
-  .action,
-  .round,
-  .segmented,
+  .btn--glass,
+  .btn--scrim,
+  .segmented--glass,
   .timer-chip,
   .toast {
     -webkit-backdrop-filter: none;
@@ -1046,7 +966,7 @@ html.is-cooking .hud {
 
   .timer-chip:not(.is-done),
   .toast {
-    background: #1c1c1e;
+    background: var(--hud-solid);
   }
 }
 

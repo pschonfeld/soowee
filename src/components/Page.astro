@@ -77,13 +77,13 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
     <footer class="footer">
       <Wordmark class="footer__wordmark" width={91} height={15} />
       <slot name="credits" />
-      <fieldset class="theme">
+      <fieldset class="segmented theme">
         <legend class="sr-only">Appearance</legend>
         {
           ['Light', 'Dark', 'Auto'].map((label) => (
             <label>
               <input type="radio" name="theme" value={label.toLowerCase()} checked={label === 'Auto'} />
-              <span>{label}</span>
+              <span class="segmented__item">{label}</span>
             </label>
           ))
         }

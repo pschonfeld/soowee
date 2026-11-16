@@ -113,7 +113,7 @@ const icons = {
         data-yield-unit={r.yield.unit}
       >
         <header class="hero">
-          <a class="round back" href="/" aria-label="All recipes">
+          <a class="btn btn--round btn--scrim back" href="/" aria-label="All recipes">
             <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.back} /></svg>
           </a>
           <!-- The photo continues past its edge as a mirrored, blurred copy (background extension). -->
@@ -175,15 +175,15 @@ const icons = {
             }
 
             <div class="actions">
-              <button type="button" class="action" data-cook-open aria-haspopup="dialog">
+              <button type="button" class="btn btn--capsule btn--glass action" data-cook-open aria-haspopup="dialog">
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.cook} /></svg>
                 Cook
               </button>
-              <button type="button" class="action" data-save>
+              <button type="button" class="btn btn--capsule btn--glass action" data-save>
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.save} /></svg>
                 <span data-save-label>Save</span>
               </button>
-              <button type="button" class="action" data-share>
+              <button type="button" class="btn btn--capsule btn--glass action" data-share>
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.share} /></svg>
                 Share
               </button>
@@ -202,11 +202,11 @@ const icons = {
                   <p class="section-sub">Yields <span data-yield>{yieldText}</span></p>
                 </div>
                 <div class="scale" role="group" aria-label="Scale recipe">
-                  <button type="button" data-scale="-1" aria-label="Scale down">
+                  <button type="button" class="btn btn--round btn--plain" data-scale="-1" aria-label="Scale down">
                     <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.minus} /></svg>
                   </button>
                   <output data-scale-output aria-live="polite">{formatScale(1)}</output>
-                  <button type="button" data-scale="1" aria-label="Scale up">
+                  <button type="button" class="btn btn--round btn--plain" data-scale="1" aria-label="Scale up">
                     <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.plus} /></svg>
                   </button>
                 </div>
@@ -349,21 +349,22 @@ const icons = {
           {r.title}
           <span>soowee</span>
         </p>
-        <button type="button" class="round" data-cook-close aria-label="Close cook mode">
+        <button type="button" class="btn btn--round btn--glass" data-cook-close aria-label="Close cook mode">
           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.close} /></svg>
         </button>
       </div>
 
-      <div class="segmented" role="tablist" aria-label="Cook mode view">
+      <div class="segmented segmented--glass cook__tabs" role="tablist" aria-label="Cook mode view">
         <button
           type="button"
+          class="segmented__item"
           role="tab"
           id="tab-ingredients"
           aria-controls="panel-ingredients"
           aria-selected="false"
           tabindex="-1">Ingredients</button
         >
-        <button type="button" role="tab" id="tab-directions" aria-controls="panel-directions" aria-selected="true"
+        <button type="button" class="segmented__item" role="tab" id="tab-directions" aria-controls="panel-directions" aria-selected="true"
           >Directions</button
         >
       </div>
@@ -434,10 +435,10 @@ const icons = {
       </div>
 
       <div class="cook__nav">
-        <button type="button" class="round" data-cook-nav="-1" aria-label="Previous step">
+        <button type="button" class="btn btn--round btn--glass" data-cook-nav="-1" aria-label="Previous step">
           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.up} /></svg>
         </button>
-        <button type="button" class="round" data-cook-nav="1" aria-label="Next step">
+        <button type="button" class="btn btn--round btn--glass" data-cook-nav="1" aria-label="Next step">
           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.down} /></svg>
         </button>
       </div>

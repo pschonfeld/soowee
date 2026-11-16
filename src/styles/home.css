@@ -67,16 +67,12 @@
   display: none;
 }
 
-/* iOS-style clear: a filled grey circle with a thin cross, on a 44px target at the capsule's right end. */
-.search__clear {
+/* iOS-style clear: a filled grey circle with a thin cross. A .btn--sm (36) centred in the 44px capsule's right
+   end; its ::after makes the hit area the full 44. */
+.btn.search__clear {
   position: absolute;
-  top: 0;
-  right: 0;
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 999px;
+  top: calc((2.75rem - var(--tap-sm)) / 2);
+  right: calc((2.75rem - var(--tap-sm)) / 2);
   color: var(--text-secondary);
 }
 
@@ -446,12 +442,6 @@
 
 .empty__clear {
   margin-top: var(--s-3);
-  min-height: 2.75rem;
-  padding: 0 var(--s-5);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text) 8%, transparent);
-  color: var(--text);
-  font-weight: 600;
 }
 
 /* ── iPad and desktop ── */

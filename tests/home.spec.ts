@@ -88,8 +88,7 @@ test('the clear button shows only with text, empties the field and keeps it focu
   await expect(clear).toBeHidden();
   await search(page).fill('masc');
   await expect(clear).toBeVisible();
-  const box = (await clear.boundingBox())!;
-  expect(box.width).toBeGreaterThanOrEqual(44); // a full tap target
+  // Its 44px hit area (a 36px button grown by ::after) is checked in buttons.spec.ts.
   await clear.click();
   await expect(search(page)).toHaveValue('');
   await expect(search(page)).toBeFocused();
