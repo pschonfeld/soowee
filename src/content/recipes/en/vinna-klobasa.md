@@ -8,8 +8,9 @@ image: ../../../assets/recipes/vinna-klobasa.webp
 imageAlt: Golden coiled wine sausage on a white plate with slices of bread and mustard, held by a person wearing a black apron
 yield:
   min: 4
+  max: 6
 time:
-  total: 120
+  total: 135
 ingredients:
   - group: For the sausage
     items:
@@ -22,7 +23,7 @@ ingredients:
       - { qty: 0.5, unit: tsp, name: white pepper, note: "finely ground, about 1 g" }
       - { qty: 0.5, unit: tsp, name: ground mace, note: "about 1 g" }
       - { name: ground nutmeg, note: "optional, a pinch" }
-      - { qty: 0.5, unit: tsp, name: ground cloves, note: "about 1 g; ¼ tsp in the filling, up to ¼ tsp to taste" }
+      - { qty: 0.5, unit: tsp, name: ground cloves, note: "¼ tsp in the filling, the remaining ¼ tsp to taste" }
       - { name: lemon zest, note: "from ½ lemon for the base batch" }
       - { qty: 100, unit: ml, name: whipping cream, note: "at least 31 % fat" }
       - { qty: 80, unit: ml, name: dry white wine, note: "preferably Welschriesling or Grüner Veltliner" }
@@ -32,7 +33,7 @@ ingredients:
       - { qty: 3, unit: tbsp, name: pork lard, note: "1 tbsp to brush, 2 tbsp in the pan" }
 equipment:
   - { name: Meat grinder, note: "standalone or mixer attachment, fine 3–4.5 mm plate" }
-  - Food processor
+  - { name: Food processor, note: "ideally with a bowl of at least 1 L" }
   - Bowl and sturdy spatula or stand mixer with a paddle
   - { name: Piston stuffer or grinder with a stuffing attachment, note: "tube for sheep casings" }
   - { name: Probe thermometer, note: thin tip }
@@ -62,18 +63,18 @@ directions:
       - Load the stuffer or grinder and slowly feed the mixture towards the tip. Once it reaches the tip, knot the casing. Find the speed on the first metre; it should be slow enough for you to keep up and not trap air.
       - Fill the casing in one long rope, steadying it with one hand as it comes off the tube. Fill it full but soft, so that a gentle pinch leaves a dent.
       - tip: An overfilled casing bursts when it is coiled and when it meets heat. If the auger warms the filling, stop and chill it for 15 minutes.
-      - Prick any air pockets with a clean pin. Twist the rope into {8} sausages of about 30 cm, cut through the twists and knot the ends.
-      - Lay the sausages on a rack, or on a large plate or tray lined with baking paper or a clean tea towel, uncovered, and keep them in the fridge until cooking.
-      - tip: Cook the sausage within 24 hours of mixing the filling, because the milk and wine in it start to ferment and sour.
+      - Prick any air pockets with a clean pin. Twist the rope into {6} equal pieces (about 180 g each). Cut through the twists, knot the ends and loosely coil each piece into a spiral of about 3 turns.
+      - Lay the sausages on a rack, or on a large plate or tray lined with baking paper or a clean tea towel, and refrigerate uncovered for {chill:1-2h}, ideally overnight.
+      - tip: Cook the sausage within 24 hours of mixing the filling.
   - title: Cook the sausage
     heat: Preheat the oven to **160 °C**, conventional top and bottom heat, and heat a wide pot of water to **80 °C** on a thermometer, barely trembling.
     steps:
-      - Coil each sausage loosely into a flat spiral and push two skewers through it crosswise to hold it.
+      - After chilling, push two skewers crosswise through each coil to hold it. Allow about 35–45 minutes for scalding, baking, pan-frying and a short rest before serving.
       - Lower one coil into the water for {timer:30-60s}, until the casing turns white and tight, and check that it holds. Scald the rest one or two at a time, lift them out and pat them dry.
       - tip: The scald shrinks the casing evenly before it meets dry heat, so it does not split in the oven. Hotter water makes the filling expand faster than the casing can give, and it bursts in the pot instead.
       - Lay the coils on a baking tray lined with paper, brush them on both sides with {1 tbsp pork lard} and bake for {bake:15m}.
       - Turn the coils, baste them with the fat from the tray and bake for {bake:5-10m} more, until the centre reads 64 °C. Push the probe in from the side into the middle of the coil. Switch off the oven and leave the door ajar.
-      - Brown the coils in three batches in the frying pan over medium-high heat, sharing {2 tbsp pork lard} between the batches, for {timer:1-2m} on each side, until deep golden and the centre reads 70 °C. Keep the finished coils in the warm oven and let them rest for {cool:3-5m} before serving.
+      - Brown the coils in a frying pan over medium-high heat. In a 28 cm pan, fry 2–3 coils at a time, depending on size, without overlapping. Divide {2 tbsp pork lard} between the batches and fry for {timer:1-2m} on each side, until deep golden and the centre reads 70 °C. Keep the finished coils in the warm oven and let them rest for {cool:3-5m} before serving.
       - tip: The filling is raw pork, so it must reach 70 °C in the centre. Don’t go much beyond that, because the sausage dries out quickly and it should be juicy.
 ---
 

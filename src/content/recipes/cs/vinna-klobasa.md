@@ -8,8 +8,9 @@ image: ../../../assets/recipes/vinna-klobasa.webp
 imageAlt: Opečená vinná klobása stočená do šneka na bílém talíři s krajíci chleba a hořčicí, který drží člověk v černé zástěře
 yield:
   min: 4
+  max: 6
 time:
-  total: 120
+  total: 135
 ingredients:
   - group: Na klobásy
     items:
@@ -22,7 +23,7 @@ ingredients:
       - { qty: 0.5, unit: tsp, name: bílého pepře, note: "mletého, cca 1 g" }
       - { qty: 0.5, unit: tsp, name: muškátového květu, note: "mletého, cca 1 g" }
       - { name: muškátový oříšek, note: "mletý, špetka, nepovinné" }
-      - { qty: 0.5, unit: tsp, name: hřebíčku, note: "mletého, cca 1 g; ¼ lžičky do směsi, až ¼ lžičky podle chuti" }
+      - { qty: 0.5, unit: tsp, name: hřebíčku, note: "mletého, ¼ lžičky do směsi, zbývající ¼ lžičky podle chuti" }
       - { name: citronová kůra, note: "z ½ citronu na základní dávku" }
       - { qty: 100, unit: ml, name: smetany ke šlehání, note: "min. 31 % tuku" }
       - { qty: 80, unit: ml, name: bílého vína, note: "suchého, ideálně Ryzlink vlašský nebo Veltlínské zelené" }
@@ -32,7 +33,7 @@ ingredients:
       - { qty: 3, unit: tbsp, name: vepřového sádla, note: "1 lžíce na potření, 2 lžíce na pánev" }
 equipment:
   - { name: Mlýnek na maso, note: "samostatný nebo nástavec k robotu, jemná mřížka 3–4,5 mm" }
-  - Sekáček
+  - { name: Sekáček, note: "ideálně s nádobou o objemu alespoň 1 l" }
   - Mísa a pevná stěrka nebo kuchyňský robot s plochou metlou
   - { name: Pístová plnička nebo mlýnek s plnicím nástavcem, note: "hubice na skopová střívka" }
   - { name: Vpichový teploměr, note: s tenkou sondou }
@@ -62,18 +63,18 @@ directions:
       - "Vložte směs do plničky nebo do mlýnku a pomalu ji posouvejte k ústí hubice. Jakmile směs dojde na konec nástavce, střívko zavažte. Správnou rychlost najdete během prvního metru: tak pomalou, abyste stíhali a do střívka se nedostával vzduch."
       - "Plňte jednu dlouhou klobásu a rukou ji přidržujte, jak sjíždí z nástavce. Plňte natěsno, ale ne natvrdo: po lehkém stisknutí má zůstat důlek."
       - tip: "Přecpané střívko praskne při stáčení nebo v troubě. Když se směs v mlýnku ohřeje, vychlaďte ji 15 minut."
-      - "Vzduchové bubliny propíchněte čistým špendlíkem. Klobásu přetočením rozdělte na {8} kusů po cca 30 cm, v místě přetočení je rozkrojte a konce zavažte."
-      - "Klobásy rozložte na mřížku nebo na velký talíř či podnos s pečicím papírem nebo čistou utěrkou a nezakryté je až do pečení nechte v lednici."
-      - tip: "Klobásy upečte nejpozději do 24 hodin od zamíchání směsi. Mléko s vínem v nich jinak začne kvasit a klobásy zkysnou."
+      - "Vzduchové bubliny propíchněte čistým špendlíkem. Klobásu přetočením rozdělte na {6} stejně velkých kusů (cca 180 g na kus). V místech přetočení ji rozkrojte, konce zavažte a každý kus volně stočte do šneka se zhruba 3 otočkami."
+      - "Klobásy rozložte na mřížku nebo na velký talíř či podnos s pečicím papírem nebo čistou utěrkou a nechte je v lednici nezakryté {chill:1-2h}, ideálně přes noc."
+      - tip: "Klobásy upečte nejpozději do 24 hodin od zamíchání směsi."
   - title: Upečte klobásy
     heat: Troubu předehřejte na **160 °C** (horní a spodní ohřev). V širokém hrnci ohřejte vodu na **80 °C** podle teploměru, hladina se má jen lehce chvět.
     steps:
-      - "Každou klobásu volně stočte do plochého šneka a propíchněte ji křížem dvěma špejlemi."
+      - "Po odležení zpevněte každého šneka dvěma špejlemi křížem. Na spaření, pečení, opečení na pánvi a krátký odpočinek před podáváním počítejte cca 35–45 minut."
       - "Nejdřív ponořte do horké vody jen jednoho šneka a nechte ho tam {timer:30-60s}, až střívko zbělá a napne se. Zkontrolujte, že nepraskl. Pak stejně spařte ostatní, po jednom nebo po dvou, vyndejte je a osušte."
       - tip: "Spaření střívko rovnoměrně stáhne dřív, než se dostane do suchého tepla, takže v troubě nepraskne. V teplejší vodě se náplň roztahuje rychleji, než střívko povolí, a klobása praskne už v hrnci."
       - "Šneky položte na plech s pečicím papírem. Na potření z obou stran použijte {1 tbsp vepřového sádla} a pečte {bake:15m}."
       - "Otočte je, přelijte výpekem z plechu a pečte dalších {bake:5-10m}, dokud nemají uprostřed 64 °C. Sondu zapíchněte z boku doprostřed šneka. Troubu pak vypněte a dvířka nechte pootevřená."
-      - "Šneky opečte na pánvi ve třech dávkách na středně silném ohni. Na opékání použijte {2 tbsp vepřového sádla}, které rozdělte mezi jednotlivé dávky. Opékejte {timer:1-2m} z každé strany, až jsou sytě zlatavé a uprostřed mají 70 °C. Hotové šneky přendejte do teplé trouby a před podáváním je nechte {cool:3-5m} odpočinout."
+      - "Šneky opečte na pánvi na středně silném ohni. Na pánev o průměru 28 cm dejte podle velikosti 2–3 šneky najednou, aby se nepřekrývali. Na opékání použijte {2 tbsp vepřového sádla}, které rozdělte mezi jednotlivé dávky. Opékejte {timer:1-2m} z každé strany, až jsou sytě zlatavé a uprostřed mají 70 °C. Hotové šneky přendejte do teplé trouby a před podáváním je nechte {cool:3-5m} odpočinout."
       - tip: "Náplň je ze syrového vepřového, uprostřed proto musí mít 70 °C. Déle už ale klobásy nepečte, rychle vysychají a mají zůstat šťavnaté."
 ---
 
