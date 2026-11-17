@@ -31,7 +31,7 @@ ingredients:
       - { qty: 150, unit: ml, name: kuřecího vývaru, note: "nesoleného nebo málo soleného" }
       - { qty: 250, unit: ml, name: smetany ke šlehání, note: "30–33 % tuku" }
       - { qty: 1, unit: tsp, name: dijonské hořčice }
-      - { qty: 80, unit: g, name: sýra Parmigiano Reggiano, note: "najemno nastrouhaného; 60 g do omáčky, 20 g k podávání" }
+      - { qty: 80, unit: g, name: Parmigiano Reggiano, note: "najemno nastrouhaného; 60 g do omáčky, 20 g k podávání" }
       - { qty: 100, unit: g, name: baby špenátu }
       - { name: citronová šťáva, note: "pár kapek, volitelně" }
   - group: Na těstoviny
@@ -46,9 +46,9 @@ equipment:
 directions:
   - title: Připravte suroviny
     steps:
-      - V hrnci přiveďte k varu {3 L vody} a osolte ji {30 g mořské soli}. Až dokončíte omáčku, bude voda na těstoviny připravená.
-      - Osušte {kuřecí stehna|kuřecích stehen} papírovou kuchyňskou utěrkou, nakrájejte je na kousky velké 3–4 cm, osolte {4 g mořské soli} a opepřete {černým pepřem|černý pepř}.
-      - Nastrouhejte {80 g sýra Parmigiano Reggiano} a {20 g} odložte k podávání.
+      - V hrnci přiveďte k varu {3 L vody} a nasypte do ní {30 g mořské soli}. Až dokončíte omáčku, bude voda na těstoviny připravená.
+      - Osušte {kuřecí stehna|kuřecích stehen} papírovou kuchyňskou utěrkou, nakrájejte je na kousky velké 3–4 cm, posolte je, použijte {4 g mořské soli}, a opepřete {černým pepřem|černý pepř}.
+      - Nastrouhejte {80 g Parmigiano Reggiano} a {20 g} odložte k podávání.
       - Najemno nasekejte {česnek|stroužek česneku}. {Sušená rajčata|sušených rajčat} scezte a nakrájejte na proužky, olej z nich si uschovejte.
   - title: Opečte kuře
     steps:

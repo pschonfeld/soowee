@@ -544,34 +544,107 @@ One bullet per allergen, named as in the EU list of 14, in this order: **Gluten*
 
 Every recipe exists in Czech and in English: `src/content/recipes/cs/` and `src/content/recipes/en/`, one file each, with the same file name. Either can be written first; the other is a translation, and the build [compares them](#validation-rules) so a translation can never change the recipe. Everything that is not prose stays as it is in both: the keys, the units (`g`, `tbsp`), the tokens (`{simmer:20m}`) and the numbers in them, which keep a decimal point (`{1.5 kg}`). The page writes them out in the reader's language.
 
-### Writing in Czech
+The rules below are the owner's decisions. Where they differ from an earlier review, a translation or a dictionary, they win.
 
-- Use the words of a Czech cookbook, not a translation of the English: “hladká mouka”, “smetana ke šlehání”, “Předehřejte troubu na **180 °C**, horní a spodní ohřev”. A step reads as an instruction in the polite plural: “Rozpusťte máslo”, “Nechte odležet”.
-- `name` after a unit is in the genitive, so the line reads as Czech: `{ qty: 225, unit: g, name: hladké mouky }` → “225 g hladké mouky”. A counted name is in the nominative with its [plural](#plural) forms; a name without `qty` is in the nominative too: `{ name: sůl, note: špetka }`.
-- Mentions follow the sentence: `{35 g másla}` matches the name as written; a counted ingredient matches any of its forms (`{3 vejce}`, `{6 vajec}`); another case is `{máslem|másla}`.
-- Plain-text numbers use a decimal comma and a non-breaking space before the unit: `1,5 cm`, `60–63 °C`. Quotation marks are „…“. An approximate number is “cca 100 g”, not “asi” or “přibližně”; the page writes `about` as “cca” too.
-- Ingredients by their Czech shop names:
-  - salt is *sůl* (fine is the default) and only coarse salt says so, *hrubozrnná*; *mořská sůl* where the English says sea salt;
-  - sugar is *cukr krupice* (`{ qty: 10, unit: g, name: cukru krupice }`), not a note “krupicového”;
+### Translating a recipe
+
+1. Read this document and an approved recipe in the target language as the model of tone and detail (`src/content/recipes/cs/crepes.md` for Czech).
+2. Copy the source file's structure exactly: the same sections, the same steps and tips in the same places, the same `qty`, `unit`, `about`, durations, `{amount}` tokens and prose numbers. Write numbers as digits in both languages where the source does. Translate everything else.
+3. Run `pnpm astro build`. It fails with the path of the line when a mention matches no ingredient, an amount or number differs from the other language, a plural form is missing, or a recipe exists in one language only.
+4. Have the text read by an independent Czech editor (a person, or an agent given only this document and the two files), then apply the corrections.
+5. The owner reviews a translation before it is published (AGENTS.md).
+
+### The Czech voice
+
+The voice of a contemporary Czech home cookbook (in the manner of Apetit or *Kuchařka pro dceru*): natural when read aloud, clear for someone standing at the stove, never a translation of the English.
+
+- Address the reader in the polite plural and the imperative: “Rozpusťte máslo. Přilijte mléko. Těsto nechte odležet.”
+- Keep the `description` short: what the dish is, what makes this version worth it, and what to plan for (“Těsto nechte alespoň hodinu odležet”).
+- Section titles say what the cook does: “Umíchejte těsto”, “Nechte těsto odležet”, “Usmažte palačinky”.
+- Steps follow the order of the work. When the vessel or the ingredient changes, name it, so the reader never has to look back a sentence.
+- Pair a sensitive step's time with the sign the cook can see, smell or feel, in short sentences: “Smažte {timer:45-60s}. Povrch zmatní, tenký okraj zkřehne a začne se odchlipovat od pánve.” Use the signs the source gives.
+- Put a condition where the reader acts on it: “Je-li těsto hustší, po lžících do něj zašlehejte až {50 ml plnotučného mléka}.” A tip holds a short reason, or what to do when something goes wrong.
+- Pick the verb by the movement: dry ingredients *promíchejte*, eggs *rozšlehejte*, flour *zapracujte*, more liquid *vmíchejte*, the batter *přeceďte*; vegetables that must not brown *restujte*, until they *zesklovatí*.
+- Heat in the general cookbook wording, whatever the hob, on one scale: low *mírný*, medium-low *mírný až střední*, medium *střední*, medium-high *středně silný*, high *silný*, the lowest *nejslabší* (“na **středně silném** ohni”, “zesilte ohřev”, “zmírněte ohřev”). Never “středně mírný”. Keep a specific setting where the recipe gives one.
+- Italian and French terms that Czech cooks use stay as they are: *soffritto*, *ragù*, *passata*, *fior di latte*, *beurre noisette*. Use a foreign term where it helps the reader recognise an ingredient or a technique.
+- A dish keeps the name Czech cooks know it by: *Palačinky*, *Boloňská omáčka*, *Lasagne*, but *Tiramisu*, *Fish & Chips*.
+
+Turns that read as translated, and what to write instead:
+
+| Translated | Czech cookbook |
+|---|---|
+| Prošlehejte mouku, cukr a sůl | V míse promíchejte mouku, cukr a sůl |
+| Šlehejte, dokud ve vejcích nezůstanou bílé šmouhy | Vejce rozšlehejte, až se bílky spojí se žloutky |
+| Na středně vysokém stupni | Na středně silném ohni |
+| Kapka vody začne tančit | Kapka vody se rozběhne po dně |
+| Spodní strana je místy dozlatova | Spodní strana místy zezlátne |
+| Okraj začne krajkovitě křehnout | Tenký okraj zkřehne a začne se odchlipovat od pánve |
+| Těsto má konzistenci tekuté smetany | Těsto má být řídké jako smetana |
+| Najděte naběračku | Připravte si naběračku |
+| Přestaňte, než ztmavne | Nenechte ho ztmavnout |
+| Nechte vymíchat dohladka | Vymíchejte dohladka |
+| Na prst vlažné | Na dotek vlažné |
+| Přidejte plamen | Zesilte ohřev |
+| Šlehače (the beaters) | Metly |
+| Až olej začne třpytit (shimmers) | Až se hladina oleje zavlní |
+| Hnědý povlak na dně (fond) | Připečeniny |
+| Osolte {8 g soli} | Přisypte {8 g soli} |
+
+The table gives examples, not a dictionary: translate by the technique, the ingredient and the place in the recipe.
+
+### Czech ingredient names
+
+- `name` reads as the line does after the amount: after a unit in the genitive (`{ qty: 225, unit: g, name: hladké mouky }` → “225 g hladké mouky”); a counted ingredient in the nominative singular with its [plural](#plural) forms; a line without `qty` in the nominative (`{ name: sůl, note: špetka }`). The same ingredient with and without an amount in two groups is therefore two names (`olivového oleje` and `olivový olej`).
+- The name first, its kind in the note: `{ name: olivového oleje, note: extra panenského }` (English `olive oil` + `extra virgin`). A note after a genitive name agrees with it.
+- Names as a Czech shop sells them:
+  - salt is *sůl*, fine being the default; only coarse salt says so, *hrubozrnná*; *mořská sůl* where the source says sea salt;
+  - sugar is *cukr krupice* (`name: cukru krupice`), never the note “krupicového”, and never bare *krupice*, which is semolina;
   - a neutral oil is *slunečnicový nebo řepkový olej*, never “neutrální”;
-  - minced meat is *hovězí mleté*, *vepřové mleté*, *telecí mleté*;
-  - the full name stays together: *plnotučné mléko* is the name, not *mléko* with the note “plnotučné”;
+  - minced meat is *hovězí mleté*, *vepřové mleté*, *telecí mleté*, so after a unit `name: hovězího mletého` (“500 g hovězího mletého”);
+  - a name that belongs together stays together: *plnotučné mléko* is the name, not *mléko* with the note “plnotučné”;
   - celery sticks are *stonky řapíkatého celeru*;
-  - beer is *pivo*, its kind in the note (`name: piva, note: "světlý ležák, …"`);
+  - beer is *pivo*, its kind in the note (`name: piva, note: "světlý ležák, přímo z lednice"`);
   - eggs give their size class, *velikost S, M, L*, not “velká”;
-  - flour type as a preference: “ideálně francouzská T45 nebo T55”.
-- Cheese names are proper names and keep their capitals, undeclined: *Parmigiano Reggiano*, *Pecorino Romano*, *Provolone Piccante*, *Gruyère* (“80 g Pecorino Romano”, “strouhaným sýrem Gruyère”). Generic cheeses stay lower case: *mozzarella*, *mascarpone*.
-- A baking dish for lasagne is a *mísa*; a *miska* is a small bowl.
-- Butter is unsalted unless the recipe says otherwise, so the note does not say “nesolené”.
-- A source keeps its own title: `source.title` and the link text in `## Zdroj` are the linked page's title, untranslated.
-- Section titles are imperative, like the English ones: “Připravte těsto”, “Usmažte palačinky”.
-- Heat in the general cookbook wording, whatever the hob: “na středním ohni”, “na **středně silném** ohni”, “zesilte ohřev”. Keep a specific setting where the recipe gives one.
-- Pair a sensitive step's time with the sign the cook can see, smell or feel, in short sentences: “Smažte {timer:45-60s}. Povrch zmatní, tenký okraj zkřehne a začne se odchlipovat od pánve.”
-- Pick the verb by the movement: dry ingredients *promíchejte*, eggs *rozšlehejte*, flour *zapracujte*, more liquid *vmíchejte*, the batter *přeceďte*.
-- Name the vessel exactly: a *rendlík* is a small saucepan, a *hrnec* a pot, a *kastrol* an oven dish. Qualify words that mean two things: *krupicový* cukr (not *krupice*, semolina), *papírová kuchyňská* utěrka, *citrusová* kůra.
-- Check the case around every token: the build checks only that a mention names an ingredient. “navlhčenou {neutrálním olejem|neutrální olej}”, a note after a genitive name agrees with it (`cukru, krupicového`), and a duration reads in the accusative (“nechte {rest:1h} odležet” → “nechte 1 hodinu odležet”).
-- Avoid calques of the English: *najděte*, *přestaňte*, *přitahujte mouku*, *nechte vymíchat*, *na prst*, *přidejte plamen*, *kapka začne tančit* (it *se rozběhne po dně*), *spodní strana je dozlatova* (it *zezlátne*). Read each step aloud as a Czech chef would say it.
-- The notes use the Czech headings, labels and allergen names in the tables above.
+  - a flour type is a preference: “ideálně francouzská T45 nebo T55”;
+  - butter is unsalted unless the recipe says otherwise, so a note never says “nesolené”.
+- Cheese names are proper names and keep their capitals, undeclined: *Parmigiano Reggiano*, *Pecorino Romano*, *Provolone Piccante*, *Gruyère* (“80 g Pecorino Romano”, “strouhaným sýrem Gruyère”). The `name` is the cheese's name alone, without “sýra”; its note is in the genitive, as if “sýra” stood before it: `{ qty: 60, unit: g, name: Parmigiano Reggiano, note: "najemno nastrouhaného" }`. Generic cheeses stay lower case: *mozzarella*, *mascarpone*.
+- Keep notes short; cut what the reader does not act on (“z kravského mléka”, not “z kravského mléka, ne z bůvolího”; “cca 20 % tuku”, not where the meat is cut from). A split total needs no lead-in: “1 g k zelenině, 8 g k masu”, never “celkem: …”.
+- A counted ingredient's note does not change with the number, so word it to fit any number, or for the number in the recipe.
+- Qualify words that mean two things: *papírová kuchyňská* utěrka (not a tea towel), *citrusová* kůra.
+- Equipment by its exact name: a *rendlík* is a small saucepan, a *hrnec* a pot, a *kastrol* an oven dish; a baking dish for lasagne is a *mísa*, a *miska* a small bowl; beaters are *metly*, a stand mixer a *kuchyňský robot*. A size or use goes in the item's `note`, a diameter with its sign: `{ name: Palačinková pánev, note: "⌀ 28 cm" }`.
+
+### Czech text around the tokens
+
+The build checks that a mention names an ingredient, not the grammar around it. Write each sentence with the words the page puts in:
+
+| Written | On the page |
+|---|---|
+| `{timer:3-4m}`, `{timer:1m}`, `{rest:1h}`, `{simmer:2h}`, `{timer:45-60s}` | “3–4 minuty”, “1 minutu”, “1 hodinu”, “2 hodiny”, “45–60 sekund”: accusative, as in “nechte 1 hodinu odležet” |
+| `{chill:8h}` | “8 hodin”, plain text |
+| `{35 g másla}`, `{150 ml}` | “35 g **másla**”, “150 ml” |
+| `{1 tbsp olivového oleje}`, `{2 tbsp …}`, `{0.5 tsp soli}` | in a step “1 lžíci”, “2 lžíce”, “½ lžičky”; the ingredient list says “1 lžíce” |
+| `{1.5 L vody}` | “1,5 l **vody**” |
+| `{6 vajec}` | “6 **vajec**”; at 1½× “9 vajec”, at ½× “3 vejce” |
+| `{olivovým olejem\|olivový olej}` | “**olivovým olejem**” |
+
+- A mention matches an ingredient's `name` or one of its plural forms; any other case is written `{shown|name}`.
+- A spoon renders in the accusative, so give it a verb that takes one (“rozehřejte {1 tbsp olivového oleje}”), not a preposition that needs another case: “s {1 tbsp …}” would read “s 1 lžíci”.
+- A scaled amount changes, so the words around it must fit every scale: “Zbývající {18 piškotů Savoiardi} namočte”, not “Zbylých”, which fits only 5 and more.
+- *Osolit* and *posypat* take the instrumental, not an amount: write “Přisypte {8 g soli}”, “nasypte do ní {30 g soli}”, or name the amount apart: “posolte je, použijte {4 g mořské soli}”.
+
+### Czech typography
+
+- A decimal comma and a non-breaking space before the unit in plain text: `1,5 cm`, `0,5 l`, `65 ml`; an en dash in a range: `35–40 °C`, `3–4 minuty`. The tokens keep the machine form (`{1.5 kg}`).
+- An approximate number is “cca 100 g”, not “asi” or “přibližně”; the page writes `about` as “cca” too.
+- Quotation marks are „…“.
+- Foreign names keep their diacritics: *gruyère*, *crème fraîche*.
+- In YAML, a value with a colon followed by a space must be quoted, or the line is read as a key and the build fails: write such a step in quotes, or rephrase it.
+
+### The Czech notes
+
+The notes use the Czech headings, labels and allergen names in the tables above. A source keeps its own title: `source.title` and the link text in `## Zdroj` are the linked page's title, untranslated; the `byline` and `source.label` are Czech (“Upraveno podle Vincenzo’s Plate”, “Původní recept”).
+
+Sources of this style: [Apetit, Základní recept na palačinky](https://www.apetitonline.cz/recept/zakladni-recept-na-palacinky), [Kuchařka pro dceru, Dokonalé palačinky](https://www.kucharkaprodceru.cz/palacinky-recept/), [ÚJČ: Značky, čísla a číslice](https://prirucka.ujc.cas.cz/?id=785), [ÚJČ: Pomlčka](https://prirucka.ujc.cas.cz/?id=165).
 
 ## Examples
 
