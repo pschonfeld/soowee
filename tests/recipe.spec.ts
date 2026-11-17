@@ -10,6 +10,7 @@ const RECIPES = [
   { path: '/en/marry-me-chicken-pasta/', title: 'Marry Me Chicken Pasta', ingredients: 19, sections: 5 },
   { path: '/en/bolognese-sauce/', title: 'Bolognese Sauce', ingredients: 19, sections: 5 },
   { path: '/en/crepes/', title: 'Crêpes', ingredients: 7, sections: 4 },
+  { path: '/en/vinna-klobasa/', title: 'Czech Wine Sausage', ingredients: 15, sections: 4 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];

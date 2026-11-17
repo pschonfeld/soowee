@@ -134,7 +134,7 @@ classDiagram
 | Field | Type | Required | Default | Rules | Shown |
 |---|---|---|---|---|---|
 | `title` | text | yes | | | Hero heading, browser tab, cook mode, JSON-LD `name` |
-| `description` | text | yes | | One or two sentences | Lede under the hero, home page list (cut to 3 lines on phones), meta description, social preview, JSON-LD |
+| `description` | text | yes | | One to three sentences | Lede under the hero, home page list (cut to 3 lines on phones), meta description, social preview, JSON-LD |
 | `featured` | true/false | no | `false` | At most one recipe | Shown large at the top of the home page, instead of in its list (it joins the list only as a search result) |
 | `cuisine` | text | no | | e.g. `Italian`, `British` | Small label above the title, JSON-LD `recipeCuisine` |
 | `byline` | text | no | | Currently used for origin: `Adapted from Vincenzo’s Plate` | Under the title |
@@ -151,7 +151,7 @@ classDiagram
 
 ### Image credit
 
-All three fields are required when `imageCredit` is present. Photos are licensed images (Unsplash, Wikimedia Commons), never the original recipe author’s.
+All three fields are required when `imageCredit` is present. Use licensed images (Unsplash, Wikimedia Commons), not the original recipe author’s photos, unless the owner explicitly supplies and approves a photo. An owner-approved photo with an unknown source may omit `imageCredit`; never invent an author, licence or source URL.
 
 | Field | Type | Rules |
 |---|---|---|
@@ -479,7 +479,7 @@ A home cook with basic craft who wants a restaurant-level result, not a shortcut
 
 | Part | Budget |
 |---|---|
-| `description` | One or two sentences: what the dish is and what makes this version worth it. Mention a commitment the reader must plan for (“Made a day ahead”). Lead with what helps someone choose: phones show only the first 3 lines on the home page. Not a list of every component, no filler (“featuring”, “delicious”) |
+| `description` | One to three sentences: what the dish is and what makes this version worth it. Mention a commitment the reader must plan for (“Made a day ahead”). Lead with what helps someone choose: phones show only the first 3 lines on the home page. Not a list of every component, no filler (“featuring”, “delicious”) |
 | Section | One phase of the dish, about 6 steps at most. Split a longer one where the cook could pause: “Brown the meat”, then “Simmer the ragù” |
 | Step | One action, ending in a state the cook can check. Short enough to read at a glance from the stove: it should fit one cook-mode screen on a phone, together with its tip |
 | Tip | At most two in a section, and most sections have none or one. A tip earns its place only if it adds one of: the *why* behind the step, how to tell it is going wrong, a choice at that point (a swap, what to buy), or a safety note. It never repeats its step |
