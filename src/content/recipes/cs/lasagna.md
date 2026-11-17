@@ -1,6 +1,6 @@
 ---
 title: Lasagne
-description: Čerstvé vaječné těstoviny prokládané pomalu dušeným hovězím a vepřovým ragù a bešamelem, se sýry Provolone Piccante a Pecorino Romano místo obvyklého parmazánu. Zhruba čtyři a půl hodiny, většinu z nich se ragù duší, a vyjde plný stůl pro osm až deset lidí.
+description: Čerstvé vaječné těstoviny prokládané pomalu dušeným hovězím a vepřovým ragù a bešamelem, se sýry Provolone Piccante a Pecorino Romano místo obvyklého parmazánu. Příprava zabere zhruba čtyři a půl hodiny, většinu času se ragù dusí. Vystačí pro osm až deset lidí.
 featured: true
 cuisine: Italská
 byline: Upraveno podle Vincenzo’s Plate

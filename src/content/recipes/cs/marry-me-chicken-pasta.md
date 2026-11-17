@@ -1,6 +1,6 @@
 ---
 title: Těstoviny Marry Me Chicken
-description: Moderní italsko-americké jídlo z bister, žádná toskánská klasika. Opečená kuřecí stehna se dodusí v omáčce ze zredukovaného vývaru, smetany a sýra Parmigiano Reggiano, kterou oživí sušená rajčata. Vše se promíchá s tagliatelle.
+description: Moderní italsko-americká bistro klasika. Opečená kuřecí stehna se dodusí v omáčce ze zredukovaného vývaru, smetany a sýra Parmigiano Reggiano, kterou oživí sušená rajčata. Vše se promíchá s tagliatelle.
 cuisine: Italsko-americká
 image: ../../../assets/recipes/marry-me-chicken-pasta.jpg
 imageAlt: Tagliatelle s kuřecím masem v krémové omáčce, posypané petrželkou a strouhaným sýrem Parmigiano Reggiano, v šedé skvrnité misce na bílém mramoru

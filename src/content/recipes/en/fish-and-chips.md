@@ -1,6 +1,6 @@
 ---
 title: Fish & Chips
-description: A classic British dish featuring crispy beer-battered cod, oven chips and creamy pea purée.
+description: A British classic with crisp beer-battered cod, oven chips and creamy pea purée.
 cuisine: British
 byline: Adapted from Gordon Ramsay
 image: ../../../assets/recipes/fish-and-chips.jpg
