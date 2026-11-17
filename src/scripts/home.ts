@@ -1,4 +1,4 @@
-/* Home page: search and the Saved badge. Everything else on the page works without JavaScript. */
+/* Home page: search, the Saved badge and the logo's eyes. Everything else on the page works without JavaScript. */
 import { matches } from '../lib/search';
 
 const input = document.querySelector<HTMLInputElement>('#search')!;
@@ -80,3 +80,33 @@ function sync() {
 }
 sync();
 addEventListener('pageshow', sync);
+
+/* ── Logo: the eyes follow the mouse, eased so they trail a little; on hover the onion leans toward it ── */
+const logo = document.querySelector<SVGSVGElement>('.home__logo')!;
+const bulb = logo.querySelector<SVGPathElement>('.logo__bulb')!;
+const still = matchMedia('(prefers-reduced-motion: reduce)');
+let pointer = { x: 0, y: 0 };
+let eye = { x: 0, y: 0 };
+let frame = 0;
+
+addEventListener('pointermove', (event) => {
+  if (event.pointerType !== 'mouse' || still.matches) return;
+  pointer = { x: event.clientX, y: event.clientY };
+  frame ||= requestAnimationFrame(follow);
+});
+
+function follow() {
+  frame = 0;
+  const box = bulb.getBoundingClientRect();
+  if (box.bottom < 0) return; // scrolled away: nothing to look at
+  const dx = pointer.x - (box.left + box.width / 2);
+  const dy = pointer.y - (box.top + box.height * 0.62); // the eyes sit below the bulb's middle
+  const distance = Math.hypot(dx, dy) || 1;
+  const reach = Math.min(1, distance / 160); // close to the onion the eyes look less far
+  const target = { x: (dx / distance) * 2.4 * reach, y: (dy / distance) * 1.8 * reach };
+  eye = { x: eye.x + (target.x - eye.x) * 0.22, y: eye.y + (target.y - eye.y) * 0.22 };
+  logo.style.setProperty('--eye-x', eye.x.toFixed(2));
+  logo.style.setProperty('--eye-y', eye.y.toFixed(2));
+  logo.style.setProperty('--tilt', Math.max(-7, Math.min(7, (dx / box.width) * 9)).toFixed(1));
+  if (Math.abs(target.x - eye.x) + Math.abs(target.y - eye.y) > 0.02) frame = requestAnimationFrame(follow);
+}

@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import Page from '../components/Page.astro';
 import Featured from '../components/Featured.astro';
 import RecipeItem from '../components/RecipeItem.astro';
-import Wordmark from '../assets/brand/soowee-wordmark.svg';
+import Logo from '../components/Logo.astro';
 import '../styles/home.css';
 
 const recipes = (await getCollection('recipes')).sort((a, b) => a.data.title.localeCompare(b.data.title, 'en'));
@@ -28,7 +28,7 @@ let listed = 0;
   skip={{ href: '#all', label: 'Skip to recipes' }}
 >
   <main class="home">
-    <h1 class="home__title"><Wordmark class="home__wordmark" /></h1>
+    <h1 class="home__title"><Logo class="home__logo" /></h1>
     <search class="search">
       <label class="sr-only" for="search">Search recipes</label>
       <svg class="icon search__icon" viewBox="0 0 18 18" aria-hidden="true"><circle cx="8" cy="8" r="5.25"></circle><path d="m12 12 3.75 3.75"></path></svg>

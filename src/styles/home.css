@@ -9,19 +9,17 @@
   padding: max(var(--s-4), env(safe-area-inset-top)) var(--pad-right) var(--s-12) var(--pad-left);
 }
 
-/* ── Wordmark ── */
+/* ── Logo ── */
 .home__title {
   padding-top: var(--s-2);
 }
 
-.home__wordmark {
-  width: auto;
-  height: 1.375rem;
-  color: var(--text);
+.home__logo {
+  height: 3rem;
 }
 
-/* ── Search: a glass capsule under the wordmark ──
-   It scrolls away with the wordmark, as iOS search fields do by default, instead of covering the list. */
+/* ── Search: a glass capsule under the logo ──
+   It scrolls away with the logo, as iOS search fields do by default, instead of covering the list. */
 .search {
   display: block; /* <search> is inline in browsers that predate the element */
   position: relative;
@@ -507,8 +505,8 @@
     padding-top: 0;
   }
 
-  .home__wordmark {
-    height: 1.875rem;
+  .home__logo {
+    height: 3.5rem;
   }
 
   /* The capsule floats alone at the top right. */

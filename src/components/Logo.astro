@@ -1,0 +1,31 @@
+---
+/**
+ * The soowee logo: the onion. One inline SVG so CSS can animate the parts and colour them from the theme
+ * (styles: the Logo section of global.css). There is no wordmark for now; the accessible name says "soowee".
+ * `quiet` drops the face and all motion, for small sizes where eyes would be noise (the footer).
+ */
+interface Props {
+  quiet?: boolean;
+  class?: string;
+}
+
+const { quiet = false, class: className } = Astro.props;
+---
+
+<svg class:list={['logo', quiet && 'logo--quiet', className]} viewBox="8 3 48 68" role="img" aria-label="soowee">
+  <g class="logo__body">
+    <path class="logo__leaves" d="M32 24V6M31 24C30 17 26.5 13 21.5 10M33 24C34 17 37.5 13 42.5 10"></path>
+    <path
+      class="logo__bulb"
+      d="M28.5 22C28.5 30 25 33 19 38 13.5 42.5 10.5 47 10.5 53 10.5 63.5 20 70 32 70S53.5 63.5 53.5 53C53.5 47 50.5 42.5 45 38 39 33 35.5 30 35.5 22Z"
+    ></path>
+    {
+      !quiet && (
+        <g class="logo__eyes">
+          <circle class="logo__eye" cx="24" cy="52" r="3.6" />
+          <circle class="logo__eye" cx="40" cy="52" r="3.6" />
+        </g>
+      )
+    }
+  </g>
+</svg>

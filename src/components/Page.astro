@@ -1,12 +1,12 @@
 ---
 import { sitePath } from '../lib/url';
 /**
- * The shell every page shares: <head>, skip link, footer (wordmark, photo credits, appearance switch).
+ * The shell every page shares: <head>, skip link, footer (the onion, photo credits, appearance switch).
  * Pages put their content in the default slot, extra <head> tags (JSON-LD) in `head`, and their photo credits
  * in `credits`.
  */
 import '../styles/global.css';
-import Wordmark from '../assets/brand/soowee-wordmark.svg';
+import Logo from './Logo.astro';
 
 interface Props {
   /** Full document title. */
@@ -76,7 +76,7 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
     <slot />
 
     <footer class="footer">
-      <Wordmark class="footer__wordmark" width={91} height={15} />
+      <Logo class="footer__logo" quiet />
       <slot name="credits" />
       <fieldset class="segmented theme">
         <legend class="sr-only">Appearance</legend>

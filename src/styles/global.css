@@ -65,6 +65,8 @@
   --bar-fill: rgb(255 255 255 / 0.8);
   /* Selected segment on the page (iOS: white in light, a raised grey in dark, never the card colour). */
   --segment-selected: #ffffff;
+  /* The logo's leaves: a little brighter in dark, so they don't sink into black. */
+  --leaf: #5b9a36;
 
   /* Hero backdrop – overridden per recipe from the photo */
   --tint: #4a3b2f;
@@ -133,6 +135,7 @@
     --image-edge: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.1));
     --bar-fill: light-dark(rgb(255 255 255 / 0.8), rgb(44 44 46 / 0.8));
     --segment-selected: light-dark(#ffffff, #636366);
+    --leaf: light-dark(#5b9a36, #7cc451);
   }
 }
 
@@ -150,6 +153,7 @@
       --image-edge: rgb(255 255 255 / 0.1);
       --bar-fill: rgb(44 44 46 / 0.8);
       --segment-selected: #636366;
+      --leaf: #7cc451;
     }
   }
 
@@ -165,6 +169,7 @@
     --image-edge: rgb(255 255 255 / 0.1);
     --bar-fill: rgb(44 44 46 / 0.8);
     --segment-selected: #636366;
+    --leaf: #7cc451;
   }
 }
 
@@ -528,6 +533,86 @@ a {
   stroke-linejoin: round;
 }
 
+/* Logo (src/components/Logo.astro): the onion. Height comes from where it is used; the width follows.
+   The bulb follows --text, the eyes are cut out of the bulb in --bg, so the theme switch needs no code.
+   Motion is CSS, plus the eyes following the pointer on the home page (home.ts sets --eye-x/--eye-y/--tilt). */
+.logo {
+  --logo-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: block;
+  width: auto;
+  overflow: visible; /* the hop and the lean go a little past the box */
+  color: var(--text);
+}
+
+.logo__bulb {
+  fill: currentColor;
+}
+
+.logo__leaves {
+  fill: none;
+  stroke: var(--leaf);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+}
+
+.logo__eye {
+  fill: var(--bg);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: logo-blink 9s infinite;
+}
+
+/* Eyes trail the pointer (mark units, at most ~2.4). */
+.logo__eyes {
+  translate: calc(var(--eye-x, 0) * 1px) calc(var(--eye-y, 0) * 1px);
+}
+
+.logo__body,
+.logo__leaves {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: rotate 0.5s var(--logo-spring);
+}
+
+.logo__leaves {
+  transition-duration: 0.7s; /* the leaves lag behind the body */
+}
+
+/* Hover (or a tap): leans toward the pointer, the leaves swing the other way, a small hop. */
+.logo:not(.logo--quiet):is(:hover, :active) .logo__body {
+  rotate: calc(var(--tilt, 0) * 1deg);
+  animation: logo-hop 0.42s var(--ease-out);
+}
+
+.logo:not(.logo--quiet):is(:hover, :active) .logo__leaves {
+  rotate: calc(var(--tilt, 0) * -0.7deg);
+}
+
+/* A blink every 9 s; every other one is a double. */
+@keyframes logo-blink {
+  0%,
+  46%,
+  50%,
+  92%,
+  94.5%,
+  97%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  48%,
+  93.2%,
+  95.8% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes logo-hop {
+  40% {
+    translate: 0 -5%;
+  }
+}
+
 /* Footer */
 .footer {
   max-width: 74rem;
@@ -543,8 +628,8 @@ a {
   color: var(--text-secondary);
 }
 
-.footer__wordmark {
-  color: var(--text);
+.footer__logo {
+  height: 1.75rem;
 }
 
 .footer a {
@@ -583,5 +668,12 @@ a {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+
+  /* Shortening an endless animation would make it flicker: the logo stands still instead, eyes straight ahead. */
+  .logo * {
+    animation: none !important;
+    translate: none !important;
+    rotate: none !important;
   }
 }

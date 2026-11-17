@@ -7,12 +7,12 @@ Status: **implemented, then revised.** Reached through two drafts, an independen
 - **Phones: rows with a square photo** (104px), top-aligned beside the text: cuisine, title, time, description cut at 2 lines.
 - **iPad and desktop: editorial cards.** A large 4:3 photo with the same cuisine, title, time and 2-line description under it, two columns from 48rem, three from 64rem. Same content in the same order as the phone rows, just stacked. Photo tiles alone made choosing by photo only, and two columns of rows read as dated; the cards keep the photo large and the decision information visible. Cards are separated by space, not lines; on hover the photo lifts 2px.
 - **Separators (phones) start where the text starts**, as in iOS lists, drawn as 0.5px hairlines; the first visible row has none, also while searching.
-- **Search is a glass capsule** (Liquid Glass): fully rounded, translucent fill (`--bar-fill`) with backdrop blur, and the same three edge layers as the recipe's glass buttons (light top rim, 0.5px inner hairline, soft lift). It sits under the wordmark and **scrolls away with it**, as iOS search fields do by default (`hidesSearchBarWhenScrolling`); a sticky capsule was tried and dropped because it covered the descriptions being read, on a page short enough to scroll back up (on iPhone, tap the status bar). On iPad and desktop it sits at the top right, beside the wordmark. With Reduce Transparency, or without backdrop-filter support, it turns solid (`--card`).
+- **Search is a glass capsule** (Liquid Glass): fully rounded, translucent fill (`--bar-fill`) with backdrop blur, and the same three edge layers as the recipe's glass buttons (light top rim, 0.5px inner hairline, soft lift). It sits under the logo and **scrolls away with it**, as iOS search fields do by default (`hidesSearchBarWhenScrolling`); a sticky capsule was tried and dropped because it covered the descriptions being read, on a page short enough to scroll back up (on iPhone, tap the status bar). On iPad and desktop it sits at the top right, beside the logo. With Reduce Transparency, or without backdrop-filter support, it turns solid (`--card`).
 - **Crisper photos:** a 0.5px inner hairline (`--image-edge`) keeps white plates from melting into the page. Continuous (squircle) corners are used where the browser supports `corner-shape`.
 - **Press response:** rows and the featured card give slightly under the finger (scale 0.98).
 - **No photo credits on the home page.** Unsplash photos need none. Fish & Chips (CC BY-SA 4.0) is credited in the footer of its recipe page, which its row links to; the license allows attribution "in any reasonable manner", including a link to where the credit is.
 - **Clear button:** the browser's own clear control is hidden and replaced by an iOS-style one (filled grey circle, thin cross) on a 44px target. It shows only while there's text.
-- **Top spacing on phones:** wordmark, 16px, capsule, 20px, featured card.
+- **Top spacing on phones:** logo, 16px, capsule, 20px, featured card.
 - **Featured card uses the recipe hero's background extension:** the photo continues as a mirrored, blurred copy of itself under the text (`backdropFor()`), darkened by the per-photo scrim that keeps every text style at WCAG AA. Same look as the hero, instead of a flat tint.
 - **Back button is real glass:** the same blur, light rim and shadow as Cook / Save / Share, tinted `rgb(0 0 0 / 0.34)` so the icon keeps about 3.6:1 on the palest photo.
 - **One glass language:** `--glass-edge` / `--glass-shadow` (recipe hero buttons, back button, cook mode) and the home search capsule share the same three layers: light top rim, 0.5px inner hairline, soft lift. Cook / Save / Share are capsules, like the search.
@@ -62,7 +62,7 @@ There's no separate catalog page. The home page is made of zones, and each zone 
 
 ```
 ┌─────────────────────────────────────┐
-│ soowee                              │ h1: wordmark (accessible name "soowee"), 22px tall
+│ soowee                              │ h1: the onion logo (accessible name "soowee"), 48px tall
 │ ┌─────────────────────────────────┐ │
 │ │ ⌕  Search recipes            ⊗  │ │ 44px, grey fill, radius 12, native clear button
 │ └─────────────────────────────────┘ │
@@ -185,7 +185,7 @@ The button is a plain `<a href="/" aria-label="All recipes">`, with no `history.
 
 | File | Change |
 |---|---|
-| `src/components/Page.astro` | NEW shell: `<html>`, head (meta, theme script, icons, OG, `theme-color`), skip link, footer (wordmark, credits, theme switch). Props: title, description, OG data, body style, theme colours, credits. |
+| `src/components/Page.astro` | NEW shell: `<html>`, head (meta, theme script, icons, OG, `theme-color`), skip link, footer (the onion alone, credits, theme switch). Props: title, description, OG data, body style, theme colours, credits. |
 | `src/components/Recipe.astro` | Uses Page.astro. Adds the back link in the hero. |
 | `src/components/Featured.astro` | NEW. Uses `tintFor`, `heroTime`, `directionTimes` and `formatYield`. |
 | `src/components/RecipeItem.astro` | NEW. One `<a>` containing the photo (`alt=""`, since the title is next to it) and a text block: cuisine, title, meta (time and wait from `heroTime`, badge slot) and description. CSS switches it between list row and grid tile. |

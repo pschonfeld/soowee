@@ -170,7 +170,7 @@ test('phones: rows with a square photo beside the text; wider screens: cards wit
   }
 });
 
-test('the search bar scrolls away with the wordmark instead of covering the list', async ({ page }) => {
+test('the search bar scrolls away with the logo instead of covering the list', async ({ page }) => {
   const before = (await search(page).boundingBox())!;
   // `instant`: the site uses smooth scrolling, which WebKit would animate.
   await page.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
@@ -225,7 +225,7 @@ test('screenshots for visual review', async ({ page }, testInfo) => {
     }
     await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({ path: `${dir}/home-${scheme}.png`, fullPage: true });
-    // Scrolled into the list: how rows look mid-page (the search bar has scrolled away with the wordmark).
+    // Scrolled into the list: how rows look mid-page (the search bar has scrolled away with the logo).
     await page.locator('#all').evaluate((el) => scrollTo(0, el.getBoundingClientRect().top + scrollY + 40));
     await page.screenshot({ path: `${dir}/home-scrolled-${scheme}.png` });
     await page.evaluate(() => scrollTo(0, 0));
