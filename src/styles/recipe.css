@@ -689,6 +689,17 @@ html.is-cooking {
   overflow: hidden;
 }
 
+/* The backdrop's edge under the cook scrim: the colour iOS paints past the page (status bar, toolbar, overscroll).
+   Safari takes it from the page background and theme-color (set while cooking in recipe.ts), not from the photo, so
+   both carry the darkened edge; otherwise the bars show the bright hero colour around a dark cook mode. */
+body {
+  --cook-edge: color-mix(in srgb, #000 calc(var(--cook-scrim, 0) * 100%), var(--backdrop-edge, var(--tint-deep)));
+}
+
+html.is-cooking body {
+  background: var(--cook-edge);
+}
+
 .cook {
   position: fixed;
   inset: 0;
@@ -703,7 +714,7 @@ html.is-cooking {
   color: var(--on-tint);
   background:
     linear-gradient(rgb(0 0 0 / var(--cook-scrim)), rgb(0 0 0 / var(--cook-scrim))),
-    var(--backdrop) center / cover no-repeat var(--backdrop-edge, var(--tint-deep));
+    var(--backdrop) center / cover no-repeat var(--cook-edge);
 }
 
 .cook[open] {
@@ -743,10 +754,15 @@ html.is-cooking {
 .cook__title {
   flex: 1;
   min-width: 0;
-  outline: none;
   font-size: var(--text-subhead);
   font-weight: 600;
   line-height: var(--lh-tight);
+}
+
+/* Focused on open only as a starting point for Tab and the keyboard; it is not a control, so no focus ring.
+   Beats the global :focus-visible ring, which Safari draws after the tap that opens cook mode. */
+.cook__title:focus-visible {
+  outline: none;
 }
 
 .cook__title span {

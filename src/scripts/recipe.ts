@@ -508,9 +508,22 @@ function selectTab(tab: HTMLButtonElement) {
   context.hidden = directions.hidden;
 }
 
+/** The browser bar colour: the darkened backdrop edge while cooking (--cook-edge in recipe.css), the hero's otherwise. */
+const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+const pageThemeColor = themeColor?.content;
+
+/** color-mix() computes to `color(srgb 0–1 …)` (or `rgb(0–255, …)`), which theme-color may not accept; hex always is. */
+function toHex(color: string): string {
+  const unit = color.startsWith('color(srgb') ? 255 : 1;
+  const channels = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
+  if (channels?.length !== 3) return color;
+  return `#${channels.map((c) => Math.round(c * unit).toString(16).padStart(2, '0')).join('')}`;
+}
+
 function openCook() {
   cook.show();
   document.documentElement.classList.add('is-cooking');
+  if (themeColor) themeColor.content = toHex(getComputedStyle(document.body).backgroundColor);
   for (const el of background) el.inert = true;
   selectTab(tabs[1]);
   setActive(activeStepIndex, false);
@@ -524,6 +537,7 @@ function openCook() {
 function closeCook() {
   cook.close();
   document.documentElement.classList.remove('is-cooking');
+  if (themeColor && pageThemeColor) themeColor.content = pageThemeColor;
   for (const el of background) el.inert = false;
   void wakeLock?.release();
   wakeLock = null;
