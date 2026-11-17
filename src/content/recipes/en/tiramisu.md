@@ -40,7 +40,7 @@ equipment:
   - Spatula
   - Fine-mesh sieve
   - Fine grater
-  - Rectangular dish
+  - { name: Baking dish, note: "porcelain, 38 × 26 × 7 cm (4.5 L)" }
 directions:
   - title: Make the coffee
     steps:
@@ -57,7 +57,7 @@ directions:
   - title: Assemble
     steps:
       - Dip {18 Savoiardi biscuits}, one at a time, 1–2 seconds a side in the cooled {coffee}, and lay them in a single, snug layer in the dish. The centre should still feel firm; it softens overnight.
-      - tip: The biscuits decide the dish. Pick one that half of them cover in a single snug layer, and trim them to fit if needed.
+      - tip: Arrange half the biscuits in a single snug layer, trimming them to fit if needed.
       - Spread half of the cream over the biscuits and smooth it to the edges.
       - Dust with a thin, even layer of {cocoa powder} through a fine sieve and grate {10 g dark chocolate} over it.
       - Dip the remaining {18 Savoiardi biscuits} in the {coffee} the same way, lay them on top and spread over the rest of the cream, smoothing the top.

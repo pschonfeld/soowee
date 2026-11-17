@@ -40,7 +40,7 @@ equipment:
   - Silikonová stěrka
   - Jemné sítko
   - Jemné struhadlo
-  - Obdélníková forma
+  - { name: Zapékací mísa, note: "porcelánová, 38 × 26 × 7 cm (4,5 l)" }
 directions:
   - title: Připravte kávu
     steps:
@@ -56,9 +56,9 @@ directions:
       - Do krému zamíchejte velkou lžíci sněhu z bílků, aby se krém uvolnil, pak zbylý sníh zlehka vmíchejte ve dvou dávkách. Stěrkou zařízněte středem až ke dnu mísy, krém přeložte přes sníh a mísu po každém tahu pootočte. Pokračujte, až v krému nezůstanou žádné pruhy.
   - title: Poskládejte tiramisu
     steps:
-      - Namáčejte {18 piškotů Savoiardi} po jednom ve vychladlé {kávě|silné kávy nebo espressa}, z každé strany 1–2 sekundy, a rovnou je skládejte těsně vedle sebe do formy v jedné vrstvě. Uprostřed mají zůstat ještě pevné, přes noc změknou.
-      - tip: Na velikosti formy záleží. Vyberte takovou, kterou polovina piškotů pokryje v jedné těsné vrstvě, a piškoty podle potřeby zkraťte.
-      - Na piškoty rozetřete polovinu krému a uhlaďte ho až ke stěnám formy.
+      - Namáčejte {18 piškotů Savoiardi} po jednom ve vychladlé {kávě|silné kávy nebo espressa}, z každé strany 1–2 sekundy, a rovnou je skládejte těsně vedle sebe do mísy v jedné vrstvě. Uprostřed mají zůstat ještě pevné, přes noc změknou.
+      - tip: Polovinu piškotů rozložte těsně vedle sebe do jedné vrstvy a podle potřeby je zkraťte.
+      - Na piškoty rozetřete polovinu krému a uhlaďte ho až ke stěnám mísy.
       - Krém poprašte přes jemné sítko tenkou rovnoměrnou vrstvou {kakaa|kakao} a nastrouhejte na něj {10 g hořké čokolády}.
       - Zbývající {18 piškotů Savoiardi} namočte stejným způsobem do {kávy|silné kávy nebo espressa}, položte je navrch a rozetřete zbytek krému. Povrch uhlaďte.
       - Povrch poprašte rovnoměrnou vrstvou {kakaa|kakao}.
