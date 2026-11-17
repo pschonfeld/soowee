@@ -13,4 +13,6 @@ export default defineConfig({
   base: env.BASE_PATH || undefined,
   // One small stylesheet: inlining it removes the only render-blocking request.
   build: { inlineStylesheets: 'always' },
+  // Czech at the root, English under /en/ (docs: AGENTS.md, decision 6). Keep in step with LOCALES in src/lib/i18n.ts.
+  i18n: { locales: ['cs', 'en'], defaultLocale: 'cs', routing: { prefixDefaultLocale: false } },
 });

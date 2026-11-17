@@ -3,7 +3,7 @@ title: Bolognese Sauce
 description: A long-simmered beef, pork and veal ragù, rich with tomato and mellowed with milk, tossed with egg tagliatelle. Plan for over four hours, three of them simmering on their own.
 cuisine: Italian
 byline: Adapted from Vincenzo’s Plate
-image: ../../assets/recipes/bolognese-sauce.jpg
+image: ../../../assets/recipes/bolognese-sauce.jpg
 imageAlt: Pappardelle tossed with a chunky meat ragù and chopped parsley in a dark bowl on a wooden table
 imageCredit:
   author: Nicholas Grande
@@ -15,16 +15,15 @@ source:
   url: https://youtu.be/Gyz7s3cFjZU
 yield:
   min: 6
-  unit: servings
 time:
   total: 255
 ingredients:
   - group: For the ragù
     items:
-      - { qty: 3, unit: tbsp, name: extra virgin olive oil }
-      - { qty: 1, name: red onion, about: { qty: 200, unit: g }, note: "large, finely chopped" }
-      - { qty: 2, name: carrots, about: { qty: 200, unit: g }, note: finely chopped }
-      - { qty: 2, name: celery sticks, about: { qty: 120, unit: g }, note: finely chopped }
+      - { qty: 3, unit: tbsp, name: olive oil, note: extra virgin }
+      - { qty: 1, name: red onion, plural: { other: red onions }, about: { qty: 200, unit: g }, note: "large, finely chopped" }
+      - { qty: 2, name: carrot, plural: { other: carrots }, about: { qty: 200, unit: g }, note: finely chopped }
+      - { qty: 2, name: celery stick, plural: { other: celery sticks }, about: { qty: 120, unit: g }, note: finely chopped }
       - { qty: 500, unit: g, name: ground pork, note: "about 20 % fat" }
       - { qty: 300, unit: g, name: ground beef, note: "about 15–20 % fat" }
       - { qty: 200, unit: g, name: ground veal }
@@ -34,7 +33,7 @@ ingredients:
       - { qty: 400, unit: g, name: peeled tomatoes, note: "whole, tinned" }
       - { qty: 240, unit: ml, name: milk, note: "whole" }
       - { qty: 1, unit: L, name: water, note: "hot, added as needed" }
-      - { qty: 15, unit: g, name: fine sea salt, note: "in total: 1 g with the vegetables, 10 g with the meat, up to 4 g to adjust at the end" }
+      - { qty: 15, unit: g, name: fine sea salt, note: "1 g with the vegetables, 10 g with the meat, up to 4 g to adjust at the end" }
       - { name: black pepper, note: freshly ground }
   - group: For the pasta
     items:
@@ -43,12 +42,12 @@ ingredients:
       - { qty: 500, unit: g, name: egg tagliatelle, note: "dried; or pappardelle" }
       - { qty: 60, unit: g, name: Parmigiano Reggiano, note: "finely grated, to serve" }
 equipment:
-  - Pot, heavy-bottomed, 5 L
-  - Pot, 7–8 L, for the pasta
+  - { name: Pot, note: "heavy-bottomed, 5 L" }
+  - { name: Pot, note: "7–8 L, for the pasta" }
 directions:
   - title: Make the soffritto
     steps:
-      - Heat {3 tbsp extra virgin olive oil} in the heavy-bottomed pot over medium-low heat.
+      - Heat {3 tbsp olive oil} in the heavy-bottomed pot over medium-low heat.
       - Add the {red onion}, {carrots}, {celery} and {1 g fine sea salt} and cook gently, stirring now and then, for {timer:12-15m}, until soft, sweet and translucent.
       - tip: Chop the vegetables small, about 3 mm, so they melt into the sauce; a food processor is fine if you pulse it rather than purée. Do not let them brown.
   - title: Brown the meat

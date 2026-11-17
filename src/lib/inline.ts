@@ -3,45 +3,48 @@
  * ({750 g mascarpone}, {cocoa powder}). Build-time only. Mentions are only parsed here; lib/mentions.ts checks that
  * they name an ingredient of the recipe.
  */
-import { UNITS, formatQty } from './format';
+import { UNITS, formatQty, formatUnit, unitForms } from './format';
+import { pluralForm, strings, type Forms, type Locale } from './i18n';
 
 /**
  * Hands-off time while cooking: the dish works on its own, but the cook is still in the process and nearby.
  * Rendered as a timer like {timer:…}, counted in time.total (the cooking time), subtracted from it to get the
  * work time, and named in the time summary ("3 hr 5 min of simmering, baking and cooling"). The value is the
- * word used in that sentence. Add a verb here when a recipe needs one; an unknown token fails the build.
+ * word used in that sentence, per language. Add a verb here when a recipe needs one; an unknown token fails the
+ * build.
  */
 export const HANDS_OFF = {
-  simmer: 'simmering',
-  bake: 'baking',
-  roast: 'roasting',
-  cool: 'cooling',
-  dry: 'drying',
-  drain: 'draining',
-  soak: 'soaking',
-} as const;
+  simmer: { en: 'simmering', cs: 'dušení' },
+  bake: { en: 'baking', cs: 'pečení' },
+  roast: { en: 'roasting', cs: 'pečení' },
+  cool: { en: 'cooling', cs: 'chladnutí' },
+  dry: { en: 'drying', cs: 'osychání' },
+  drain: { en: 'draining', cs: 'odkapávání' },
+  soak: { en: 'soaking', cs: 'namáčení' },
+} as const satisfies Record<string, Record<Locale, string>>;
 
 /**
  * Waiting: time the cook can walk away from (a batter resting, a dough rising, a tiramisu setting). Kept OUT of
  * time.total and shown after it: "30 min + 8 hr chilling" in the hero, "plus at least 8 hr in the fridge" in
- * the time summary. The value is the word used in the hero, and in the summary for waits without a place.
+ * the time summary. The value is the word used in the hero, and in the summary for waits without a place, per
+ * language. Czech uses verbal nouns, which read the same in both places ("+ 1 h odležení", "1 h odležení").
  */
 export const WAITS = {
-  rest: 'resting',
-  rise: 'rising',
-  marinate: 'marinating',
-  chill: 'chilling',
-  freeze: 'freezing',
-} as const;
+  rest: { en: 'resting', cs: 'odležení' },
+  rise: { en: 'rising', cs: 'kynutí' },
+  marinate: { en: 'marinating', cs: 'marinování' },
+  chill: { en: 'chilling', cs: 'chlazení' },
+  freeze: { en: 'freezing', cs: 'mražení' },
+} as const satisfies Record<string, Record<Locale, string>>;
 
 /**
  * Waits in the fridge or freezer: plain text (not a timer, since longer is fine), named by the place in the time
  * summary ("at least 8 hr in the fridge") and listed after the other waits, the fridge first.
  */
 export const PLACES = {
-  chill: 'in the fridge',
-  freeze: 'in the freezer',
-} as const;
+  chill: { en: 'in the fridge', cs: 'v lednici' },
+  freeze: { en: 'in the freezer', cs: 'v mrazáku' },
+} as const satisfies Record<string, Record<Locale, string>>;
 
 export type HandsOffToken = keyof typeof HANDS_OFF;
 export type WaitToken = keyof typeof WAITS;
@@ -81,8 +84,22 @@ const QUANTITY = /\{([^{}:]*)\}/g;
 export interface Quantity {
   qty?: number;
   unit?: (typeof UNITS)[number];
-  /** The ingredient as written in the text; resolved against the ingredient list by lib/mentions.ts. */
+  /** The ingredient it refers to; resolved against the ingredient list by lib/mentions.ts. */
   name?: string;
+  /**
+   * The words shown on the page. The same as `name`, unless the mention gives both: `{máslem|máslo}` shows
+   * "máslem" and refers to "máslo", for a Czech case the ingredient's own forms don't cover.
+   */
+  text?: string;
+}
+
+/** `{máslem|máslo}` → shown "máslem", refers to "máslo"; `{máslo}` → both "máslo". */
+function mention(words: string, inner: string): Pick<Quantity, 'name' | 'text'> {
+  const parts = words.split('|').map((part) => part.trim());
+  if (parts.length > 2 || parts.some((part) => !part)) {
+    throw new Error(`Malformed mention "{${inner}}" (write {name}, or {shown|name} for another form of the name)`);
+  }
+  return { text: parts[0], name: parts.at(-1) };
 }
 
 /** Parses the inside of a brace token without a colon; throws on anything that is neither an amount nor a name. */
@@ -95,14 +112,16 @@ export function parseQuantity(inner: string): Quantity {
     if (!(qty > 0)) throw new Error(`"{${inner}}" needs an amount above zero`);
     if (word === undefined) return { qty };
     if ((UNITS as readonly string[]).includes(word)) {
-      return { qty, unit: word as Quantity['unit'], ...(rest && { name: rest }) };
+      return { qty, unit: word as Quantity['unit'], ...(rest && mention(rest, inner)) };
     }
     // {25gr}: a word stuck to the number is meant as a unit. With a space, {6 eggs}, it is an ingredient.
     if (!space) throw new Error(`Unknown unit "${word}" in {${inner}} (allowed: ${UNITS.join(', ')})`);
-    return { qty, name: rest ? `${word} ${rest}` : word };
+    return { qty, ...mention(rest ? `${word} ${rest}` : word, inner) };
   }
-  if (/^\p{L}/u.test(text)) return { name: text };
-  throw new Error(`Malformed token "{${inner}}" (use an amount like {25 g}, an ingredient like {butter}, or both: {25 g butter})`);
+  if (/^\p{L}/u.test(text)) return mention(text, inner);
+  throw new Error(
+    `Malformed token "{${inner}}" (use an amount like {25 g}, an ingredient like {butter}, or both: {25 g butter})`,
+  );
 }
 
 /** Every amount and mention in a piece of step text, in order. */
@@ -110,43 +129,94 @@ export function quantities(source: string): Quantity[] {
   return [...source.matchAll(QUANTITY)].map(([, inner]) => parseQuantity(inner));
 }
 
-function renderQuantity({ qty, unit, name }: Quantity, html: boolean): string {
+/** What the renderer needs besides the text: the language, and the forms of the counted ingredients. */
+export interface RenderContext {
+  locale: Locale;
+  /** The forms of the ingredient a mention refers to, when it is counted in pieces ("3 eggs"); else undefined. */
+  forms?: (name: string) => Forms | undefined;
+}
+
+/**
+ * A noun that follows a number which scales: rendered for the number as written, with every form in `data-forms`
+ * so recipe.ts can pick the right one when the recipe is scaled ("1 lemon" → "2 lemons", "2 lžíce" → "6 lžic").
+ */
+export function nounHtml(forms: Forms, count: number, locale: Locale, tag = 'span'): string {
+  const text = escapeHtml(pluralForm(locale, count, forms));
+  const variable = new Set(Object.values(forms)).size > 1;
+  if (!variable) return tag === 'span' ? text : `<${tag}>${text}</${tag}>`;
+  return `<${tag} data-forms="${escapeHtml(JSON.stringify(forms))}" data-count="${count}">${text}</${tag}>`;
+}
+
+function renderQuantity({ qty, unit, name, text }: Quantity, html: boolean, ctx: RenderContext): string {
+  const { locale } = ctx;
   let value = '';
   if (qty !== undefined) {
-    const text = formatQty(qty, unit);
-    value = html ? `<span data-qty="${qty}"${unit ? ` data-unit="${unit}"` : ''}>${text}</span>` : text;
-    if (unit) value += `\u00a0${unit}`;
+    const number = formatQty(qty, unit, locale);
+    value = html ? `<span data-qty="${qty}"${unit ? ` data-unit="${unit}"` : ''}>${number}</span>` : number;
+    if (unit) {
+      const noun = html ? nounHtml(unitForms(unit, locale, true), qty, locale) : formatUnit(unit, qty, locale, true);
+      value += `\u00a0${noun}`;
+    }
   }
-  if (name) value += (value ? ' ' : '') + (html ? `<strong>${name}</strong>` : name);
+  if (name && text) {
+    // A counted ingredient measured out here ("{6 eggs}") follows the number when the recipe is scaled. The words
+    // as written win at their own number, so a Czech case ("{1 cibuli}") is kept wherever it applies.
+    const forms = qty !== undefined && !unit ? ctx.forms?.(name) : undefined;
+    const written = forms && { ...forms, [categoryOf(qty!, locale)]: text };
+    const noun = html ? (written ? nounHtml(written, qty!, locale, 'strong') : `<strong>${escapeHtml(text)}</strong>`) : text;
+    value += (value ? ' ' : '') + noun;
+  }
   return value;
+}
+
+/** The plural category of a number in a language, as pluralForm() picks it. */
+function categoryOf(n: number, locale: Locale): keyof Forms {
+  return pluralForm(locale, n, { one: 'one', few: 'few', many: 'many', other: 'other' }) as keyof Forms;
 }
 
 const TIMER_ICON =
   '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="9" r="5.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 6.2V9l1.8 1.2M6.4 1.8h3.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function unescapeHtml(text: string): string {
+  return text.replace(/&(amp|lt|gt|quot);/g, (_, name: string) => ({ amp: '&', lt: '<', gt: '>', quot: '"' })[name]!);
+}
 
 function escapeHtml(text: string): string {
   return text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 }
 
 const UNIT_SECONDS = { h: 3600, m: 60, s: 1 } as const;
-const UNIT_WORDS = { h: 'hour', m: 'minute', s: 'second' } as const;
 type Unit = keyof typeof UNIT_SECONDS;
+const UNIT_WORDS: Record<Locale, Record<Unit, Forms>> = {
+  en: {
+    h: { one: 'hour', other: 'hours' },
+    m: { one: 'minute', other: 'minutes' },
+    s: { one: 'second', other: 'seconds' },
+  },
+  // Czech in the accusative: a duration sits in a sentence ("nechte 1 hodinu odležet"), and the pill shows it there.
+  cs: {
+    h: { one: 'hodinu', few: 'hodiny', many: 'hodiny', other: 'hodin' },
+    m: { one: 'minutu', few: 'minuty', many: 'minuty', other: 'minut' },
+    s: { one: 'sekundu', few: 'sekundy', many: 'sekundy', other: 'sekund' },
+  },
+};
 
-const words = (n: number, unit: Unit) => `${n} ${UNIT_WORDS[unit]}${n === 1 ? '' : 's'}`;
+const words = (n: number, unit: Unit, locale: Locale) => `${n} ${pluralForm(locale, n, UNIT_WORDS[locale][unit])}`;
 
 /**
  * "20m" → 20 minutes · "1h30m" → 1 hour 30 minutes · "5-10m" → 5–10 minutes.
  * The label is always generated, so every recipe words durations the same way.
  * A range rings at its lower bound: that is when the cook should start checking.
  */
-export function parseTimer(value: string, token = 'timer'): { seconds: number; label: string } {
+export function parseTimer(value: string, token: string, locale: Locale): { seconds: number; label: string } {
   const range = /^(\d+)-(\d+)([hms])$/.exec(value.trim());
   if (range) {
     const [, low, high, unit] = range as unknown as [string, string, string, Unit];
     if (Number(low) > 0 && Number(high) > Number(low)) {
       return {
         seconds: Number(low) * UNIT_SECONDS[unit],
-        label: `${low}–${high} ${UNIT_WORDS[unit]}${Number(high) === 1 ? '' : 's'}`,
+        // The noun agrees with the upper bound: "1–2 minutes", "5–10 minut".
+        label: `${low}–${words(Number(high), unit, locale)}`,
       };
     }
   }
@@ -162,14 +232,22 @@ export function parseTimer(value: string, token = 'timer'): { seconds: number; l
     [Math.floor((seconds % 3600) / 60), 'm'],
     [seconds % 60, 's'],
   ];
-  return { seconds, label: split.filter(([n]) => n).map(([n, unit]) => words(n, unit)).join(' ') };
+  return {
+    seconds,
+    label: split
+      .filter(([n]) => n)
+      .map(([n, unit]) => words(n, unit, locale))
+      .join(' '),
+  };
 }
 
 function rejectUnknownTokens(source: string): void {
   // {25 g: butter}, {5:00}: a colon makes it a duration token, but no duration token starts like that.
   const stray = /\{[^{}A-Za-z]*[^{}\sA-Za-z][^{}]*:[^{}]*\}/.exec(source);
   if (stray && !/^\{\s*[A-Za-z]/.test(stray[0])) {
-    throw new Error(`Unknown token "${stray[0]}" (allowed: ${DURATION_TOKENS.join(', ')}, or an amount like {25 g butter})`);
+    throw new Error(
+      `Unknown token "${stray[0]}" (allowed: ${DURATION_TOKENS.join(', ')}, or an amount like {25 g butter})`,
+    );
   }
   for (const [token, name] of source.matchAll(ANY_TOKEN)) {
     // Known name, written exactly as the renderer expects it: no spaces, lower case.
@@ -180,7 +258,8 @@ function rejectUnknownTokens(source: string): void {
 }
 
 /** A number and the unit after it ("190 °C", "2 minutes") never part at a line end. */
-const NUMBER_UNIT = /(\d)[ \u00a0](°[CF]|%|g|kg|ml|L|cm|mm|tsp|tbsp|minutes?|min|hours?|hr|seconds?|servings?)(?![\p{L}\d])/gu;
+const NUMBER_UNIT =
+  /(\d)[ \u00a0](°[CF]|%|g|kg|ml|L|l|cm|mm|tsp|tbsp|minutes?|min|hours?|hr|h|seconds?|servings?|lžičk[ay]|lžiček|lžíce|lžic|minut[ay]?|hodin[ay]?|sekund[ay]?|porc[eií]|den|dny|dní)(?![\p{L}\d])/gu;
 /** Nor do the two ends of a range ("60-63", "1–2"): a word joiner on each side of the dash keeps the glyphs as written. */
 const NUMBER_RANGE = /(\d)([–-])(?=\d)/g;
 
@@ -200,36 +279,40 @@ export function keepAmountsWhole(html: string): string {
         else if (/^<\/button>/i.test(part)) inButton--;
         return part;
       }
-      return inButton ? part : part.replace(NUMBER_UNIT, '$1\u00a0$2').replace(NUMBER_RANGE, '$1\u2060$2\u2060');
+      return inButton
+        ? part
+        : part.replace(NUMBER_UNIT, '$1\u00a0$2').replace(NUMBER_RANGE, '$1\u2060$2\u2060').replace(/⌀ (?=\d)/g, '⌀\u00a0');
     })
     .join('');
 }
 
-export function renderInline(source: string): string {
-  return keepAmountsWhole(renderMarkup(source));
+export function renderInline(source: string, ctx: RenderContext): string {
+  return keepAmountsWhole(renderMarkup(source, ctx));
 }
 
-function renderMarkup(source: string): string {
+function renderMarkup(source: string, ctx: RenderContext): string {
+  const { locale } = ctx;
   rejectUnknownTokens(source);
   return escapeHtml(source)
-    .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), true))
+    // The source is escaped first; a token is parsed as written (an ingredient name may hold "&"), and escaped on output.
+    .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(unescapeHtml(inner)), true, ctx))
     .replace(BOLD, '<strong>$1</strong>')
-    .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
+    .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token, locale).label)
     .replace(TIMER_WITH_PUNCTUATION, (_, token: string, value: string, punctuation: string) => {
-      const { seconds, label } = parseTimer(value, token);
-      const button = `<button type="button" class="timer" data-timer="${seconds}" aria-label="Start timer: ${label}">${TIMER_ICON}<span>${label}</span></button>`;
+      const { seconds, label } = parseTimer(value, token, locale);
+      const button = `<button type="button" class="timer" data-timer="${seconds}" aria-label="${strings(locale).startTimer} ${label}">${TIMER_ICON}<span>${label}</span></button>`;
       // Punctuation right after a timer stays on its line (", until soft" never starts a line); see .timer-wrap.
       return punctuation ? `<span class="timer-wrap">${button}${punctuation}</span>` : button;
     });
 }
 
-export function plainText(source: string): string {
+export function plainText(source: string, locale: Locale): string {
   rejectUnknownTokens(source);
   return source
-    .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), false))
+    .replace(QUANTITY, (_, inner: string) => renderQuantity(parseQuantity(inner), false, { locale }))
     .replace(BOLD, '$1')
-    .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token).label)
-    .replace(TIMER, (_, token: string, value: string) => parseTimer(value, token).label);
+    .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token, locale).label)
+    .replace(TIMER, (_, token: string, value: string) => parseTimer(value, token, locale).label);
 }
 
 type Directions = { steps: (string | { tip: string })[] }[];
@@ -255,14 +338,17 @@ export function directionTimes(directions: Directions): DirectionTimes {
   const waits = new Map<WaitToken, number>();
   for (const p of steps) {
     for (const [, token, value] of p.matchAll(HANDS_OFF_PATTERN)) {
-      handsOff += parseTimer(value, token).seconds;
+      handsOff += parseTimer(value, token, 'en').seconds; // seconds are the same in every language
       activities.add(token as HandsOffToken);
     }
     for (const [, token, value] of p.matchAll(WAIT_PATTERN)) {
-      waits.set(token as WaitToken, (waits.get(token as WaitToken) ?? 0) + parseTimer(value, token).seconds);
+      waits.set(token as WaitToken, (waits.get(token as WaitToken) ?? 0) + parseTimer(value, token, 'en').seconds);
     }
   }
-  const order: WaitToken[] = [...[...waits.keys()].filter((token) => !isPlace(token)), ...(Object.keys(PLACES) as PlaceToken[])];
+  const order: WaitToken[] = [
+    ...[...waits.keys()].filter((token) => !isPlace(token)),
+    ...(Object.keys(PLACES) as PlaceToken[]),
+  ];
   return {
     handsOff: Math.round(handsOff / 60),
     activities: [...activities],

@@ -7,22 +7,69 @@
  * sentence under Directions says how they break down.
  */
 import { formatMinutes } from './format';
+import type { Locale } from './i18n';
 import { HANDS_OFF, PLACES, WAITS, isPlace, type DirectionTimes } from './inline';
 
 /** A piece of the sentence; `strong` marks the numbers. */
 export type Segment = { text: string; strong?: true };
 
-/** ["a"] → "a", ["a", "b", "c"] → "a, b and c" */
-export function listJoin(words: readonly string[]): string {
-  return words.length < 2 ? (words[0] ?? '') : `${words.slice(0, -1).join(', ')} and ${words.at(-1)}`;
+/** The words of the time sentence around its numbers, per language. */
+const PHRASES: Record<
+  Locale,
+  {
+    and: string;
+    ofCooking: string;
+    inTotal: string;
+    ofWork: string;
+    of: string;
+    fromStartToFinish: string;
+    plus: string;
+    atLeast: string;
+  }
+> = {
+  en: {
+    and: ' and ',
+    ofCooking: ' of cooking: ',
+    inTotal: ' in total: ',
+    ofWork: ' of work',
+    of: ' of ',
+    fromStartToFinish: ' from start to finish',
+    plus: ', plus ',
+    atLeast: 'at least ',
+  },
+  // Czech puts the activity in the genitive after the number, so "of" is just a space: "3 h dušení".
+  cs: {
+    and: ' a ',
+    ofCooking: ' přípravy: ',
+    inTotal: ' celkem: ',
+    ofWork: ' práce',
+    of: ' ',
+    fromStartToFinish: ' od začátku do konce',
+    plus: ', k tomu ',
+    atLeast: 'nejméně ',
+  },
+};
+
+/** ["a"] → "a", ["a", "b", "c"] → "a, b and c"; a word named twice (Czech bakes and roasts alike) is said once. */
+export function listJoin(words: readonly string[], locale: Locale): string {
+  const unique = [...new Set(words)];
+  return unique.length < 2
+    ? (unique[0] ?? '')
+    : `${unique.slice(0, -1).join(', ')}${PHRASES[locale].and}${unique.at(-1)}`;
 }
 
 /** The hero's Time: { cook: "30 min", wait: "8 hr chilling" }; `wait` only when the method has one. */
-export function heroTime(totalMinutes: number, times: DirectionTimes): { cook: string; wait?: string } {
-  const cook = formatMinutes(totalMinutes);
+export function heroTime(totalMinutes: number, times: DirectionTimes, locale: Locale): { cook: string; wait?: string } {
+  const cook = formatMinutes(totalMinutes, locale);
   if (!times.waits.length) return { cook };
   const minutes = times.waits.reduce((sum, w) => sum + w.minutes, 0);
-  return { cook, wait: `${formatMinutes(minutes)} ${listJoin(times.waits.map((w) => WAITS[w.token]))}` };
+  return {
+    cook,
+    wait: `${formatMinutes(minutes, locale)} ${listJoin(
+      times.waits.map((w) => WAITS[w.token][locale]),
+      locale,
+    )}`,
+  };
 }
 
 /** All of it, until the dish can be served: cooking time plus every wait, for schema.org's totalTime. */
@@ -34,25 +81,31 @@ export function readyMinutes(totalMinutes: number, times: DirectionTimes): numbe
  * e.g. "4 hr 30 min in total: 1 hr 25 min of work and 3 hr 5 min of simmering, baking and cooling." or
  * "30 min of work, plus at least 8 hr in the fridge." "In total" only when nothing is waited on after it.
  */
-export function describeTime(totalMinutes: number, times: DirectionTimes): Segment[] {
-  const n = (minutes: number): Segment => ({ text: formatMinutes(minutes), strong: true });
+export function describeTime(totalMinutes: number, times: DirectionTimes, locale: Locale): Segment[] {
+  const n = (minutes: number): Segment => ({ text: formatMinutes(minutes, locale), strong: true });
+  const p = PHRASES[locale];
   const waits = times.waits;
 
   const sentence: Segment[] = [];
   if (times.handsOff > 0) {
-    const activities = listJoin(times.activities.map((token) => HANDS_OFF[token]));
-    sentence.push(n(totalMinutes), { text: waits.length ? ' of cooking: ' : ' in total: ' });
-    sentence.push(n(totalMinutes - times.handsOff), { text: ' of work and ' }, n(times.handsOff), { text: ` of ${activities}` });
+    const activities = listJoin(
+      times.activities.map((token) => HANDS_OFF[token][locale]),
+      locale,
+    );
+    sentence.push(n(totalMinutes), { text: waits.length ? p.ofCooking : p.inTotal });
+    sentence.push(n(totalMinutes - times.handsOff), { text: `${p.ofWork}${p.and}` }, n(times.handsOff), {
+      text: `${p.of}${activities}`,
+    });
   } else if (waits.length > 0) {
-    sentence.push(n(totalMinutes), { text: ' of work' });
+    sentence.push(n(totalMinutes), { text: p.ofWork });
   } else {
-    sentence.push(n(totalMinutes), { text: ' from start to finish' });
+    sentence.push(n(totalMinutes), { text: p.fromStartToFinish });
   }
   waits.forEach(({ token, minutes }, i) => {
-    sentence.push({ text: i === 0 ? ', plus ' : i === waits.length - 1 ? ' and ' : ', ' });
+    sentence.push({ text: i === 0 ? p.plus : i === waits.length - 1 ? p.and : ', ' });
     // "At least" only for the fridge and freezer, where longer is fine.
-    if (isPlace(token)) sentence.push({ text: 'at least ' }, n(minutes), { text: ` ${PLACES[token]}` });
-    else sentence.push(n(minutes), { text: ` of ${WAITS[token]}` });
+    if (isPlace(token)) sentence.push({ text: p.atLeast }, n(minutes), { text: ` ${PLACES[token][locale]}` });
+    else sentence.push(n(minutes), { text: `${p.of}${WAITS[token][locale]}` });
   });
   sentence.push({ text: '.' });
   return sentence;

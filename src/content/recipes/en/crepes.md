@@ -3,31 +3,33 @@ title: Crêpes
 description: Thin, supple French crêpes with a quiet note of brown butter and only a little sugar, a neutral base for whatever goes with them. The batter rests for at least an hour, and is easiest made the night before.
 featured: false
 cuisine: French
-image: ../../assets/recipes/crepes.jpg
+image: ../../../assets/recipes/crepes.jpg
 imageAlt: Thin golden crêpes folded into quarters on a white plate, with yoghurt, flaked almonds and a strawberry
 imageCredit:
   author: Svitlana
   license: Unsplash License
   url: https://unsplash.com/photos/a-plate-of-food-0MuOPAOFjrc
 yield:
-  min: 16
-  unit: crêpes
+  min: 12
+  max: 14
+  unit: crêpe
+  plural: { other: crêpes }
 time:
   total: 50
 ingredients:
   - items:
       - { qty: 35, unit: g, name: butter, note: unsalted }
-      - { qty: 550, unit: ml, name: whole milk, note: "in total: 500 ml in the batter, up to 50 ml to adjust it" }
+      - { qty: 550, unit: ml, name: whole milk, note: "500 ml in the batter, up to 50 ml to adjust it" }
       - { qty: 225, unit: g, name: plain flour, note: "all-purpose; T45 or T55 in France" }
       - { qty: 10, unit: g, name: sugar, note: "fine; leave out for savoury fillings" }
       - { qty: 0.5, unit: tsp, name: salt, note: fine }
-      - { qty: 3, name: eggs, about: { qty: 165, max: 180, unit: g }, note: "large, ideally at room temperature" }
+      - { qty: 3, name: egg, plural: { other: eggs }, about: { qty: 165, max: 180, unit: g }, note: "large, ideally at room temperature" }
       - { name: neutral oil, note: for the pan }
 equipment:
-  - Small saucepan, light inside, so you can see the butter brown
+  - { name: Small saucepan, note: "light inside, so you can see the butter brown" }
   - Fine-mesh sieve
-  - Crêpe pan, 24 cm base
-  - Thin spatula, for flipping
+  - { name: Crêpe pan, note: "⌀ 28 cm" }
+  - { name: Thin spatula, note: for flipping }
 directions:
   - title: Make the brown-butter milk
     steps:
@@ -52,14 +54,14 @@ directions:
     steps:
       - Whisk the batter well, since the butter and flour settle. After a night in the fridge a few specks of set butter are fine, as they melt in the pan, so don’t sieve it again.
       - It should be like pouring cream, coating a spoon thinly and running off in a quick ribbon. If it is thicker, whisk in up to {50 ml whole milk}, a tablespoon at a time.
-      - Find a ladle or cup that holds about 50 ml, measured once with water, so every crêpe gets the same amount.
+      - Find a ladle or cup that holds about 65 ml, measured once with water, so every crêpe gets the same amount.
       - Wipe the pan with a paper towel dipped in {neutral oil}, leaving a sheen but no drops. The butter in the batter is usually enough after that; wipe again only if a crêpe sticks.
       - Lift the pan off the heat, pour one ladleful of batter into the centre and at once tilt and swirl the pan so the batter covers the base in one thin layer.
       - tip: The first crêpe is a test. If the batter sets before you can swirl it, the pan is too hot or the batter too thick; if the crêpe is still pale after a minute, turn the heat up.
       - Cook for {timer:45-60s}, until the surface looks dry, the edge lifts and turns lacy and the underside is golden in spots.
       - Loosen the edge with the spatula, flip and cook the second side for {timer:15-20s}, until it sets.
       - Stack the crêpes on a plate under a clean tea towel, where they stay warm and supple. Serve them with the first, golden side outwards.
-      - tip: For another pan, scale the batter with the base area, about 35 ml for 20 cm and 60–70 ml for 28 cm.
+      - tip: For a smaller pan, use about 50–55 ml for 24–26 cm and 35–40 ml for 20–22 cm.
 ---
 
 ## Chef’s Notes

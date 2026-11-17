@@ -11,9 +11,10 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 const doc = read('../../docs/recipe-model.md');
 
 describe('docs/recipe-model.md', () => {
-  // Every `key: z.…` (or `key: image()`) in the schema is a field a recipe author can write.
+  // Every `key: z.…` (or `key: image()`, or `key: plural…`, the shared plural-forms object) in the schema is a
+  // field a recipe author can write.
   const schemaFields = new Set(
-    [...read('../content.config.ts').matchAll(/(\w+):\s*(?:z\b|image\(\))/g)].map(([, key]) => key),
+    [...read('../content.config.ts').matchAll(/(\w+):\s*(?:z\b|image\(\)|plural\b)/g)].map(([, key]) => key),
   );
   // The field tables: from "## Field reference" up to the next top-level section.
   const reference = doc.slice(doc.indexOf('## Field reference'), doc.indexOf('## Inline markup'));
@@ -38,19 +39,19 @@ describe('docs/recipe-model.md', () => {
     expect(DURATION_TOKENS.filter((token) => !doc.includes(`{${token}:`))).toEqual([]);
   });
 
-  it('lists every hands-off verb with the word used in the time sentence', () => {
-    const missing = Object.entries(HANDS_OFF).filter(([token, word]) => !doc.includes(`| \`{${token}:}\` | ${word} |`));
-    expect(missing).toEqual([]);
+  // Each table row gives the English word, then the Czech one: | `{simmer:}` | simmering | dušení |
+  const row = (token: string, words: { en: string; cs: string }) => `| \`{${token}:}\` | ${words.en} | ${words.cs} |`;
+
+  it('lists every hands-off verb with the words used in the time sentence', () => {
+    expect(Object.entries(HANDS_OFF).filter(([token, words]) => !doc.includes(row(token, words)))).toEqual([]);
   });
 
-  it('lists every wait verb with the word used in the hero', () => {
-    const missing = Object.entries(WAITS).filter(([token, word]) => !doc.includes(`| \`{${token}:}\` | ${word} |`));
-    expect(missing).toEqual([]);
+  it('lists every wait verb with the words used in the hero', () => {
+    expect(Object.entries(WAITS).filter(([token, words]) => !doc.includes(row(token, words)))).toEqual([]);
   });
 
   it('lists every fridge and freezer token with the place used in the time sentence', () => {
-    const missing = Object.entries(PLACES).filter(([token, place]) => !doc.includes(`| \`{${token}:}\` | ${place} |`));
-    expect(missing).toEqual([]);
+    expect(Object.entries(PLACES).filter(([token, words]) => !doc.includes(row(token, words)))).toEqual([]);
   });
 
   it('lists every allowed unit', () => {

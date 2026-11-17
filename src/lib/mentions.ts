@@ -11,6 +11,8 @@ interface Ingredient {
   name: string;
   qty?: number;
   unit?: Unit;
+  /** The other forms of a counted ingredient's name ("lemons"; Czech "citrony", "citronů"). */
+  plural?: Record<string, string>;
 }
 interface Recipe {
   ingredients: { items: Ingredient[] }[];
@@ -23,20 +25,28 @@ export interface MentionIssue {
 
 const words = (text: string) => text.toLowerCase().split(/\s+/).filter(Boolean);
 /** "lemon" and "lemons", "potato" and "potatoes" are the same word. */
-const sameWord = (a: string, b: string) => a === b || a + 's' === b || b + 's' === a || a + 'es' === b || b + 'es' === a;
+const sameWord = (a: string, b: string) =>
+  a === b || a + 's' === b || b + 's' === a || a + 'es' === b || b + 'es' === a;
 
 /**
  * The ingredient a mention refers to. A mention matches a name it covers completely, or a run of whole words in
  * it ("Provolone" → "Provolone Piccante"). A complete match wins, so {water} is "water", not "sparkling water".
+ * Any form of the name counts as the name (`spellings`): {6 vajec} is "vejce", whose forms include "vajec".
  * Throws when nothing or more than one ingredient matches.
  */
-export function resolveMention(mention: string, names: string[]): string {
+export function resolveMention(
+  mention: string,
+  names: string[],
+  spellings: (name: string) => string[] = (n) => [n],
+): string {
   const want = words(mention);
-  const runs = names.filter((name) => {
-    const have = words(name);
+  const covers = (spelling: string, complete: boolean) => {
+    const have = words(spelling);
+    if (complete && have.length !== want.length) return false;
     return have.some((_, start) => want.every((w, i) => have[start + i] !== undefined && sameWord(w, have[start + i])));
-  });
-  const complete = runs.filter((name) => words(name).length === want.length);
+  };
+  const runs = names.filter((name) => spellings(name).some((spelling) => covers(spelling, false)));
+  const complete = runs.filter((name) => spellings(name).some((spelling) => covers(spelling, true)));
   const found = complete.length ? complete : runs;
   if (found.length === 1) return found[0];
   if (!found.length) {
@@ -66,6 +76,8 @@ export function checkMentions(recipe: Recipe): MentionIssue[] {
     group.items.map((item, k) => ({ item, path: ['ingredients', g, 'items', k] as (string | number)[] })),
   );
   const names = [...new Set(lines.map(({ item }) => item.name))];
+  const forms = new Map(lines.map(({ item }) => [item.name, [item.name, ...Object.values(item.plural ?? {})]]));
+  const spellings = (name: string) => forms.get(name) ?? [name];
   const used = new Set<string>();
   const measured = new Map<string, { dimension: string; qty: number; path: (string | number)[] }[]>();
 
@@ -82,7 +94,7 @@ export function checkMentions(recipe: Recipe): MentionIssue[] {
 
     for (const { text, path, tip } of texts) {
       for (const bold of boldSpans(text)) {
-        if (names.some((name) => tryResolve(bold, [name]))) {
+        if (names.some((name) => tryResolve(bold, [name], spellings))) {
           issues.push({
             path,
             message: tip
@@ -99,7 +111,7 @@ export function checkMentions(recipe: Recipe): MentionIssue[] {
         }
         let resolved: string;
         try {
-          resolved = resolveMention(name, names);
+          resolved = resolveMention(name, names, spellings);
         } catch (error) {
           issues.push({ path, message: (error as Error).message });
           continue;
@@ -116,14 +128,20 @@ export function checkMentions(recipe: Recipe): MentionIssue[] {
   for (const name of names) {
     const own = lines.filter(({ item }) => item.name === name);
     if (!used.has(name)) {
-      issues.push({ path: own[0].path, message: `"${name}" is never mentioned in the steps: write {${name}} where it is used` });
+      issues.push({
+        path: own[0].path,
+        message: `"${name}" is never mentioned in the steps: write {${name}} where it is used`,
+      });
       continue;
     }
     const portions = measured.get(name);
     if (!portions) continue;
     const listed = own.filter(({ item }) => item.qty !== undefined).map(({ item }) => base(item.qty!, item.unit));
     if (!listed.length) {
-      issues.push({ path: portions[0].path, message: `"${name}" has no amount in the list, so the steps cannot measure it out` });
+      issues.push({
+        path: portions[0].path,
+        message: `"${name}" has no amount in the list, so the steps cannot measure it out`,
+      });
       continue;
     }
     const dimensions = new Set([...listed, ...portions.map((p) => [p.dimension] as const)].map(([d]) => d));
@@ -147,9 +165,9 @@ export function checkMentions(recipe: Recipe): MentionIssue[] {
   return issues;
 }
 
-function tryResolve(mention: string, names: string[]): boolean {
+function tryResolve(mention: string, names: string[], spellings: (name: string) => string[]): boolean {
   try {
-    resolveMention(mention, names);
+    resolveMention(mention, names, spellings);
     return true;
   } catch {
     return false;

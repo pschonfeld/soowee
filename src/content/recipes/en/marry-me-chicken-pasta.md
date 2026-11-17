@@ -2,7 +2,7 @@
 title: Marry Me Chicken Pasta
 description: A modern Italian-American bistro dish, not a Tuscan classic. Browned chicken thighs finish cooking in a sauce of reduced stock, cream and Parmigiano, sharpened by sun-dried tomatoes and tossed with tagliatelle.
 cuisine: Italian-American
-image: ../../assets/recipes/marry-me-chicken-pasta.jpg
+image: ../../../assets/recipes/marry-me-chicken-pasta.jpg
 imageAlt: Tagliatelle with chicken in a creamy sauce, scattered with parsley and grated Parmigiano, in a speckled grey bowl on white marble
 imageCredit:
   author: Sama Hosseini
@@ -11,7 +11,6 @@ imageCredit:
 yield:
   min: 3
   max: 4
-  unit: servings
 time:
   total: 40
 ingredients:
@@ -23,8 +22,8 @@ ingredients:
       - { qty: 2, unit: tbsp, name: olive oil }
   - group: For the sauce
     items:
-      - { qty: 45, unit: g, name: butter, note: "in total: 30 g for the sauce, 15 g cold, to finish" }
-      - { qty: 2, name: garlic cloves, note: very finely chopped }
+      - { qty: 45, unit: g, name: butter, note: "30 g for the sauce, 15 g cold, to finish" }
+      - { qty: 2, name: garlic clove, plural: { other: garlic cloves }, note: very finely chopped }
       - { qty: 0.5, unit: tsp, name: dried thyme or oregano }
       - { qty: 0.5, unit: tsp, name: chilli flakes, note: optional }
       - { qty: 100, unit: g, name: sun-dried tomatoes, note: "in oil; drained, cut into strips" }
@@ -32,7 +31,7 @@ ingredients:
       - { qty: 150, unit: ml, name: chicken stock, note: "unsalted or low-salt" }
       - { qty: 250, unit: ml, name: whipping cream, note: "30–33 % fat" }
       - { qty: 1, unit: tsp, name: Dijon mustard }
-      - { qty: 80, unit: g, name: Parmigiano Reggiano, note: "finely grated; in total: 60 g for the sauce, 20 g to serve" }
+      - { qty: 80, unit: g, name: Parmigiano Reggiano, note: "finely grated; 60 g for the sauce, 20 g to serve" }
       - { qty: 100, unit: g, name: baby spinach }
       - { name: lemon juice, note: "a few drops, optional" }
   - group: For the pasta
@@ -41,8 +40,8 @@ ingredients:
       - { qty: 30, unit: g, name: fine sea salt }
       - { qty: 250, unit: g, name: egg tagliatelle, note: "dried; or pappardelle" }
 equipment:
-  - Sauté pan, stainless steel or cast iron, 28–30 cm
-  - Pot, 4 L
+  - { name: Sauté pan, note: "stainless steel or cast iron, ⌀ 28–30 cm" }
+  - { name: Pot, note: "4 L" }
   - Instant-read thermometer
 directions:
   - title: Get ready

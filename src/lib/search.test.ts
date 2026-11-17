@@ -48,3 +48,14 @@ describe('matches', () => {
     expect(matches(tiramisu, '  ')).toBe(true);
   });
 });
+
+describe('Czech inflection', () => {
+  it('finds another case of a word when asked to', () => {
+    const hay = haystack(['Palačinky', '225 g hladké mouky', 'másla']);
+    expect(hay.split(' ')).toContain('mouky');
+    expect(matches(hay.split(' '), 'mouka')).toBe(false);
+    expect(matches(hay.split(' '), 'mouka', true)).toBe(true);
+    expect(matches(hay.split(' '), 'maslo', true)).toBe(true);
+    expect(matches(hay.split(' '), 'pala', true)).toBe(true);
+  });
+});

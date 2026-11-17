@@ -1,0 +1,89 @@
+---
+/**
+ * The home page in one language: search, the featured recipe and every recipe. src/pages/index.astro (Czech) and
+ * src/pages/en/index.astro render it.
+ */
+import Page from './Page.astro';
+import Featured from './Featured.astro';
+import RecipeItem from './RecipeItem.astro';
+import Logo from './Logo.astro';
+import '../styles/home.css';
+import { localeOf, otherLocale, strings } from '../lib/i18n';
+import { getRecipes } from '../lib/recipes';
+import { localePath } from '../lib/url';
+
+const locale = localeOf(Astro.currentLocale);
+const t = strings(locale);
+const recipes = await getRecipes(locale);
+
+// One pick at most, so the page always has a single focal point (lib/recipes.ts fails the build otherwise).
+const featured = recipes.find((r) => r.data.featured);
+let listed = 0;
+
+// No photo credits here: Unsplash photos need none, and every item links to its recipe page, whose footer credits
+// the photo (CC BY-SA 4.0 allows attribution through a link to the credit, "in any reasonable manner").
+---
+
+<Page
+  title="soowee"
+  description={t.siteDescription}
+  themeColor={{ light: '#f2f2f7', dark: '#000000' }}
+  og={{ type: 'website', title: 'soowee', image: featured?.data.image }}
+  skip={{ href: '#all', label: t.skipToRecipes }}
+  translation={localePath(otherLocale(locale), '/')}
+>
+  <main class="home">
+    <h1 class="home__title"><Logo class="home__logo" /></h1>
+    <search class="search">
+      <label class="sr-only" for="search">{t.searchRecipes}</label>
+      <svg class="icon search__icon" viewBox="0 0 18 18" aria-hidden="true"><circle cx="8" cy="8" r="5.25"></circle><path d="m12 12 3.75 3.75"></path></svg>
+      <input
+        id="search"
+        type="search"
+        placeholder={t.searchRecipes}
+        enterkeyhint="search"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+      />
+      {/* Our own clear button instead of the browser's: same look in every browser, and a 44px target. */}
+      <button type="button" class="btn btn--round btn--plain btn--sm search__clear" aria-label={t.clearText} data-search-clear hidden>
+        <svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8"></circle><path d="m6.2 6.2 5.6 5.6m0-5.6-5.6 5.6"></path></svg>
+      </button>
+    </search>
+
+    {featured && <Featured entry={featured} />}
+
+    <section class="all" id="all" aria-labelledby="all-title">
+      <div class="all__head">
+        <h2 id="all-title" class="all__title">{t.allRecipes}</h2>
+        <p class="all__count" role="status" data-count></p>
+      </div>
+      <ul class="items">
+        {/*
+          The featured recipe is in the list too, so search finds it, but hidden until someone searches: a recipe
+          never shows twice. Positions skip it, so the first visible row still draws no separator.
+        */}
+        {recipes.map((entry) => {
+          const isFeatured = entry === featured;
+          const pos = isFeatured ? -1 : listed++;
+          return <RecipeItem entry={entry} eager={!featured && pos < 2} pos={pos} featured={isFeatured} />;
+        })}
+      </ul>
+      <div class="empty" data-empty hidden>
+        <p>{t.noMatchBefore}<span data-empty-query></span>{t.noMatchAfter}</p>
+        <button type="button" class="btn btn--capsule btn--fill empty__clear" data-clear>{t.clearSearch}</button>
+      </div>
+    </section>
+  </main>
+
+  {/* The few strings home.ts writes, as data: the script stays the same for both languages. */}
+  <script
+    type="application/json"
+    id="strings"
+    set:html={JSON.stringify({ noMatchBefore: t.noMatchBefore, noMatchAfter: t.noMatchAfter, recipeCount: t.recipeCount })}
+  />
+  <script>
+    import '../scripts/home.ts';
+  </script>
+</Page>

@@ -7,6 +7,7 @@ import { sitePath } from '../lib/url';
  */
 import '../styles/global.css';
 import Logo from './Logo.astro';
+import { localeOf, otherLocale, strings } from '../lib/i18n';
 
 interface Props {
   /** Full document title. */
@@ -18,18 +19,26 @@ interface Props {
   bodyStyle?: string;
   og: { type: 'website' | 'article'; title: string; image?: ImageMetadata };
   skip: { href: string; label: string };
+  /** This page in the other language, from localePath(): every page exists in both. */
+  translation: string;
 }
 
-const { title, description, themeColor, bodyStyle, og, skip } = Astro.props;
+const { title, description, themeColor, bodyStyle, og, skip, translation } = Astro.props;
+const locale = localeOf(Astro.currentLocale);
+const other = otherLocale(locale);
+const t = strings(locale);
 
 // Absolute URLs need the production origin (`site`); without it they are left out instead of pointing at localhost.
 const origin = Astro.site;
 const canonical = origin && new URL(Astro.url.pathname, origin).href;
 const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
+// hreflang needs absolute URLs, like canonical.
+const alternate = origin && new URL(translation, origin).href;
+const OG_LOCALE = { cs: 'cs_CZ', en: 'en_GB' } as const;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -49,8 +58,11 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
     <link rel="icon" href={sitePath('/favicon.svg')} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={sitePath('/apple-touch-icon.png')} />
     {canonical && <link rel="canonical" href={canonical} />}
+    {canonical && alternate && <link rel="alternate" hreflang={locale} href={canonical} />}
+    {alternate && <link rel="alternate" hreflang={other} href={alternate} />}
     <meta property="og:type" content={og.type} />
     <meta property="og:site_name" content="soowee" />
+    <meta property="og:locale" content={OG_LOCALE[locale]} />
     <meta property="og:title" content={og.title} />
     <meta property="og:description" content={description} />
     {canonical && <meta property="og:url" content={canonical} />}
@@ -78,12 +90,19 @@ const imageUrl = origin && og.image && new URL(og.image.src, origin).href;
     <footer class="footer">
       <Logo class="footer__logo" quiet />
       <slot name="credits" />
+      <a class="footer__language" href={translation} hreflang={other} lang={other}>{t.switchTo}</a>
       <fieldset class="segmented theme">
-        <legend class="sr-only">Appearance</legend>
+        <legend class="sr-only">{t.appearance}</legend>
         {
-          ['Light', 'Dark', 'Auto'].map((label) => (
+          (
+            [
+              ['light', t.themeLight],
+              ['dark', t.themeDark],
+              ['auto', t.themeAuto],
+            ] as const
+          ).map(([value, label]) => (
             <label>
-              <input type="radio" name="theme" value={label.toLowerCase()} checked={label === 'Auto'} />
+              <input type="radio" name="theme" value={value} checked={value === 'auto'} />
               <span class="segmented__item" data-label={label}>{label}</span>
             </label>
           ))

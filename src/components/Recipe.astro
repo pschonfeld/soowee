@@ -1,21 +1,27 @@
 ---
-import { sitePath } from '../lib/url';
-import { render, type CollectionEntry } from 'astro:content';
+import { localePath } from '../lib/url';
+import { render } from 'astro:content';
 import { Image, Picture } from 'astro:assets';
 import Page from './Page.astro';
 import '../styles/recipe.css';
-import { formatQty, formatScale, formatYield, isoDuration } from '../lib/format';
-import { directionTimes, keepAmountsWhole, plainText, renderInline } from '../lib/inline';
+import { formatQty, formatScale, formatUnit, formatYield, isoDuration, unitForms } from '../lib/format';
+import { localeOf, otherLocale, pluralForm, strings, type Forms } from '../lib/i18n';
+import { directionTimes, keepAmountsWhole, nounHtml, plainText, renderInline, type RenderContext } from '../lib/inline';
+import { resolveMention } from '../lib/mentions';
+import type { RecipeEntry } from '../lib/recipes';
 import { describeTime, heroTime, readyMinutes } from '../lib/time';
 import { backdropFor } from '../lib/backdrop';
 import { tintFor } from '../lib/tint';
 
 interface Props {
-  entry: CollectionEntry<'recipes'>;
+  entry: RecipeEntry;
 }
 
 const { entry } = Astro.props;
 const r = entry.data;
+const locale = localeOf(Astro.currentLocale);
+const t = strings(locale);
+const other = otherLocale(locale);
 const { Content } = await render(entry);
 const tint = await tintFor(r.image, r.tint);
 const backdrop = await backdropFor(r.image);
@@ -31,13 +37,14 @@ const pageStyle = [
 
 const SourceTag = r.source?.url ? 'a' : 'div';
 
-const yieldText = formatYield(r.yield.min, r.yield.max, r.yield.unit);
+const yieldUnit: Forms = r.yield.unit ? { one: r.yield.unit, ...r.yield.plural } : t.servings;
+const yieldText = formatYield(r.yield.min, r.yield.max, yieldUnit, locale);
 // The hero shows the cooking time, then the wait ("30 min" / "+ 8 hr chilling"); the Directions header says how
 // they break down in one generated sentence (lib/time.ts).
 // content.config.ts guarantees the hands-off time leaves a positive amount of work.
 const times = directionTimes(r.directions);
-const time = heroTime(r.time.total, times);
-const timeSentence = describeTime(r.time.total, times);
+const time = heroTime(r.time.total, times, locale);
+const timeSentence = describeTime(r.time.total, times, locale);
 
 // Each step with the tips that follow it: a tip belongs to the step before it, and the schema makes every section
 // start with a step. The page and cook mode both render steps from this.
@@ -50,20 +57,51 @@ const sections = r.directions.map((section) => ({
   }, []),
 }));
 
-type Ingredient = { qty?: number; unit?: string; name: string; about?: { qty: number; max?: number; unit: string }; note?: string };
-/** "g flour" / "onion": the unit (if any) and name, as shown after the quantity. */
-const ingredientLabel = (i: Ingredient) => [i.unit, i.name].filter(Boolean).join(' ');
-const aboutText = (i: Ingredient) =>
-  i.about &&
-  `(about ${formatQty(i.about.qty, i.about.unit)}${i.about.max ? `–${formatQty(i.about.max, i.about.unit)}` : ''} ${i.about.unit})`;
-const ingredientText = (i: Ingredient) =>
-  [
-    i.qty !== undefined && formatQty(i.qty, i.unit),
-    i.unit,
-    i.name + (i.about ? ` ${aboutText(i)}` : '') + (i.note ? `, ${i.note}` : ''),
+type Ingredient = (typeof r.ingredients)[number]['items'][number];
+/** Every form of a counted ingredient's name ("lemon", "lemons"); nothing for the rest, whose name never changes. */
+const nameForms = (i: Ingredient): Forms | undefined => (i.plural ? { one: i.name, ...i.plural } : undefined);
+/**
+ * "g flour" / "onion" / "lžíce oleje": the unit (if any) and name, as shown after the quantity. HTML: a noun that
+ * changes with the number carries its forms, so recipe.ts can follow the scale ("1 lemon" → "2 lemons").
+ */
+const ingredientLabel = (i: Ingredient) => {
+  const count = i.qty ?? 1;
+  const forms = nameForms(i);
+  return [i.unit && nounHtml(unitForms(i.unit, locale), count, locale), forms ? nounHtml(forms, count, locale) : escape(i.name)]
+    .filter(Boolean)
+    .join(' ');
+};
+const escape = (text: string) => text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+const aboutUnit = (about: NonNullable<Ingredient['about']>) => nounHtml(unitForms(about.unit, locale), about.max ?? about.qty, locale);
+/** Plain text, for JSON-LD: "2 lemons (about 200 g), cut into wedges". */
+const ingredientText = (i: Ingredient) => {
+  const count = i.qty ?? 1;
+  const about =
+    i.about &&
+    `(${t.about} ${formatQty(i.about.qty, i.about.unit, locale)}${i.about.max ? `–${formatQty(i.about.max, i.about.unit, locale)}` : ''} ${formatUnit(i.about.unit, i.about.max ?? i.about.qty, locale)})`;
+  const forms = nameForms(i);
+  return [
+    i.qty !== undefined && formatQty(i.qty, i.unit, locale),
+    i.unit && formatUnit(i.unit, count, locale),
+    (forms ? pluralForm(locale, count, forms) : i.name) + (about ? ` ${about}` : '') + (i.note ? `, ${i.note}` : ''),
   ]
     .filter(Boolean)
     .join(' ');
+};
+
+// Step text names ingredients ({6 eggs}); a counted one follows the scale like the list does. content.config.ts has
+// already checked every mention, so resolving cannot fail here.
+const items = r.ingredients.flatMap((g) => g.items);
+const names = [...new Set(items.map((i) => i.name))];
+const spellings = (name: string) => {
+  const forms = nameForms(items.find((i) => i.name === name)!);
+  return forms ? Object.values(forms) : [name];
+};
+const renderContext: RenderContext = {
+  locale,
+  forms: (mention) => nameForms(items.find((i) => i.name === resolveMention(mention, names, spellings))!),
+};
+const inline = (text: string) => renderInline(text, renderContext);
 
 // Absolute URL for JSON-LD needs the production origin (`site`); without it the image is left out.
 const imageUrl = Astro.site && new URL(r.image.src, Astro.site).href;
@@ -73,6 +111,7 @@ const jsonLd = {
   '@type': 'Recipe',
   name: r.title,
   description: r.description,
+  inLanguage: locale,
   image: imageUrl,
   recipeCuisine: r.cuisine,
   recipeYield: yieldText.replace(/ /g, ' '), // the no-break space is for layout, not for data
@@ -84,7 +123,7 @@ const jsonLd = {
     name: s.title,
     itemListElement: [s.heat, ...s.steps]
       .filter((p): p is string => typeof p === 'string')
-      .map((p) => ({ '@type': 'HowToStep', text: plainText(p) })),
+      .map((p) => ({ '@type': 'HowToStep', text: plainText(p, locale) })),
   })),
 };
 
@@ -112,7 +151,8 @@ const icons = {
   themeColor={backdrop?.edge ?? tint.base}
   bodyStyle={pageStyle}
   og={{ type: 'article', title: r.title, image: r.image }}
-  skip={{ href: '#recipe', label: 'Skip to recipe' }}
+  skip={{ href: '#recipe', label: t.skipToRecipe }}
+  translation={localePath(other, `/${entry.id}/`)}
 >
     <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
 
@@ -121,10 +161,10 @@ const icons = {
         data-recipe={entry.id}
         data-yield-min={r.yield.min}
         data-yield-max={r.yield.max}
-        data-yield-unit={r.yield.unit}
+        data-yield-forms={JSON.stringify(yieldUnit)}
       >
         <header class="hero">
-          <a class="btn btn--round btn--scrim back" href={sitePath('/')} aria-label="All recipes">
+          <a class="btn btn--round btn--scrim back" href={localePath(locale, '/')} aria-label={t.allRecipes}>
             <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.back} /></svg>
           </a>
           <!-- The photo continues past its edge as a mirrored, blurred copy (background extension). -->
@@ -156,14 +196,14 @@ const icons = {
             */}
             <dl class="meta">
               <div>
-                <dt>Time</dt>
+                <dt>{t.time}</dt>
                 <dd>
                   {time.cook}
                   {time.wait && <span class="meta__wait">+ {time.wait}</span>}
                 </dd>
               </div>
               <div>
-                <dt>Yield</dt>
+                <dt>{t.yield}</dt>
                 <dd data-yield>{yieldText}</dd>
               </div>
             </dl>
@@ -188,15 +228,15 @@ const icons = {
             <div class="actions">
               <button type="button" class="btn btn--capsule btn--glass action" data-cook-open aria-haspopup="dialog">
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.cook} /></svg>
-                Cook
+                {t.cook}
               </button>
               <button type="button" class="btn btn--capsule btn--glass action" data-save>
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.save} /></svg>
-                <span data-save-label>Save</span>
+                <span data-save-label>{t.save}</span>
               </button>
               <button type="button" class="btn btn--capsule btn--glass action" data-share>
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.share} /></svg>
-                Share
+                {t.share}
               </button>
             </div>
 
@@ -209,15 +249,15 @@ const icons = {
             <section class="ingredients" aria-labelledby="ingredients-title">
               <div class="section-head">
                 <div>
-                  <h2 class="section-title" id="ingredients-title">Ingredients</h2>
-                  <p class="section-sub">Yields <span data-yield>{yieldText}</span></p>
+                  <h2 class="section-title" id="ingredients-title">{t.ingredients}</h2>
+                  <p class="section-sub">{t.yields} <span data-yield>{yieldText}</span></p>
                 </div>
-                <div class="scale" role="group" aria-label="Scale recipe">
-                  <button type="button" class="btn btn--round btn--plain" data-scale="-1" aria-label="Scale down">
+                <div class="scale" role="group" aria-label={t.scaleRecipe}>
+                  <button type="button" class="btn btn--round btn--plain" data-scale="-1" aria-label={t.scaleDown}>
                     <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.minus} /></svg>
                   </button>
                   <output data-scale-output aria-live="polite">{formatScale(1)}</output>
-                  <button type="button" class="btn btn--round btn--plain" data-scale="1" aria-label="Scale up">
+                  <button type="button" class="btn btn--round btn--plain" data-scale="1" aria-label={t.scaleUp}>
                     <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.plus} /></svg>
                   </button>
                 </div>
@@ -233,23 +273,23 @@ const icons = {
                           <label class="ingredient">
                             <input type="checkbox" />
                             <span class="ingredient__qty" data-qty={item.qty} data-unit={item.unit}>
-                              {item.qty !== undefined && formatQty(item.qty, item.unit)}
+                              {item.qty !== undefined && formatQty(item.qty, item.unit, locale)}
                             </span>
                             <span>
-                              {ingredientLabel(item)}
+                              <Fragment set:html={ingredientLabel(item)} />
                               {item.about && (
                                 <span class="ingredient__note">
-                                  {' (about '}
+                                  {` (${t.about} `}
                                   <span data-qty={item.about.qty} data-unit={item.about.unit}>
-                                    {formatQty(item.about.qty, item.about.unit)}
+                                    {formatQty(item.about.qty, item.about.unit, locale)}
                                   </span>
                                   {item.about.max && '–'}
                                   {item.about.max && (
                                     <span data-qty={item.about.max} data-unit={item.about.unit}>
-                                      {formatQty(item.about.max, item.about.unit)}
+                                      {formatQty(item.about.max, item.about.unit, locale)}
                                     </span>
                                   )}
-                                  {`\u00a0${item.about.unit})`}
+                                  {'\u00a0'}<Fragment set:html={aboutUnit(item.about)} />)
                                 </span>
                               )}
                               {item.note && <span class="ingredient__note">, {keepAmountsWhole(item.note)}</span>}
@@ -271,13 +311,20 @@ const icons = {
                 <section class="equipment" aria-labelledby="equipment-title">
                   <div class="section-head">
                     <h2 class="section-title" id="equipment-title">
-                      Equipment
+                      {t.equipment}
                     </h2>
                   </div>
                   <ul>
-                    {r.equipment.map((item) => (
-                      <li>{keepAmountsWhole(item)}</li>
-                    ))}
+                    {r.equipment.map((item) =>
+                      typeof item === 'string' ? (
+                        <li>{keepAmountsWhole(item)}</li>
+                      ) : (
+                        <li>
+                          {item.name}
+                          <span class="ingredient__note">, {keepAmountsWhole(item.note)}</span>
+                        </li>
+                      ),
+                    )}
                   </ul>
                 </section>
               )
@@ -288,7 +335,7 @@ const icons = {
             <section class="directions" aria-labelledby="directions-title">
               <div class="section-head">
                 <div>
-                  <h2 class="section-title" id="directions-title">Directions</h2>
+                  <h2 class="section-title" id="directions-title">{t.directions}</h2>
                   <p class="section-sub section-sub--time">
                     {timeSentence.map((s) => (s.strong ? <strong>{keepAmountsWhole(s.text)}</strong> : keepAmountsWhole(s.text)))}
                   </p>
@@ -305,21 +352,21 @@ const icons = {
                           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
                             <path d={icons.heat} />
                           </svg>
-                          <span set:html={renderInline(section.heat)} />
+                          <span set:html={inline(section.heat)} />
                         </p>
                       )}
                       <ol class="directions__steps" role="list">
                         {section.steps.map((step) => (
                           <li>
-                            <p set:html={renderInline(step.text)} />
+                            <p set:html={inline(step.text)} />
                             {step.tips.map((tip) => (
                               <p class="tip">
                                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true">
                                   <path d={icons.bulb} />
                                 </svg>
                                 <span>
-                                  <span class="sr-only">Tip: </span>
-                                  <Fragment set:html={renderInline(tip)} />
+                                  <span class="sr-only">{t.tip} </span>
+                                  <Fragment set:html={inline(tip)} />
                                 </span>
                               </p>
                             ))}
@@ -334,7 +381,7 @@ const icons = {
 
             {
               entry.body?.trim() && (
-                <section class="prose" aria-label="Notes">
+                <section class="prose" aria-label={t.notes}>
                   <Content />
                 </section>
               )
@@ -347,7 +394,7 @@ const icons = {
     {
       r.imageCredit && (
         <p slot="credits">
-          Photo: <a href={r.imageCredit.url}>{r.imageCredit.author}</a>, {r.imageCredit.license}
+          {t.photo} <a href={r.imageCredit.url}>{r.imageCredit.author}</a>, {r.imageCredit.license}
         </p>
       )
     }
@@ -360,31 +407,31 @@ const icons = {
           {r.title}
           <span>soowee</span>
         </p>
-        <button type="button" class="btn btn--round btn--scrim cook__close" data-cook-close aria-label="Close cook mode">
+        <button type="button" class="btn btn--round btn--scrim cook__close" data-cook-close aria-label={t.closeCook}>
           <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.close} /></svg>
         </button>
       </div>
 
-      <div class="segmented segmented--glass cook__tabs" role="tablist" aria-label="Cook mode view">
+      <div class="segmented segmented--glass cook__tabs" role="tablist" aria-label={t.cookView}>
         <button
           type="button"
           class="segmented__item"
-          data-label="Ingredients"
+          data-label={t.ingredients}
           role="tab"
           id="tab-ingredients"
           aria-controls="panel-ingredients"
           aria-selected="false"
-          tabindex="-1">Ingredients</button
+          tabindex="-1">{t.ingredients}</button
         >
-        <button type="button" class="segmented__item" data-label="Directions" role="tab" id="tab-directions" aria-controls="panel-directions" aria-selected="true"
-          >Directions</button
+        <button type="button" class="segmented__item" data-label={t.directions} role="tab" id="tab-directions" aria-controls="panel-directions" aria-selected="true"
+          >{t.directions}</button
         >
       </div>
 
       <div class="cook__panel" id="panel-ingredients" role="tabpanel" aria-labelledby="tab-ingredients" tabindex="0" hidden>
         <div class="cook__inner">
         <p class="cook__yield">
-          Yields <span data-yield>{yieldText}</span>
+          {t.yields} <span data-yield>{yieldText}</span>
         </p>
         {
           r.ingredients.map((group) => (
@@ -394,23 +441,23 @@ const icons = {
                 {group.items.map((item) => (
                   <li class="cook__ingredient">
                     <b data-qty={item.qty} data-unit={item.unit}>
-                      {item.qty !== undefined && formatQty(item.qty, item.unit)}
+                      {item.qty !== undefined && formatQty(item.qty, item.unit, locale)}
                     </b>
                     <span>
-                      {ingredientLabel(item)}
+                      <Fragment set:html={ingredientLabel(item)} />
                       {item.about && (
                         <span class="ingredient__note">
-                          {' (about '}
+                          {` (${t.about} `}
                           <span data-qty={item.about.qty} data-unit={item.about.unit}>
-                            {formatQty(item.about.qty, item.about.unit)}
+                            {formatQty(item.about.qty, item.about.unit, locale)}
                           </span>
                           {item.about.max && '–'}
                           {item.about.max && (
                             <span data-qty={item.about.max} data-unit={item.about.unit}>
-                              {formatQty(item.about.max, item.about.unit)}
+                              {formatQty(item.about.max, item.about.unit, locale)}
                             </span>
                           )}
-                          {`\u00a0${item.about.unit})`}
+                          {'\u00a0'}<Fragment set:html={aboutUnit(item.about)} />)
                         </span>
                       )}
                       {item.note && <span class="ingredient__note">, {keepAmountsWhole(item.note)}</span>}
@@ -428,21 +475,21 @@ const icons = {
            panel carry the structure for screen readers, and the active step has aria-current. -->
       <p class="cook__context" aria-hidden="true" data-cook-context>
         <span data-context-title>{sections[0].title}</span>{' '}
-        <span class="cook__count" data-context-count>1 of {sections.length}</span>
+        <span class="cook__count" data-context-count>1 {t.of} {sections.length}</span>
       </p>
 
       <div class="cook__panel" id="panel-directions" role="tabpanel" aria-labelledby="tab-directions" tabindex="0">
         <div class="cook__inner">
         {
           sections.map((section, i) => (
-            <div class="cook__section" data-section={section.title} data-count={`${i + 1} of ${sections.length}`}>
+            <div class="cook__section" data-section={section.title} data-count={`${i + 1} ${t.of} ${sections.length}`}>
               <h3 class="sr-only">{section.title}</h3>
-              {section.heat && <p class="cook__step" data-step set:html={renderInline(section.heat)} />}
+              {section.heat && <p class="cook__step" data-step set:html={inline(section.heat)} />}
               {section.steps.map((step) => (
                 <div class="cook__step" data-step>
-                  <p set:html={renderInline(step.text)} />
+                  <p set:html={inline(step.text)} />
                   {step.tips.map((tip) => (
-                    <p class="cook__tip" set:html={`Tip: ${renderInline(tip)}`} />
+                    <p class="cook__tip" set:html={`${t.tip} ${inline(tip)}`} />
                   ))}
                 </div>
               ))}
@@ -455,9 +502,11 @@ const icons = {
 
     <div class="hud">
       <p class="toast" role="status" data-toast></p>
-      <div class="timers" role="region" aria-label="Timers" data-timers></div>
+      <div class="timers" role="region" aria-label={t.timers} data-timers></div>
     </div>
 
+    {/* The strings recipe.ts writes (announcements, timer labels), as data: one script serves both languages. */}
+    <script type="application/json" id="strings" set:html={JSON.stringify({ ...t.client, save: t.save, saved: t.saved })} />
     <script>
       import '../scripts/recipe.ts';
     </script>

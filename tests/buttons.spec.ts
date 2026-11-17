@@ -70,7 +70,7 @@ function check(all: Control[]) {
 }
 
 test('home: every control follows the button system', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/en/');
   check(await controls(page));
   // The search clear and the "no results" clear only exist while searching.
   await page.getByRole('searchbox', { name: 'Search recipes' }).fill('zzzz');
@@ -82,7 +82,7 @@ test('home: every control follows the button system', async ({ page }) => {
 });
 
 test('recipe page, cook mode and timers: every control follows the button system', async ({ page }) => {
-  await page.goto('/lasagna/');
+  await page.goto('/en/lasagna/');
   check(await controls(page));
 
   // Timer chip: pause and dismiss, then the Undo state.

@@ -19,14 +19,14 @@ const visibleTitles = (page: Page) => page.locator('.item:not([hidden]) .item__t
 const search = (page: Page) => page.getByRole('searchbox', { name: 'Search recipes' });
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/en/');
 });
 
 test('lists every recipe once, alphabetically, each linking to its page', async ({ page }) => {
   await expect(items(page)).toHaveCount(RECIPES.length);
   expect(await visibleTitles(page)).toEqual(LISTED);
   for (const { slug, title } of RECIPES) {
-    await expect(page.locator(`.item[data-slug="${slug}"] a`)).toHaveAttribute('href', `/${slug}/`);
+    await expect(page.locator(`.item[data-slug="${slug}"] a`)).toHaveAttribute('href', `/en/${slug}/`);
     await expect(page.locator(`.item[data-slug="${slug}"] .item__title`)).toHaveText(title);
   }
 });
@@ -34,7 +34,7 @@ test('lists every recipe once, alphabetically, each linking to its page', async 
 test('the featured recipe leads the page, never shows twice, and search still finds it', async ({ page }) => {
   const feature = page.locator('.feature');
   const row = page.locator(`.item[data-slug="${FEATURED}"]`);
-  await expect(feature).toHaveAttribute('href', `/${FEATURED}/`);
+  await expect(feature).toHaveAttribute('href', `/en/${FEATURED}/`);
   await expect(feature.getByRole('heading')).toHaveText('Lasagna');
   await expect(row).toBeHidden();
 
@@ -54,7 +54,7 @@ test('each time reads exactly as in its recipe hero', async ({ page }) => {
     await search(page).fill(slug === FEATURED ? 'lasagna' : '');
     const listed = (await page.locator(`.item[data-slug="${slug}"] .item__meta`).innerText()).replace(/\s+/g, ' ').trim();
     const hero = await page.context().newPage();
-    await hero.goto(`/${slug}/`);
+    await hero.goto(`/en/${slug}/`);
     const time = hero.locator('.meta > div').first().locator('dd');
     const heroText = (await time.innerText()).replace(/\s+/g, ' ').trim();
     await hero.close();
@@ -119,9 +119,9 @@ test('the search is re-applied when coming back to the page', async ({ page }) =
 test('recipes saved on this device show a badge', async ({ page }) => {
   const badge = page.locator('.item[data-slug="tiramisu"] [data-saved]');
   await expect(badge).toBeHidden();
-  await page.goto('/tiramisu/');
+  await page.goto('/en/tiramisu/');
   await page.locator('[data-save]').click();
-  await page.goto('/');
+  await page.goto('/en/');
   await expect(badge).toBeVisible();
   await expect(page.locator('.item[data-slug="tiramisu"] a')).toContainText('Saved');
   await expect(page.locator('[data-saved]:visible')).toHaveCount(1);
@@ -129,7 +129,7 @@ test('recipes saved on this device show a badge', async ({ page }) => {
 
 test('the browser bar colour follows the appearance switch, not only the system', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
-  await page.goto('/');
+  await page.goto('/en/');
   // The theme-color the browser would use: the first one whose media query matches.
   const barColour = () =>
     page.evaluate(

@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { DURATION_TOKENS, HANDS_OFF, WAITS, keepAmountsWhole, parseQuantity, parseTimer, plainText, renderInline, directionTimes } from './inline';
+import {
+  DURATION_TOKENS,
+  HANDS_OFF,
+  WAITS,
+  keepAmountsWhole,
+  parseQuantity,
+  parseTimer as parseTimerIn,
+  plainText as plainTextIn,
+  renderInline as renderInlineIn,
+  directionTimes,
+} from './inline';
+
+// Most cases are about the markup, not the language: they run in English. Czech has its own block at the end.
+const parseTimer = (value: string, token = 'timer') => parseTimerIn(value, token, 'en');
+const plainText = (source: string) => plainTextIn(source, 'en');
+const renderInline = (source: string) => renderInlineIn(source, { locale: 'en' });
 
 describe('parseTimer', () => {
   it('parses single and compound durations with generated labels', () => {
@@ -188,5 +203,42 @@ describe('unknown tokens', () => {
 
   it('leaves amounts and ordinary braces alone', () => {
     expect(plainText('{25 g} and {2}')).toBe('25\u00a0g and 2');
+  });
+});
+
+describe('Czech', () => {
+  const cs = (source: string) => renderInlineIn(source, { locale: 'cs' });
+
+  it('words durations with the Czech plural, a range agreeing with its upper bound', () => {
+    expect(parseTimerIn('1m', 'timer', 'cs').label).toBe('1 minutu'); // accusative: "šlehejte 1 minutu"
+    expect(parseTimerIn('3m', 'timer', 'cs').label).toBe('3 minuty');
+    expect(parseTimerIn('20m', 'timer', 'cs').label).toBe('20 minut');
+    expect(parseTimerIn('1h30m', 'timer', 'cs').label).toBe('1 hodinu 30 minut');
+    expect(parseTimerIn('5-10m', 'timer', 'cs').label).toBe('5–10 minut');
+    expect(parseTimerIn('1-2m', 'timer', 'cs').label).toBe('1–2 minuty');
+    expect(cs('{timer:5m}')).toContain('aria-label="Spustit minutku na 5 minut"');
+  });
+
+  it('spells the spoons out and lets them follow the scale', () => {
+    expect(cs('{2 tbsp}')).toBe(
+      '<span data-qty="2" data-unit="tbsp">2</span>\u00a0<span data-forms="{&quot;one&quot;:&quot;lžíci&quot;,&quot;few&quot;:&quot;lžíce&quot;,&quot;many&quot;:&quot;lžíce&quot;,&quot;other&quot;:&quot;lžic&quot;}" data-count="2">lžíce</span>',
+    );
+    expect(plainTextIn('{5 tbsp} a {0.5 tsp}', 'cs')).toBe('5\u00a0lžic a ½\u00a0lžičky');
+    expect(plainTextIn('{1.5 L}', 'cs')).toBe('1,5\u00a0l');
+  });
+
+  it('keeps the written form of a counted ingredient at its own number and uses its forms at the others', () => {
+    const forms = { one: 'cibule', few: 'cibule', many: 'cibule', other: 'cibulí' };
+    const html = renderInlineIn('Nakrájejte {1 cibuli}.', { locale: 'cs', forms: () => forms });
+    expect(html).toContain('>cibuli</strong>');
+    expect(html).toContain('&quot;one&quot;:&quot;cibuli&quot;');
+    expect(html).toContain('&quot;other&quot;:&quot;cibulí&quot;');
+  });
+
+  it('shows the left side of {shown|name}', () => {
+    expect(cs('Vymažte {máslem|máslo}.')).toBe('Vymažte <strong>máslem</strong>.');
+    expect(parseQuantity('35 g másla|máslo')).toEqual({ qty: 35, unit: 'g', name: 'máslo', text: 'másla' });
+    expect(() => parseQuantity('a|b|c')).toThrow(/Malformed mention/);
+    expect(() => parseQuantity('máslem|')).toThrow(/Malformed mention/);
   });
 });

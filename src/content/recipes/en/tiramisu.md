@@ -4,7 +4,7 @@ description: A classic Italian no-bake dessert of coffee-soaked Savoiardi layere
 featured: false
 cuisine: Italian
 byline: Adapted from Vincenzo’s Plate
-image: ../../assets/recipes/tiramisu.jpg
+image: ../../../assets/recipes/tiramisu.jpg
 imageAlt: A slice of tiramisu dusted with cocoa and topped with chocolate shavings, beside a fork
 imageCredit:
   author: Jay
@@ -17,7 +17,6 @@ source:
 yield:
   min: 8
   max: 10
-  unit: servings
 time:
   total: 30
 ingredients:
@@ -26,13 +25,13 @@ ingredients:
       - { qty: 400, unit: ml, name: strong coffee or espresso }
   - group: For the cream
     items:
-      - { qty: 6, name: eggs, note: "very fresh, separated" }
+      - { qty: 6, name: egg, plural: { other: eggs }, note: "very fresh, separated" }
       - { qty: 6, unit: tbsp, name: sugar, note: "fine granulated" }
       - { qty: 750, unit: g, name: mascarpone }
       - { name: salt, note: a pinch }
   - group: For the assembly
     items:
-      - { qty: 36, name: Savoiardi biscuits, about: { qty: 300, max: 360, unit: g }, note: "ladyfingers, half for each layer" }
+      - { qty: 36, name: Savoiardi biscuit, plural: { other: Savoiardi biscuits }, about: { qty: 300, max: 360, unit: g }, note: "ladyfingers, half for each layer" }
       - { qty: 10, unit: g, name: dark chocolate, note: "½–1 square, for grating" }
       - { name: cocoa powder, note: "unsweetened, for dusting" }
 equipment:

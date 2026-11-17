@@ -1,5 +1,11 @@
 /* Home page: search, the Saved badge and the logo's eyes. Everything else on the page works without JavaScript. */
+import { localeOf, pluralForm, type Strings } from '../lib/i18n';
 import { matches } from '../lib/search';
+
+const locale = localeOf(document.documentElement.lang);
+const t: Pick<Strings, 'noMatchBefore' | 'noMatchAfter' | 'recipeCount'> = JSON.parse(
+  document.getElementById('strings')!.textContent!,
+);
 
 const input = document.querySelector<HTMLInputElement>('#search')!;
 const items = [...document.querySelectorAll<HTMLElement>('[data-search]')].map((item) => ({
@@ -21,7 +27,7 @@ function filter() {
   let shown = 0;
   for (const { item, words, featured } of items) {
     // The featured recipe is already the card above the list; it joins the list only as a search result.
-    const hit = matches(words, query) && !(featured && query === '');
+    const hit = matches(words, query, locale === 'cs') && !(featured && query === '');
     item.hidden = !hit;
     // Position among the visible rows: the first row (two on wide screens) draws no separator.
     if (hit) item.dataset.pos = String(shown++);
@@ -35,7 +41,11 @@ function filter() {
   clearTimeout(announceTimer);
   announceTimer = window.setTimeout(() => {
     // With no results the message under the heading says it; the count is then for screen readers only.
-    count.textContent = !query ? '' : shown ? `${shown} ${shown === 1 ? 'recipe' : 'recipes'}` : `No recipes match “${query}”`;
+    count.textContent = !query
+      ? ''
+      : shown
+        ? `${shown} ${pluralForm(locale, shown, t.recipeCount)}`
+        : `${t.noMatchBefore}${query}${t.noMatchAfter}`;
     count.classList.toggle('sr-only', query !== '' && shown === 0);
   }, 300);
 }

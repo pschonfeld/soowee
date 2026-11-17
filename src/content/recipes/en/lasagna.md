@@ -4,7 +4,7 @@ description: Fresh egg pasta layered with a slow-simmered beef and pork ragù an
 featured: true
 cuisine: Italian
 byline: Adapted from Vincenzo’s Plate
-image: ../../assets/recipes/lasagna.jpg
+image: ../../../assets/recipes/lasagna.jpg
 imageAlt: Freshly baked lasagna in a dark baking dish, topped with a basil leaf
 imageCredit:
   author: Clare Andrews
@@ -17,27 +17,26 @@ source:
 yield:
   min: 8
   max: 10
-  unit: servings
 time:
   total: 270
 ingredients:
   - group: For the cheeses
     items:
-      - { qty: 250, unit: g, name: mozzarella fior di latte, note: "cow’s milk, not buffalo" }
+      - { qty: 250, unit: g, name: mozzarella fior di latte, note: "cow’s milk" }
       - { qty: 80, unit: g, name: Pecorino Romano }
       - { qty: 100, unit: g, name: Provolone Piccante }
   - group: For the ragù
     items:
-      - { qty: 2, unit: tbsp, name: extra virgin olive oil }
+      - { qty: 2, unit: tbsp, name: olive oil, note: extra virgin }
       - { qty: 500, unit: g, name: ground beef, note: "about 15–20 % fat" }
-      - { qty: 500, unit: g, name: ground pork, note: "about 20 % fat, from the shoulder if ground to order" }
-      - { qty: 1, name: onion, about: { qty: 150, unit: g }, note: "medium, diced into small cubes" }
-      - { qty: 1, name: carrot, about: { qty: 100, unit: g }, note: "diced into small cubes" }
-      - { qty: 1, name: celery stick, about: { qty: 60, unit: g }, note: "diced into small cubes" }
+      - { qty: 500, unit: g, name: ground pork, note: "about 20 % fat" }
+      - { qty: 1, name: onion, plural: { other: onions }, about: { qty: 150, unit: g }, note: "medium, finely chopped" }
+      - { qty: 1, name: carrot, plural: { other: carrots }, about: { qty: 100, unit: g }, note: finely chopped }
+      - { qty: 1, name: celery stick, plural: { other: celery sticks }, about: { qty: 60, unit: g }, note: finely chopped }
       - { qty: 240, unit: ml, name: red wine, note: dry }
       - { qty: 1.4, unit: L, name: passata, note: "unsalted, 100% tomato, ideally San Marzano" }
       - { qty: 240, unit: ml, name: water }
-      - { qty: 12, unit: g, name: fine sea salt, note: "in total: 1 g with the vegetables, 8 g with the meat, up to 3 g to adjust at the end" }
+      - { qty: 12, unit: g, name: fine sea salt, note: "1 g with the vegetables, 8 g with the meat, up to 3 g to adjust at the end" }
       - { name: black pepper, note: freshly ground }
   - group: For the béchamel
     items:
@@ -48,11 +47,11 @@ ingredients:
       - { name: nutmeg, note: a few gratings }
   - group: For the assembly
     items:
-      - { qty: 600, unit: g, name: egg pasta sheets, note: "fresh, enough for 4 layers of about 150 g" }
-      - { name: extra virgin olive oil, note: for greasing }
+      - { qty: 600, unit: g, name: egg pasta sheets, note: "fresh, enough for 6 layers of about 100 g" }
+      - { name: olive oil, note: "extra virgin, for greasing" }
 equipment:
-  - Pot, heavy-bottomed, 5 L
-  - Baking dish, porcelain, 38 × 26 × 7 cm (4.5 L)
+  - { name: Pot, note: "heavy-bottomed, 5 L" }
+  - { name: Baking dish, note: "porcelain, 38 × 26 × 7 cm (4.5 L)" }
   - Instant-read thermometer
 directions:
   - title: Prepare the cheeses
@@ -63,7 +62,7 @@ directions:
       - tip: Parmigiano Reggiano can replace the Pecorino Romano. If only Provolone dolce is available, use it and add {20 g} more Pecorino Romano for bite.
   - title: Make the soffritto and brown the meat
     steps:
-      - Heat {2 tbsp extra virgin olive oil} in a large heavy-bottomed pot over medium-low heat.
+      - Heat {2 tbsp olive oil} in a large heavy-bottomed pot over medium-low heat.
       - Add the {onion}, {carrot}, {celery} and {1 g salt} and cook gently, stirring now and then, for {timer:12-15m}, until soft, sweet and translucent.
       - tip: Do not let the vegetables brown. The salt draws out moisture so they sweat instead of frying.
       - Turn the heat up to high and add {500 g ground beef} and {500 g ground pork}. Spread the meat over the soffritto, leave it untouched for 2–3 minutes, then break it up with a wooden spoon.
@@ -87,14 +86,14 @@ directions:
       - Season with a pinch of {salt} and a few gratings of {nutmeg}, remove from the heat and keep warm. You should have about 440 ml.
   - title: Assemble the lasagna
     steps:
-      - Grease the baking dish with {extra virgin olive oil} using a pastry brush and stand it on the baking tray.
-      - Trim {600 g egg pasta sheets} to fit the dish, in 4 portions of about {150 g}, each enough to cover the base once.
+      - Grease the baking dish with {olive oil} using a pastry brush and stand it on the baking tray.
+      - Trim {600 g egg pasta sheets} to fit the dish, in 6 portions of about {100 g}, each enough to cover the base once.
       - tip: There is no need to boil fresh sheets. They cook in the sauce. Butt the edges together rather than overlapping them, because a double thickness stays doughy.
       - Spread {300 ml} ragù in a thin layer over the bottom of the dish and cover with the first portion of pasta.
-      - Spread {450 ml} ragù over the pasta, scatter over a third of the {Pecorino Romano}, {Provolone} and {mozzarella} (not the reserved Pecorino Romano), then spoon over {80 ml} béchamel and spread lightly so it fills the gaps between the cheese.
-      - Cover with the next portion of pasta and repeat the filling. Do this until you have three fillings in all, then finish with the fourth portion of pasta.
+      - Spread {270 ml} ragù over the pasta, scatter over a fifth of the {Pecorino Romano}, {Provolone} and {mozzarella} (not the reserved Pecorino Romano), then spoon over {50 ml} béchamel and spread lightly so it fills the gaps between the cheese.
+      - Cover with the next portion of pasta and repeat the filling. Do this until you have five fillings in all, then finish with the sixth portion of pasta.
       - tip: Keep every layer even and not too wet. Too much sauce and the lasagna loses shape and slides apart when served. Any ragù left over (you should have a little) goes on the table or in the freezer.
-      - Spread {300 ml} ragù over the top sheet, then the remaining béchamel (about 200 ml) from edge to edge so no pasta is exposed.
+      - Spread {300 ml} ragù over the top sheet, then the remaining béchamel (about 190 ml) from edge to edge so no pasta is exposed.
   - title: Bake
     steps:
       - Cover the dish with foil, without letting it touch the surface, and bake for {bake:30m}.

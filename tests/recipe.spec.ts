@@ -4,12 +4,12 @@ import sharp from 'sharp';
 import { parseTimer } from '../src/lib/inline';
 
 const RECIPES = [
-  { path: '/lasagna/', title: 'Lasagna', ingredients: 21, sections: 6 },
-  { path: '/fish-and-chips/', title: 'Fish & Chips', ingredients: 20, sections: 7 },
-  { path: '/tiramisu/', title: 'Tiramisu', ingredients: 8, sections: 4 },
-  { path: '/marry-me-chicken-pasta/', title: 'Marry Me Chicken Pasta', ingredients: 19, sections: 5 },
-  { path: '/bolognese-sauce/', title: 'Bolognese Sauce', ingredients: 19, sections: 5 },
-  { path: '/crepes/', title: 'Crêpes', ingredients: 7, sections: 4 },
+  { path: '/en/lasagna/', title: 'Lasagna', ingredients: 21, sections: 6 },
+  { path: '/en/fish-and-chips/', title: 'Fish & Chips', ingredients: 20, sections: 7 },
+  { path: '/en/tiramisu/', title: 'Tiramisu', ingredients: 8, sections: 4 },
+  { path: '/en/marry-me-chicken-pasta/', title: 'Marry Me Chicken Pasta', ingredients: 19, sections: 5 },
+  { path: '/en/bolognese-sauce/', title: 'Bolognese Sauce', ingredients: 19, sections: 5 },
+  { path: '/en/crepes/', title: 'Crêpes', ingredients: 7, sections: 4 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -69,9 +69,9 @@ test('hero backdrop is derived from each recipe photo', async ({ page }) => {
         scrim: Number(style.getPropertyValue('--scrim')),
       };
     });
-  await page.goto('/lasagna/');
+  await page.goto('/en/lasagna/');
   const lasagna = await read();
-  await page.goto('/fish-and-chips/');
+  await page.goto('/en/fish-and-chips/');
   const fish = await read();
   for (const b of [lasagna, fish]) {
     expect(b.backdrop).toMatch(/^url\(data:image\/webp;base64,/);
@@ -120,7 +120,7 @@ test('on short phone screens the backdrop has no hard line where the mirrored ph
 });
 
 test('mirrored backdrop meets the photo at its edge and text stays off the sharp photo', async ({ page }) => {
-  await page.goto('/lasagna/');
+  await page.goto('/en/lasagna/');
   const g = await page.evaluate(() => {
     const box = (s: string) => document.querySelector(s)!.getBoundingClientRect();
     const media = box('.hero__media');
@@ -180,9 +180,9 @@ for (const { path } of RECIPES) {
 test('a long timer label fits at 320px with 200% text', async ({ page }, testInfo) => {
   // No hand-curated recipe has to contain a multi-unit duration, so put the longest kind of label the schema allows
   // into every rendered timer pill (step and cook view) and check nothing scrolls sideways.
-  const { label } = parseTimer('1h30m', 'simmer');
+  const { label } = parseTimer('1h30m', 'simmer', 'en');
   await page.setViewportSize({ width: 320, height: 640 });
-  await page.goto('/lasagna/');
+  await page.goto('/en/lasagna/');
   await page.addStyleTag({ content: 'html { font-size: 200% }' });
   await page.locator('.timer span').evaluateAll((spans, text) => spans.forEach((s) => (s.textContent = text)), label);
   const pill = page.locator('.directions__section .timer').first();
@@ -216,7 +216,7 @@ test('Cook, Save and Share are on the first screen of a 320 × 568 phone', async
 test('hero text matches the Ingredients column and the photo runs to the edge at every width', async ({ page }) => {
   for (const [width, height] of [[768, 1024], [1023, 900], [1024, 900], [1440, 900], [1920, 1080], [2560, 1440], [3440, 1440]]) {
     await page.setViewportSize({ width, height });
-    await page.goto('/fish-and-chips/');
+    await page.goto('/en/fish-and-chips/');
     const g = await page.evaluate(() => {
       const body = document.querySelector('.hero__body')!;
       const cs = getComputedStyle(body);
@@ -247,9 +247,9 @@ test('hero text matches the Ingredients column and the photo runs to the edge at
 });
 
 test('the back button leads to the home page', async ({ page }) => {
-  await page.goto('/tiramisu/');
+  await page.goto('/en/tiramisu/');
   const back = page.getByRole('link', { name: 'All recipes' });
-  await expect(back).toHaveAttribute('href', '/');
+  await expect(back).toHaveAttribute('href', '/en/');
   await back.click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { name: 'All recipes' })).toBeVisible();
@@ -257,7 +257,7 @@ test('the back button leads to the home page', async ({ page }) => {
 
 test('appearance switch overrides the system setting and is remembered', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
-  await page.goto('/lasagna/');
+  await page.goto('/en/lasagna/');
   const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   expect(await background()).toBe('rgb(242, 242, 247)');
 
@@ -273,11 +273,11 @@ test('appearance switch overrides the system setting and is remembered', async (
 
 test.describe('interactions', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
   });
 
   test('scaling updates quantities and yield, and stops at its limits', async ({ page }) => {
-    const oil = page.locator('.ingredient', { hasText: 'extra virgin olive oil' }).first().locator('[data-qty]');
+    const oil = page.locator('.ingredient', { hasText: 'olive oil' }).first().locator('[data-qty]');
     const beef = page.locator('.ingredient', { hasText: 'ground beef' }).locator('[data-qty]');
     await expect(oil).toHaveText('2');
 
@@ -290,8 +290,8 @@ test.describe('interactions', () => {
     await expect(page.locator('.directions__section p', { hasText: 'red wine' })).toContainText('pour in 360\u00a0ml red wine');
     await expect(page.locator('#panel-directions [data-step]', { hasText: 'While the ragù finishes' })).toContainText('melt 60\u00a0g butter');
     await expect(page.locator('.hero [data-yield]')).toHaveText('12–15 servings');
-    // The approximate weight of a counted ingredient scales with it.
-    await expect(page.locator('.ingredient', { hasText: 'onion' })).toContainText('onion (about 225 g)');
+    // The approximate weight of a counted ingredient scales with it, and its name follows the number.
+    await expect(page.locator('.ingredient', { hasText: 'onion' })).toContainText('onions (about 225 g)');
     // One ingredient split across steps: 80 g Pecorino in the list, 50 g for the layers and 30 g for the top.
     await expect(page.locator('.ingredient', { hasText: 'Pecorino Romano' }).locator('[data-qty]')).toHaveText('120');
     await expect(page.locator('.directions__section p', { hasText: 'Grate' })).toContainText('Grate 120\u00a0g Pecorino Romano and set 45\u00a0g aside');
@@ -345,14 +345,14 @@ test.describe('interactions', () => {
     expect(ld.prepTime).toBeUndefined();
     expect(ld.cookTime).toBeUndefined();
 
-    await page.goto('/fish-and-chips/');
+    await page.goto('/en/fish-and-chips/');
     await expect(page.locator('.directions .section-sub')).toHaveText(
       '45 min in total: 25 min of work and 20 min of baking.',
     );
   });
 
   test('a wait is shown after the cooking time, on its own line, and named in the sentence', async ({ page }) => {
-    await page.goto('/tiramisu/');
+    await page.goto('/en/tiramisu/');
     const time = page.locator('.meta dd').first();
     await expect(time).toHaveText(/^30\smin\s*\+ 8\shr chilling$/);
     // The wait sits under the cooking time, not beside it.
@@ -373,7 +373,7 @@ test.describe('interactions', () => {
   });
 
   test('a wait in the middle of the method is outside the cooking time and still rings', async ({ page }) => {
-    await page.goto('/crepes/');
+    await page.goto('/en/crepes/');
     await expect(page.locator('.meta dd').first()).toHaveText(/^50\smin\s*\+ 1\shr resting$/);
     await expect(page.locator('.directions .section-sub')).toHaveText('50 min of work, plus 1 hr of resting.');
     await expect(page.locator('.directions__section', { hasText: 'Rest the batter' }).locator('.timer')).toHaveCount(1);
@@ -382,7 +382,7 @@ test.describe('interactions', () => {
   });
 
   test('a weight range on a counted ingredient scales at both ends', async ({ page }) => {
-    await page.goto('/tiramisu/');
+    await page.goto('/en/tiramisu/');
     const savoiardi = page.locator('.ingredient', { hasText: 'Savoiardi' });
     await expect(savoiardi).toContainText('36Savoiardi biscuits (about 300–360 g), ladyfingers');
     await page.getByRole('button', { name: 'Scale up' }).click();
@@ -408,7 +408,7 @@ test.describe('interactions', () => {
   test('ingredient names lead, qualifiers follow', async ({ page }) => {
     // innerText keeps the no-break space between number and unit; this test is about word order.
     const names = (await page.locator('.ingredient > span:nth-of-type(2)').allInnerTexts()).map((n) => n.replace(/\u00a0/g, ' '));
-    expect(names).toContain('onion (about 150 g), medium, diced into small cubes');
+    expect(names).toContain('onion (about 150 g), medium, finely chopped');
     expect(names).toContain('g butter, unsalted');
     expect(names.some((n) => /^(medium|dry|whole|unsalted|fresh|shredded|grated)\b/i.test(n.replace(/^(g|ml|L|tbsp|tsp) /, '')))).toBe(false);
   });
@@ -553,7 +553,7 @@ test.describe('interactions', () => {
 
   test('timers count down, finish and can be dismissed', async ({ page }) => {
     await page.clock.install();
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Start timer: 12–15 minutes' }).first().click();
 
     await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
@@ -577,7 +577,7 @@ test.describe('interactions', () => {
 
   test('a dismissed running timer can be brought back for a few seconds, without losing time', async ({ page }) => {
     await page.clock.install();
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
     const chip = page.locator('.timer-chip');
     await page.clock.fastForward('10:00');
@@ -606,7 +606,7 @@ test.describe('interactions', () => {
 
   test('a ringing timer can be silenced from the keyboard', async ({ page }) => {
     await page.clock.install();
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Start timer: 1–2 minutes' }).first().click();
     await page.clock.fastForward('02:01');
     const silence = page.getByRole('button', { name: /^Silence timer/ });
@@ -619,7 +619,7 @@ test.describe('interactions', () => {
 
   test('a finished timer is dismissed at once, with no Undo', async ({ page }) => {
     await page.clock.install();
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Start timer: 1–2 minutes' }).first().click();
     await page.clock.fastForward('02:01');
     await page.getByRole('button', { name: /Dismiss timer/ }).click();
@@ -628,7 +628,7 @@ test.describe('interactions', () => {
 
   test('a timer can be paused and resumed, and the tab title counts it down', async ({ page }) => {
     await page.clock.install();
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
     const chip = page.locator('.timer-chip');
     await expect(chip.locator('time')).toHaveText('1:00:00');
@@ -647,7 +647,7 @@ test.describe('interactions', () => {
 
   test('a finished timer repeats its alert until tapped, without being dismissed', async ({ page }) => {
     await page.clock.install();
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Start timer: 1–2 minutes' }).first().click();
     await page.clock.fastForward('02:01');
 
@@ -670,7 +670,7 @@ test.describe('interactions', () => {
     page,
   }) => {
     await page.clock.install();
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
     await page.clock.fastForward('01:00');
     await page.reload();
@@ -717,7 +717,7 @@ test.describe('interactions', () => {
   });
 
   test('the timer capsule never covers the cook-mode header or the close button', async ({ page }) => {
-    await page.goto('/lasagna/');
+    await page.goto('/en/lasagna/');
     await page.getByRole('button', { name: 'Cook', exact: true }).click();
     const dialog = page.getByRole('dialog');
     // `main` is inert while cook mode is open, but Playwright's role query still finds its (unclickable)

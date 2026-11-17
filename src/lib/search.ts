@@ -20,7 +20,14 @@ export function haystack(parts: readonly (string | undefined)[]): string {
   return [...new Set(words(parts.filter(Boolean).join(' ')))].join(' ');
 }
 
-/** True when every word of the query starts some word of the haystack. An empty query matches everything. */
-export function matches(haystackWords: readonly string[], query: string): boolean {
-  return words(query).every((q) => haystackWords.some((w) => w.startsWith(q)));
+/**
+ * True when every word of the query starts some word of the haystack. An empty query matches everything.
+ * `inflected`: Czech changes a word's ending with its case ("mouka" in the query, "mouky" in "225 g hladké mouky"),
+ * so a query word of 4 letters or more also matches without its last letter.
+ */
+export function matches(haystackWords: readonly string[], query: string, inflected = false): boolean {
+  return words(query).every((q) => {
+    const stem = inflected && q.length >= 4 ? q.slice(0, -1) : q;
+    return haystackWords.some((w) => w.startsWith(stem));
+  });
 }

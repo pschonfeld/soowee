@@ -1,4 +1,5 @@
 import { SCALES, formatClock, formatQty, formatScale, formatYield } from '../lib/format';
+import { fill, localeOf, pluralForm, type ClientStrings, type Forms } from '../lib/i18n';
 
 const $ = <T extends HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends HTMLElement>(selector: string, root: ParentNode = document) => [
@@ -6,6 +7,9 @@ const $$ = <T extends HTMLElement>(selector: string, root: ParentNode = document
 ];
 
 const article = $('article[data-recipe]')!;
+const locale = localeOf(document.documentElement.lang);
+/** This page's strings (Recipe.astro writes them); `{label}` and `{n}` are filled in with fill(). */
+const t: ClientStrings = JSON.parse($('#strings')!.textContent!);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 /* ── Toast (also the polite live region) ── */
@@ -25,10 +29,15 @@ let scaleIndex = SCALES.indexOf(1);
 function applyScale() {
   const factor = SCALES[scaleIndex];
   for (const el of $$('[data-qty]')) {
-    el.textContent = formatQty(Number(el.dataset.qty) * factor, el.dataset.unit);
+    el.textContent = formatQty(Number(el.dataset.qty) * factor, el.dataset.unit, locale);
   }
-  const { yieldMin, yieldMax, yieldUnit } = article.dataset;
-  const text = formatYield(Number(yieldMin), yieldMax ? Number(yieldMax) : undefined, yieldUnit!, factor);
+  // Nouns that agree with a scaled number: "2 lemons", "6 lžic" (lib/inline.ts, nounHtml).
+  for (const el of $$('[data-forms]')) {
+    el.textContent = pluralForm(locale, Number(el.dataset.count) * factor, JSON.parse(el.dataset.forms!) as Forms);
+  }
+  const { yieldMin, yieldMax, yieldForms } = article.dataset;
+  const max = yieldMax ? Number(yieldMax) : undefined;
+  const text = formatYield(Number(yieldMin), max, JSON.parse(yieldForms!) as Forms, locale, factor);
   for (const el of $$('[data-yield]')) el.textContent = text;
   scaleOutput.textContent = formatScale(factor);
   scaleButtons[0].disabled = scaleIndex === 0;
@@ -89,7 +98,7 @@ function readSaved(): string[] {
 
 function renderSaved(saved: boolean) {
   saveButton.toggleAttribute('data-saved', saved);
-  saveLabel.textContent = saved ? 'Saved' : 'Save';
+  saveLabel.textContent = saved ? t.saved : t.save;
 }
 
 renderSaved(readSaved().includes(article.dataset.recipe!));
@@ -101,11 +110,11 @@ saveButton.addEventListener('click', () => {
   try {
     localStorage.setItem(SAVED_KEY, JSON.stringify(next));
   } catch {
-    announce('Saving is not available in this browser');
+    announce(t.savingUnavailable);
     return;
   }
   renderSaved(next.includes(id));
-  announce(next.includes(id) ? 'Recipe saved' : 'Removed from saved recipes');
+  announce(next.includes(id) ? t.recipeSaved : t.recipeUnsaved);
 });
 
 /* ── Share ── */
@@ -119,9 +128,9 @@ $('[data-share]')!.addEventListener('click', async () => {
   // No share sheet (most desktops) or it was refused: copy the link instead.
   try {
     await navigator.clipboard.writeText(data.url);
-    announce('Link copied');
+    announce(t.linkCopied);
   } catch {
-    announce('Sharing is not available');
+    announce(t.sharingUnavailable);
   }
 });
 
@@ -255,15 +264,15 @@ function offerUndo(timer: Timer) {
 
   const note = document.createElement('span');
   note.className = 'timer-chip__label';
-  note.textContent = 'Timer dismissed';
+  note.textContent = t.timerDismissed;
   const undo = document.createElement('button');
   undo.type = 'button';
   undo.className = 'btn btn--capsule btn--glass btn--sm';
-  undo.textContent = 'Undo';
-  undo.setAttribute('aria-label', `Undo dismiss timer: ${label}`);
+  undo.textContent = t.undo;
+  undo.setAttribute('aria-label', fill(t.undoDismiss, { label }));
   chip.replaceChildren(note, undo);
   undo.focus();
-  announce(`Timer dismissed: ${label}`);
+  announce(fill(t.timerDismissedNamed, { label }));
 
   const expire = window.setTimeout(() => {
     const hadFocus = chip.contains(document.activeElement);
@@ -281,7 +290,7 @@ function offerUndo(timer: Timer) {
     persistTimers();
     updateTabTitle();
     restored.pauseButton.focus();
-    announce(`Timer restored: ${label}`);
+    announce(fill(t.timerRestored, { label }));
   });
 }
 
@@ -301,14 +310,14 @@ function togglePause(timer: Timer) {
     timer.end = Date.now() + timer.pausedRemaining;
     timer.pausedRemaining = null;
     timer.pauseButton.innerHTML = PAUSE_ICON;
-    timer.pauseButton.setAttribute('aria-label', `Pause timer: ${timer.label}`);
-    announce(`Timer resumed: ${timer.label}`);
+    timer.pauseButton.setAttribute('aria-label', fill(t.pauseTimer, { label: timer.label }));
+    announce(fill(t.timerResumed, { label: timer.label }));
     ticking ||= window.setInterval(tick, 250);
   } else {
     timer.pausedRemaining = Math.max(0, timer.end - Date.now());
     timer.pauseButton.innerHTML = PLAY_ICON;
-    timer.pauseButton.setAttribute('aria-label', `Resume timer: ${timer.label}`);
-    announce(`Timer paused: ${timer.label}`);
+    timer.pauseButton.setAttribute('aria-label', fill(t.resumeTimer, { label: timer.label }));
+    announce(fill(t.timerPaused, { label: timer.label }));
   }
   updateClock(timer);
   reorderTray();
@@ -324,15 +333,15 @@ function finishTimer(timer: Timer, overdue: boolean) {
   if (overdue) {
     // Restored after the device was asleep or the tab was closed: state only, no replayed alarm.
     const minutesAgo = Math.round((Date.now() - timer.end) / 60000);
-    timer.clock.textContent = minutesAgo > 0 ? `Done ${minutesAgo}m ago` : 'Done';
+    timer.clock.textContent = minutesAgo > 0 ? fill(t.doneAgo, { n: minutesAgo }) : t.done;
   } else {
-    timer.clock.textContent = 'Done';
-    announce(`Timer finished: ${timer.label}`);
+    timer.clock.textContent = t.done;
+    announce(fill(t.timerFinished, { label: timer.label }));
     beep();
     timer.alarm = window.setInterval(beep, ALARM_REPEAT_MS);
     // While it rings, the pause slot becomes Stop: a keyboard way to silence it (tapping the chip also works).
     timer.pauseButton.innerHTML = SILENCE_ICON;
-    timer.pauseButton.setAttribute('aria-label', `Silence timer: ${timer.label}`);
+    timer.pauseButton.setAttribute('aria-label', fill(t.silenceTimer, { label: timer.label }));
     timer.pauseButton.hidden = false;
   }
   reorderTray();
@@ -371,7 +380,7 @@ function buildTimer(name: string, label: string, end: number, pausedRemaining: n
   pauseButton.type = 'button';
   pauseButton.className = 'btn btn--round btn--glass btn--sm timer-chip__control';
   pauseButton.innerHTML = pausedRemaining !== null ? PLAY_ICON : PAUSE_ICON;
-  pauseButton.setAttribute('aria-label', `${pausedRemaining !== null ? 'Resume' : 'Pause'} timer: ${label}`);
+  pauseButton.setAttribute('aria-label', fill(pausedRemaining !== null ? t.resumeTimer : t.pauseTimer, { label }));
 
   const body = document.createElement('div');
   body.className = 'timer-chip__body';
@@ -384,7 +393,7 @@ function buildTimer(name: string, label: string, end: number, pausedRemaining: n
   const dismiss = document.createElement('button');
   dismiss.type = 'button';
   dismiss.className = 'btn btn--round btn--glass btn--sm timer-chip__control';
-  dismiss.setAttribute('aria-label', `Dismiss timer: ${label}`);
+  dismiss.setAttribute('aria-label', fill(t.dismissTimer, { label }));
   dismiss.innerHTML = DISMISS_ICON;
 
   chip.append(pauseButton, body, dismiss);
@@ -408,7 +417,7 @@ function buildTimer(name: string, label: string, end: number, pausedRemaining: n
 function startTimer(seconds: number, name: string, label: string) {
   buildTimer(name, label, Date.now() + seconds * 1000, null, false);
   ticking ||= window.setInterval(tick, 250);
-  announce(`Timer started: ${label}`);
+  announce(fill(t.timerStarted, { label }));
   persistTimers();
   updateTabTitle();
 }

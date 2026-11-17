@@ -636,6 +636,15 @@ a {
   text-underline-offset: 0.15em;
 }
 
+/* The other language: a plain link beside the appearance switch, with a full-height hit area. */
+.footer__language {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  margin-inline-start: auto;
+  color: inherit;
+}
+
 /* Appearance switch: a .segmented control (Buttons, above); the fieldset needs its default min-width reset. */
 .segmented.theme {
   min-width: 0;

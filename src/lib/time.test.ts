@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { directionTimes } from './inline';
-import { describeTime, heroTime as heroTimeRaw, listJoin, readyMinutes, type Segment } from './time';
+import { describeTime as describeTimeIn, heroTime as heroTimeIn, listJoin as listJoinIn, readyMinutes, type Segment } from './time';
+
+const describeTime = (...args: [number, ReturnType<typeof directionTimes>]) => describeTimeIn(...args, 'en');
+const heroTimeRaw = (...args: [number, ReturnType<typeof directionTimes>]) => heroTimeIn(...args, 'en');
+const listJoin = (words: string[]) => listJoinIn(words, 'en');
 
 const times = (...paragraphs: string[]) => directionTimes([{ steps: paragraphs }]);
 const sentence = (total: number, ...paragraphs: string[]) => describeTime(total, times(...paragraphs));
@@ -100,5 +104,28 @@ describe('readyMinutes', () => {
   it('is the cooking time plus every wait', () => {
     expect(readyMinutes(30, times('Chill {chill:8h}.'))).toBe(510);
     expect(readyMinutes(270, times('Simmer {simmer:2h}.'))).toBe(270);
+  });
+});
+
+describe('Czech', () => {
+  const text = (segments: Segment[]) => segments.map((s) => s.text).join('').replace(/\u00a0/g, ' ');
+  const times = (...paragraphs: string[]) => directionTimes([{ steps: paragraphs }]);
+
+  it('names the activities in the genitive after the number, each word once', () => {
+    expect(text(describeTimeIn(270, times('{simmer:2h}', '{bake:50m}', '{roast:15m}'), 'cs'))).toBe(
+      '4 h 30 min celkem: 1 h 25 min práce a 3 h 5 min dušení a pečení.',
+    );
+    expect(text(describeTimeIn(25, times('{timer:5m}'), 'cs'))).toBe('25 min od začátku do konce.');
+  });
+
+  it('adds the waits after "k tomu", the fridge with "nejméně"', () => {
+    expect(text(describeTimeIn(45, times('{cool:15m}', '{chill:4h}'), 'cs'))).toBe(
+      '45 min přípravy: 30 min práce a 15 min chladnutí, k tomu nejméně 4 h v lednici.',
+    );
+    expect(text(describeTimeIn(50, times('{rest:1h}'), 'cs'))).toBe('50 min práce, k tomu 1 h odležení.');
+  });
+
+  it('shows the wait in the hero', () => {
+    expect(heroTimeIn(40, times('{rise:2h}', '{chill:6h}'), 'cs').wait?.replace(/\u00a0/g, ' ')).toBe('8 h kynutí a chlazení');
   });
 });

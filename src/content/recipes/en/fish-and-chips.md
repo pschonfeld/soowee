@@ -3,7 +3,7 @@ title: Fish & Chips
 description: A classic British dish featuring crispy beer-battered cod, oven chips and creamy pea purée.
 cuisine: British
 byline: Adapted from Gordon Ramsay
-image: ../../assets/recipes/fish-and-chips.jpg
+image: ../../../assets/recipes/fish-and-chips.jpg
 imageAlt: Golden battered fish on a bed of chips with a lemon wedge
 imageCredit:
   author: Matthias Meckel
@@ -15,7 +15,6 @@ source:
   url: https://www.gordonramsayrestaurants.com/recipes/classic-beer-battered-fish-and-mushy-peas/
 yield:
   min: 4
-  unit: servings
 time:
   total: 45
 ingredients:
@@ -34,7 +33,7 @@ ingredients:
       - { qty: 2.5, unit: L, name: sunflower or rapeseed oil, note: "at least 5 cm deep in the pot" }
   - group: For the fish
     items:
-      - { qty: 4, name: cod fillets, note: "skinless, boneless, about 175 g each and 2.5 cm thick; haddock also works" }
+      - { qty: 4, name: cod fillet, plural: { other: cod fillets }, note: "skinless, boneless, about 175 g each and 2.5 cm thick; haddock also works" }
       - { qty: 3, unit: g, name: fine sea salt, note: "to season the fish" }
       - { qty: 120, unit: g, name: all-purpose flour, note: "for the batter" }
       - { qty: 100, unit: g, name: rice flour }
@@ -47,16 +46,16 @@ ingredients:
   - group: To serve
     items:
       - { qty: 6, unit: g, name: flaky sea salt, note: "4 g for the chips, 2 g for the fish" }
-      - { qty: 1, name: lemon, note: "cut into wedges" }
+      - { qty: 1, name: lemon, plural: { other: lemons }, note: "cut into wedges" }
       - { qty: 4, unit: tbsp, name: malt vinegar }
 equipment:
-  - Heavy-bottomed pot, 5 L
-  - Frying thermometer, one that clips to the pot
-  - Instant-read thermometer, for the fish
+  - { name: Heavy-bottomed pot, note: "5 L" }
+  - { name: Frying thermometer, note: one that clips to the pot }
+  - { name: Instant-read thermometer, note: for the fish }
   - Long tongs
   - Spider or slotted spoon
-  - Two baking trays, for the chips
-  - Wire rack with a tray, for the fish
+  - { name: Two baking trays, note: for the chips }
+  - { name: Wire rack with a tray, note: for the fish }
   - Large mixing bowl
   - Whisk
   - Blender or food processor
@@ -114,7 +113,7 @@ directions:
 
 ## Allergens
 
-- **Gluten:** This recipe contains all-purpose flour and beer, which contain gluten. If needed, substitute gluten-free flour and gluten-free beer.
+- **Gluten:** This recipe contains all-purpose flour, beer and malt vinegar (made from barley), which contain gluten. If needed, substitute gluten-free flour and gluten-free beer, and serve the fish with lemon or cider vinegar instead of malt vinegar.
 - **Dairy:** The pea purée contains butter, which is unsuitable for those with dairy allergies or lactose intolerance. Replace with plant-based butter for a dairy-free option.
 - **Alcohol:** The batter contains beer, which may not be suitable for individuals avoiding alcohol. If necessary, opt for a non-alcoholic beer.
 - **Fish:** This recipe contains cod, which is a common allergen for those with fish allergies. Ensure no cross-contamination occurs during preparation.
