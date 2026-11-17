@@ -73,11 +73,10 @@ export function formatScale(factor: number): string {
   return `${formatQty(factor, undefined, 'en')}×`;
 }
 
-/** "4 servings", "12–14 palačinek": the noun agrees with the larger number. */
-export function formatYield(min: number, max: number | undefined, unit: Forms, locale: Locale, factor = 1): string {
-  const n = (v: number) => formatQty(v * factor, undefined, locale);
-  const noun = pluralForm(locale, (max ?? min) * factor, unit);
-  return `${max ? `${n(min)}–${n(max)}` : n(min)}\u00a0${noun}`; // no-break: "4 servings" stays together
+/** A single serving or piece count, with its noun agreeing with the scaled number. */
+export function formatYield(qty: number, unit: Forms, locale: Locale, factor = 1): string {
+  const count = qty * factor;
+  return `${formatQty(count, undefined, locale)}\u00a0${pluralForm(locale, count, unit)}`;
 }
 
 const DURATION_UNITS: Record<Locale, { day: Forms; hr: string; min: string }> = {
@@ -106,13 +105,4 @@ export function isoDuration(total: number): string {
   const h = Math.floor(total / 60);
   const m = total % 60;
   return `PT${h ? `${h}H` : ''}${m ? `${m}M` : ''}`;
-}
-
-/** 605 → "10:05", 3725 → "1:02:05" */
-export function formatClock(seconds: number): string {
-  const s = Math.max(0, Math.ceil(seconds));
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${pad(m)}:${pad(s % 60)}`;
 }

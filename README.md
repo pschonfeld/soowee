@@ -25,6 +25,6 @@ First run needs the browsers: `pnpm exec playwright install chromium webkit`.
 
 - `src/components/Recipe.astro` – the page template (hero, ingredients, directions, cook mode)
 - `src/styles/global.css` – design tokens and all styles
-- `src/scripts/recipe.ts` – the only client JavaScript: scaling, save, share, timers, cook mode
+- `src/scripts/recipe.ts` – the only client JavaScript: scaling, share, cook mode
 - `src/lib/` – quantity/time formatting, inline step markup, photo-derived tint
 - `docs/recipe-model.md` – the recipe data model, kept in step with the schema by `src/lib/docs.test.ts`

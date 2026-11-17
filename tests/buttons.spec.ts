@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 /*
  * The button system (Buttons in src/styles/global.css), checked on every control the pages can show:
  * - every <button> and every link styled as one (a.btn) is a .btn with one shape and one surface, or a
- *   .segmented__item; the only exception is .timer, the inline timer in step text;
+ *   .segmented__item;
  * - every visible control's hit area, including the ::after that grows small ones, is at least 44 × 44;
  * - and it is really this control that a tap there reaches: no neighbour's hit area or overlay covers it.
  *   Controls under an inert ancestor (the page behind cook mode) are left out of that last check.
@@ -18,7 +18,6 @@ type Control = { name: string; classes: string[]; visible: boolean; hitW: number
 const controls = (page: Page): Promise<Control[]> =>
   page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('button, a.btn, .segmented__item')]
-      .filter((el) => !el.matches('.timer'))
       .map((el) => {
         const visible = el.checkVisibility({ visibilityProperty: true });
         if (visible && !el.closest('[inert]')) el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
@@ -81,19 +80,8 @@ test('home: every control follows the button system', async ({ page }) => {
   check(searching);
 });
 
-test('recipe page, cook mode and timers: every control follows the button system', async ({ page }) => {
+test('recipe page and cook mode: every control follows the button system', async ({ page }) => {
   await page.goto('/en/lasagna/');
-  check(await controls(page));
-
-  // Timer chip: pause and dismiss, then the Undo state.
-  await page.getByRole('button', { name: 'Start timer: 1 hour' }).first().click();
-  await page.getByRole('button', { name: 'Start timer: 12–15 minutes' }).first().click();
-  check(await controls(page));
-  // Once the toast clears, the chips move up to the top of the screen.
-  await expect(page.locator('[data-toast]')).toHaveText('', { timeout: 5000 });
-  check(await controls(page));
-  await page.getByRole('button', { name: 'Dismiss timer: Simmer the ragù, 1 hour' }).click();
-  await expect(page.getByRole('button', { name: /^Undo/ })).toBeVisible();
   check(await controls(page));
 
   await page.getByRole('button', { name: 'Cook', exact: true }).click();

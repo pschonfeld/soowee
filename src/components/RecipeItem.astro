@@ -6,7 +6,7 @@ import { localePath } from '../lib/url';
  * The whole item is one link. Time is heroTime(), so it reads exactly as in the recipe's hero.
  */
 import { Picture } from 'astro:assets';
-import { localeOf, strings } from '../lib/i18n';
+import { localeOf } from '../lib/i18n';
 import type { RecipeEntry } from '../lib/recipes';
 import { directionTimes } from '../lib/inline';
 import { haystack } from '../lib/search';
@@ -59,10 +59,6 @@ const search = haystack([
       <span class="item__meta">
         <span>{time.cook}</span>
         {time.wait && <span class="item__wait">+ {time.wait}</span>}
-        <span class="item__saved" data-saved hidden>
-          <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M5 2.8h8a.8.8 0 0 1 .8.8v11.6L9 12.2l-4.8 3V3.6a.8.8 0 0 1 .8-.8Z" /></svg>
-          <span class="sr-only">{strings(locale).saved}</span>
-        </span>
       </span>
       <span class="item__lede">{r.description}</span>
     </div>

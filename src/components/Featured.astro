@@ -32,7 +32,7 @@ const style = [
   .filter(Boolean)
   .join(';');
 const time = heroTime(r.time.total, directionTimes(r.directions), locale);
-const yieldUnit = r.yield.unit ? { one: r.yield.unit, ...r.yield.plural } : t.servings;
+const yieldUnit = t.servings;
 ---
 
 <a class="feature" href={localePath(locale, `/${entry.id}/`)} style={style}>
@@ -64,7 +64,7 @@ const yieldUnit = r.yield.unit ? { one: r.yield.unit, ...r.yield.plural } : t.se
       </div>
       <div>
         <dt class="sr-only">{t.yield}</dt>
-        <dd>{formatYield(r.yield.min, r.yield.max, yieldUnit, locale)}</dd>
+        <dd>{formatYield(r.yield.servings, yieldUnit, locale)}</dd>
       </div>
     </dl>
     <p class="feature__lede">{r.description}</p>

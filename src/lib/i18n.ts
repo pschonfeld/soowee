@@ -51,8 +51,6 @@ const en = {
   noMatchAfter: '”.',
   clearSearch: 'Clear search',
   recipeCount: { one: 'recipe', other: 'recipes' } as Forms,
-  saved: 'Saved',
-  save: 'Save',
   time: 'Time',
   yield: 'Yield',
   yields: 'Yields',
@@ -69,42 +67,21 @@ const en = {
   photo: 'Photo:',
   closeCook: 'Close cook mode',
   cookView: 'Cook mode view',
-  timers: 'Timers',
   /** "2 of 5": the section counter in cook mode. */
   of: 'of',
   about: 'about',
-  /** Before the timer's duration ("Start timer: 5 minutes"; Czech "Spustit minutku na 5 minut"). */
-  startTimer: 'Start timer:',
   /** The default yield unit, when a recipe gives none. */
   servings: { one: 'serving', other: 'servings' } as Forms,
-  /** Strings the recipe page's script needs; `{label}` and `{n}` are filled in by recipe.ts. */
+  /** Strings the recipe page's script needs. */
   client: {
-    savingUnavailable: 'Saving is not available in this browser',
-    recipeSaved: 'Recipe saved',
-    recipeUnsaved: 'Removed from saved recipes',
     linkCopied: 'Link copied',
     sharingUnavailable: 'Sharing is not available',
-    timerDismissed: 'Timer dismissed',
-    undo: 'Undo',
-    undoDismiss: 'Undo dismiss timer: {label}',
-    timerDismissedNamed: 'Timer dismissed: {label}',
-    timerRestored: 'Timer restored: {label}',
-    pauseTimer: 'Pause timer: {label}',
-    resumeTimer: 'Resume timer: {label}',
-    timerPaused: 'Timer paused: {label}',
-    timerResumed: 'Timer resumed: {label}',
-    silenceTimer: 'Silence timer: {label}',
-    dismissTimer: 'Dismiss timer: {label}',
-    timerStarted: 'Timer started: {label}',
-    timerFinished: 'Timer finished: {label}',
-    done: 'Done',
-    doneAgo: 'Done {n}m ago',
   },
 };
 
 export type Strings = typeof en;
-/** What recipe.ts gets from the page: the client strings plus the Save button's two labels. */
-export type ClientStrings = Strings['client'] & Pick<Strings, 'save' | 'saved'>;
+/** Client strings read by recipe.ts from the page. */
+export type ClientStrings = Strings['client'];
 
 const cs: Strings = {
   siteDescription: 'Osobní kuchařka pro rodinu a přátele.',
@@ -123,8 +100,6 @@ const cs: Strings = {
   noMatchAfter: '“ neodpovídá žádný recept.',
   clearSearch: 'Zrušit hledání',
   recipeCount: { one: 'recept', few: 'recepty', many: 'receptu', other: 'receptů' },
-  saved: 'Uloženo',
-  save: 'Uložit',
   time: 'Čas',
   yield: 'Vydá na',
   yields: 'Vydá na',
@@ -141,32 +116,12 @@ const cs: Strings = {
   photo: 'Foto:',
   closeCook: 'Zavřít režim vaření',
   cookView: 'Zobrazení režimu vaření',
-  timers: 'Minutky',
   of: 'z',
   about: 'cca',
-  startTimer: 'Spustit minutku na',
   servings: { one: 'porci', few: 'porce', many: 'porce', other: 'porcí' },
   client: {
-    savingUnavailable: 'V tomto prohlížeči nejde ukládat',
-    recipeSaved: 'Recept uložen',
-    recipeUnsaved: 'Odebráno z uložených',
     linkCopied: 'Odkaz zkopírován',
     sharingUnavailable: 'Sdílení není k dispozici',
-    timerDismissed: 'Minutka zrušena',
-    undo: 'Vrátit',
-    undoDismiss: 'Vrátit minutku: {label}',
-    timerDismissedNamed: 'Minutka zrušena: {label}',
-    timerRestored: 'Minutka obnovena: {label}',
-    pauseTimer: 'Pozastavit minutku: {label}',
-    resumeTimer: 'Pokračovat: {label}',
-    timerPaused: 'Minutka pozastavena: {label}',
-    timerResumed: 'Minutka běží dál: {label}',
-    silenceTimer: 'Ztlumit minutku: {label}',
-    dismissTimer: 'Zrušit minutku: {label}',
-    timerStarted: 'Minutka spuštěna: {label}',
-    timerFinished: 'Minutka doběhla: {label}',
-    done: 'Hotovo',
-    doneAgo: 'Hotovo před {n} min',
   },
 };
 
@@ -179,7 +134,3 @@ export const otherLocale = (locale: Locale): Locale => (locale === 'cs' ? 'en' :
 
 /** "/" for Czech, "/en" for English: the prefix of every path in that language (before sitePath adds the base). */
 export const localePrefix = (locale: Locale): '' | `/${Locale}` => (locale === DEFAULT_LOCALE ? '' : `/${locale}`);
-
-/** "{label} done" → "Pasta done". */
-export const fill = (template: string, values: Record<string, string | number>) =>
-  template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? `{${key}}`));

@@ -14,8 +14,8 @@ Status: **implemented, then revised.** Reached through two drafts, an independen
 - **Clear button:** the browser's own clear control is hidden and replaced by an iOS-style one (filled grey circle, thin cross) on a 44px target. It shows only while there's text.
 - **Top spacing on phones:** logo, 16px, capsule, 20px, featured card.
 - **Featured card uses the recipe hero's background extension:** the photo continues as a mirrored, blurred copy of itself under the text (`backdropFor()`), darkened by the per-photo scrim that keeps every text style at WCAG AA. Same look as the hero, instead of a flat tint.
-- **Back button is real glass:** the same blur, light rim and shadow as Cook / Save / Share, tinted `rgb(0 0 0 / 0.34)` so the icon keeps about 3.6:1 on the palest photo.
-- **One glass language:** `--glass-edge` / `--glass-shadow` (recipe hero buttons, back button, cook mode) and the home search capsule share the same three layers: light top rim, 0.5px inner hairline, soft lift. Cook / Save / Share are capsules, like the search.
+- **Back button is real glass:** the same blur, light rim and shadow as Cook / Share, tinted `rgb(0 0 0 / 0.34)` so the icon keeps about 3.6:1 on the palest photo.
+- **One glass language:** `--glass-edge` / `--glass-shadow` (recipe hero buttons, back button, cook mode) and the home search capsule share the same three layers: light top rim, 0.5px inner hairline, soft lift. Cook / Share are capsules, like the search.
 - **Featured card fade:** the photo melts into its blurred mirror with the recipe hero's eased curve over a long run (phones: from 40% of the photo to 1rem above its edge; wide screens: over the first 40% of the photo box), instead of a short linear fade.
 - **Testing note:** headless Playwright screenshots never draw backdrop blur (measured in both WebKit and Chromium), so glass looks see-through in `screenshots/`. Real devices blur.
 - New tokens in `global.css`: `--image-edge` and `--bar-fill`, each with light and dark values.
@@ -161,10 +161,6 @@ The button is a plain `<a href="/" aria-label="All recipes">`, with no `history.
 - **Without scripting:** `@media (scripting: none)` hides the search field, with no layout shift.
 - **Restored pages:** on load and on `pageshow`, the script re-applies whatever is already in the field (form restore after going back, and bfcache).
 
-**Saved badge.**
-- On load and on `pageshow`, the script reads `localStorage['soowee:saved']` (written by the existing Save button).
-- It shows a small bookmark icon after the meta line, with the visually hidden text "Saved". It's inline, so there's no layout shift.
-
 **Credits.** None on the home page (Revision 2). Each recipe page's footer credits its photo, and every row links there.
 
 **Head.**
@@ -190,7 +186,7 @@ The button is a plain `<a href="/" aria-label="All recipes">`, with no `history.
 | `src/components/Featured.astro` | NEW. Uses `tintFor`, `heroTime`, `directionTimes` and `formatYield`. |
 | `src/components/RecipeItem.astro` | NEW. One `<a>` containing the photo (`alt=""`, since the title is next to it) and a text block: cuisine, title, meta (time and wait from `heroTime`, badge slot) and description. CSS switches it between list row and grid tile. |
 | `src/pages/index.astro` | Replaces the redirect. |
-| `src/scripts/home.ts` | NEW, about 1 kB: search and Saved badge |
+| `src/scripts/home.ts` | NEW, about 1 kB: search |
 | `src/scripts/theme.ts` | NEW: the footer theme switch, moved unchanged from `recipe.ts`. `recipe.ts` assumes an `article`, so it can't run on the home page. |
 | `src/lib/search.ts` + `search.test.ts` | NEW: `normalize()`, `words()`, `matches()`, shared by the build and the browser |
 | `src/styles/global.css` | Keeps tokens, base styles, glass, `.round` and the footer |
@@ -240,7 +236,6 @@ No schema change and no recipe edits.
   - Search filters correctly, ignores accents and handles several words.
   - The no-results message and Clear search work; Escape clears.
   - The filter is re-applied after going back.
-  - The badge appears after saving on a recipe page.
   - Phones show a list (photo beside the text) and iPad/desktop show a grid.
   - No horizontal overflow.
   - axe passes in light and dark.
@@ -263,7 +258,7 @@ No schema change and no recipe edits.
 ## 11. Decisions taken
 
 1. AGENTS.md decision 4 changes to allow `home.ts` and `theme.ts`, and the "no search" rule is lifted. Approved by the owner.
-2. A Saved badge in v1. Approved.
+2. The Save button and Saved badge were removed at the owner’s request.
 3. The featured card uses text on a solid tint, matching the recipe hero. Approved.
 4. A one-column list on phones and a grid on iPad and desktop. Owner's decision after the mockup.
 5. Photo as tall as the text beside it, with the description in the right column and nothing under the photo. Owner's decision.

@@ -55,24 +55,24 @@ describe('renderInline', () => {
     expect(renderInline('{25 g}')).toBe('<span data-qty="25" data-unit="g">25</span>\u00a0g');
     expect(renderInline('{2}')).toBe('<span data-qty="2">2</span>');
     const timer = renderInline('{timer:5-10m}');
-    expect(timer).toContain('data-timer="300"');
-    expect(timer).toContain('aria-label="Start timer: 5–10 minutes"');
+    expect(timer).toContain('class="duration"');
+    expect(timer).toContain('5–10 minutes');
   });
 
   it('renders ingredient mentions with and without an amount', () => {
-    expect(renderInline('{750 g mascarpone}')).toBe('<span data-qty="750" data-unit="g">750</span>\u00a0g <strong>mascarpone</strong>');
-    expect(renderInline('{6 eggs}')).toBe('<span data-qty="6">6</span> <strong>eggs</strong>');
+    expect(renderInline('{750 g mascarpone}')).toBe('<strong><span data-qty="750" data-unit="g">750</span>\u00a0g mascarpone</strong>');
+    expect(renderInline('{6 eggs}')).toBe('<strong><span data-qty="6">6</span> eggs</strong>');
     expect(renderInline('{cocoa powder}')).toBe('<strong>cocoa powder</strong>');
   });
 
   it('keeps punctuation after a timer on the same line as the timer', () => {
     const html = renderInline('Fry for {timer:5m}, then drain.');
-    expect(html).toMatch(/^Fry for <span class="timer-wrap"><button [^]*<\/button>,<\/span> then drain\.$/);
-    expect(renderInline('Fry for {timer:5m} more.')).not.toContain('timer-wrap');
+    expect(html).toMatch(/^Fry for <span class="duration-wrap"><span class="duration">[^]*<\/span>,<\/span> then drain\.$/);
+    expect(renderInline('Fry for {timer:5m} more.')).not.toContain('duration-wrap');
     // Two timers, punctuation after the second only: each timer is wrapped on its own, never the text between them.
     const two = renderInline('Fry {timer:5m} then rest {timer:3m}.');
-    expect(two.match(/timer-wrap/g)).toHaveLength(1);
-    expect(two).toMatch(/then rest <span class="timer-wrap"><button [^<]*data-timer="180"/);
+    expect(two.match(/duration-wrap/g)).toHaveLength(1);
+    expect(two).toMatch(/then rest <span class="duration-wrap"><span class="duration">/);
   });
 
   it('fails loudly on a unit stuck to the number that is not a unit', () => {
@@ -97,9 +97,9 @@ describe('plainText', () => {
 });
 
 describe('hands-off time', () => {
-  it('renders every hands-off verb as a timer', () => {
+  it('renders every hands-off verb as a highlighted duration', () => {
     for (const token of Object.keys(HANDS_OFF)) {
-      expect(renderInline(`{${token}:10m}`)).toContain('data-timer="600"');
+      expect(renderInline(`{${token}:10m}`)).toContain('class="duration"');
     }
   });
 
@@ -118,9 +118,9 @@ describe('hands-off time', () => {
 });
 
 describe('waits', () => {
-  it('ring as timers outside the fridge and freezer', () => {
+  it('are highlighted outside the fridge and freezer', () => {
     for (const token of ['rest', 'rise', 'marinate']) {
-      expect(renderInline(`{${token}:10m}`)).toContain('data-timer="600"');
+      expect(renderInline(`{${token}:10m}`)).toContain('class="duration"');
     }
   });
 
@@ -148,10 +148,9 @@ describe('keepAmountsWhole', () => {
     expect(keepAmountsWhole('Heat to 190 °C, then 2-3 minutes and 60–63 °C.')).toBe(
       'Heat to 190\u00a0°C, then 2\u2060-\u20603\u00a0minutes and 60\u2060–\u206063\u00a0°C.',
     );
-    // Attributes stay as written (they are read out, not laid out), and so does a button's label: the timer pill
-    // is read back by recipe.ts for its name and announcements.
-    expect(keepAmountsWhole('<button aria-label="Start timer: 2 minutes"><span>12\u201315 minutes</span></button>, then 2 g')).toBe(
-      '<button aria-label="Start timer: 2 minutes"><span>12\u201315 minutes</span></button>, then 2\u00a0g',
+    // Duration labels stay as generated; surrounding amounts still get nonbreaking spaces.
+    expect(keepAmountsWhole('<span class="duration"><span>12\u201315 minutes</span></span>, then 2 g')).toBe(
+      '<span class="duration"><span>12\u201315 minutes</span></span>, then 2\u00a0g',
     );
     expect(renderInline('Simmer for {simmer:12-15m}, stirring.')).toContain('<span>12\u201315 minutes</span>');
   });
@@ -216,7 +215,7 @@ describe('Czech', () => {
     expect(parseTimerIn('1h30m', 'timer', 'cs').label).toBe('1 hodinu 30 minut');
     expect(parseTimerIn('5-10m', 'timer', 'cs').label).toBe('5–10 minut');
     expect(parseTimerIn('1-2m', 'timer', 'cs').label).toBe('1–2 minuty');
-    expect(cs('{timer:5m}')).toContain('aria-label="Spustit minutku na 5 minut"');
+    expect(cs('{timer:5m}')).toContain('5 minut');
   });
 
   it('spells the spoons out and lets them follow the scale', () => {
@@ -230,7 +229,7 @@ describe('Czech', () => {
   it('keeps the written form of a counted ingredient at its own number and uses its forms at the others', () => {
     const forms = { one: 'cibule', few: 'cibule', many: 'cibule', other: 'cibulí' };
     const html = renderInlineIn('Nakrájejte {1 cibuli}.', { locale: 'cs', forms: () => forms });
-    expect(html).toContain('>cibuli</strong>');
+    expect(html).toContain('>cibuli</span></strong>');
     expect(html).toContain('&quot;one&quot;:&quot;cibuli&quot;');
     expect(html).toContain('&quot;other&quot;:&quot;cibulí&quot;');
   });

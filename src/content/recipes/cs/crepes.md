@@ -10,10 +10,11 @@ imageCredit:
   license: Unsplash License
   url: https://unsplash.com/photos/a-plate-of-food-0MuOPAOFjrc
 yield:
-  min: 12
-  max: 14
-  unit: palačinka
-  plural: { few: palačinky, many: palačinky, other: palačinek }
+  servings: 4
+  pieces:
+    qty: 12
+    unit: palačinka
+    plural: { few: palačinky, many: palačinky, other: palačinek }
 time:
   total: 50
 ingredients:

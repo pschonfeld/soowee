@@ -4,11 +4,11 @@
  * they name an ingredient of the recipe.
  */
 import { UNITS, formatQty, formatUnit, unitForms } from './format';
-import { pluralForm, strings, type Forms, type Locale } from './i18n';
+import { pluralForm, type Forms, type Locale } from './i18n';
 
 /**
  * Hands-off time while cooking: the dish works on its own, but the cook is still in the process and nearby.
- * Rendered as a timer like {timer:…}, counted in time.total (the cooking time), subtracted from it to get the
+ * Rendered as a highlighted duration like {timer:…}, counted in time.total (the cooking time), subtracted from it to get the
  * work time, and named in the time summary ("3 hr 5 min of simmering, baking and cooling"). The value is the
  * word used in that sentence, per language. Add a verb here when a recipe needs one; an unknown token fails the
  * build.
@@ -38,7 +38,7 @@ export const WAITS = {
 } as const satisfies Record<string, Record<Locale, string>>;
 
 /**
- * Waits in the fridge or freezer: plain text (not a timer, since longer is fine), named by the place in the time
+ * Waits in the fridge or freezer: plain text (without highlighting, since longer is fine), named by the place in the time
  * summary ("at least 8 hr in the fridge") and listed after the other waits, the fridge first.
  */
 export const PLACES = {
@@ -59,7 +59,7 @@ export const DURATION_TOKENS = ['timer', ...Object.keys(HANDS_OFF), ...Object.ke
 // The value may be empty, so `{bake:}` reaches parseTimer and fails instead of being printed raw.
 const alternation = (tokens: readonly string[]) => new RegExp(`\\{(${tokens.join('|')}):([^}]*)\\}`, 'g');
 const TIMED_WAITS = Object.keys(WAITS).filter((token) => !(token in PLACES));
-/** {timer:…} needs attention when it rings; the hands-off verbs and the waits outside the fridge ring too. */
+/** Highlight active durations, hands-off verbs and waits outside the fridge. */
 const TIMER = alternation(['timer', ...Object.keys(HANDS_OFF), ...TIMED_WAITS]);
 /** A timer token plus the punctuation that directly follows it, matched per timer (never across two). */
 const TIMER_WITH_PUNCTUATION = new RegExp(`${TIMER.source}([,.;:!?)…]*)`, TIMER.flags);
@@ -163,8 +163,9 @@ function renderQuantity({ qty, unit, name, text }: Quantity, html: boolean, ctx:
     // as written win at their own number, so a Czech case ("{1 cibuli}") is kept wherever it applies.
     const forms = qty !== undefined && !unit ? ctx.forms?.(name) : undefined;
     const written = forms && { ...forms, [categoryOf(qty!, locale)]: text };
-    const noun = html ? (written ? nounHtml(written, qty!, locale, 'strong') : `<strong>${escapeHtml(text)}</strong>`) : text;
+    const noun = html ? (written ? nounHtml(written, qty!, locale) : escapeHtml(text)) : text;
     value += (value ? ' ' : '') + noun;
+    if (html) value = `<strong>${value}</strong>`;
   }
   return value;
 }
@@ -174,8 +175,6 @@ function categoryOf(n: number, locale: Locale): keyof Forms {
   return pluralForm(locale, n, { one: 'one', few: 'few', many: 'many', other: 'other' }) as keyof Forms;
 }
 
-const TIMER_ICON =
-  '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="9" r="5.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 6.2V9l1.8 1.2M6.4 1.8h3.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function unescapeHtml(text: string): string {
   return text.replace(/&(amp|lt|gt|quot);/g, (_, name: string) => ({ amp: '&', lt: '<', gt: '>', quot: '"' })[name]!);
@@ -206,7 +205,7 @@ const words = (n: number, unit: Unit, locale: Locale) => `${n} ${pluralForm(loca
 /**
  * "20m" → 20 minutes · "1h30m" → 1 hour 30 minutes · "5-10m" → 5–10 minutes.
  * The label is always generated, so every recipe words durations the same way.
- * A range rings at its lower bound: that is when the cook should start checking.
+ * A range uses its lower bound for derived totals and keeps both bounds in its label.
  */
 export function parseTimer(value: string, token: string, locale: Locale): { seconds: number; label: string } {
   const range = /^(\d+)-(\d+)([hms])$/.exec(value.trim());
@@ -266,20 +265,19 @@ const NUMBER_RANGE = /(\d)([–-])(?=\d)/g;
 /**
  * Keeps amounts whole in running text: a no-break space before the unit, word joiners around a range's dash.
  * Works on HTML, touching text only (never tags or attributes), so it runs last over rendered markup.
- * Text inside a <button> (the timer pill) is left exactly as generated: recipe.ts reads that label back for the
- * timer's name and announcements, and the pill already moves as one box.
+ * Duration labels are left as generated: their wrapper keeps each label together.
  */
 export function keepAmountsWhole(html: string): string {
-  let inButton = 0;
+  let inDuration = 0;
   return html
     .split(/(<[^>]*>)/)
     .map((part, i) => {
       if (i % 2) {
-        if (/^<button\b/i.test(part)) inButton++;
-        else if (/^<\/button>/i.test(part)) inButton--;
+        if (/^<span class="duration"/.test(part) || (inDuration && /^<span\b/.test(part))) inDuration++;
+        else if (inDuration && /^<\/span>/.test(part)) inDuration--;
         return part;
       }
-      return inButton
+      return inDuration
         ? part
         : part.replace(NUMBER_UNIT, '$1\u00a0$2').replace(NUMBER_RANGE, '$1\u2060$2\u2060').replace(/⌀ (?=\d)/g, '⌀\u00a0');
     })
@@ -299,10 +297,10 @@ function renderMarkup(source: string, ctx: RenderContext): string {
     .replace(BOLD, '<strong>$1</strong>')
     .replace(PLACE_PATTERN, (_, token: string, value: string) => parseTimer(value, token, locale).label)
     .replace(TIMER_WITH_PUNCTUATION, (_, token: string, value: string, punctuation: string) => {
-      const { seconds, label } = parseTimer(value, token, locale);
-      const button = `<button type="button" class="timer" data-timer="${seconds}" aria-label="${strings(locale).startTimer} ${label}">${TIMER_ICON}<span>${label}</span></button>`;
-      // Punctuation right after a timer stays on its line (", until soft" never starts a line); see .timer-wrap.
-      return punctuation ? `<span class="timer-wrap">${button}${punctuation}</span>` : button;
+      const { label } = parseTimer(value, token, locale);
+      const highlight = `<span class="duration"><span>${label}</span></span>`;
+      // Punctuation right after a timer stays on its line (", until soft" never starts a line); see .duration-wrap.
+      return punctuation ? `<span class="duration-wrap">${highlight}${punctuation}</span>` : highlight;
     });
 }
 

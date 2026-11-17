@@ -7,8 +7,7 @@ byline: Adapted from Roman Vaněk
 image: ../../../assets/recipes/vinna-klobasa.webp
 imageAlt: Golden coiled wine sausage on a white plate with slices of bread and mustard, held by a person wearing a black apron
 yield:
-  min: 4
-  max: 6
+  servings: 6
 time:
   total: 135
 ingredients:

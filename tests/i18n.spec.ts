@@ -32,7 +32,7 @@ test('Czech nouns follow the number when the recipe is scaled', async ({ page })
   const step = page.locator('.directions__steps p', { hasText: 'V odměrce' });
   // The number and the name are separate boxes in the list, so their text has no space between them.
   await expect(eggs).toContainText(/^3\s*vejce/);
-  await expect(page.locator('.meta [data-yield]')).toHaveText('12–14 palačinek');
+  await expect(page.locator('.meta [data-yield]')).toHaveText('4 porce');
   await expect(page.getByText('½ lžičky')).toHaveCount(2); // the list and the step
 
   const up = page.getByRole('button', { name: 'Více' });
@@ -42,17 +42,42 @@ test('Czech nouns follow the number when the recipe is scaled', async ({ page })
   await up.click(); // 3×
   await expect(eggs).toContainText(/^9\s*vajec/);
   await expect(step).toContainText('9 vajec');
-  await expect(page.locator('.meta [data-yield]')).toHaveText('36–42 palačinek');
+  await expect(page.locator('.meta [data-yield]')).toHaveText('12 porcí');
   await expect(page.getByText('1½ lžičky').first()).toBeVisible();
 });
 
-test('generated Czech text: time sentence, timers and announcements', async ({ page }) => {
+test('generated Czech text: time sentence and timers', async ({ page }) => {
   await page.goto('/crepes/');
   await expect(page.locator('.section-sub--time')).toHaveText('50 min práce, k tomu 1 h odležení.');
   await expect(page.locator('.meta')).toContainText('+ 1 h odležení');
-  const timer = page.locator('.directions .timer', { hasText: '1 minutu' });
-  await expect(timer).toHaveAttribute('aria-label', 'Spustit minutku na 1 minutu');
-  await page.getByRole('button', { name: 'Uložit' }).click();
-  await expect(page.locator('[data-toast]')).toHaveText('Recept uložen');
-  await expect(page.locator('[data-save-label]')).toHaveText('Uloženo');
+  const timer = page.locator('.directions .duration', { hasText: '1 minutu' });
+  await expect(timer).toHaveText('1 minutu');
+  await expect(timer).not.toHaveAttribute('role', 'button');
 });
+
+for (const locale of ['cs', 'en'] as const) {
+  test(`${locale}: servings and approximate pieces scale together and survive reload`, async ({ page }) => {
+    await page.goto(`${locale === 'cs' ? '' : '/en'}/crepes/`);
+    const servings = page.locator('.ingredients [data-yield]');
+    const pieces = page.locator('.ingredients [data-yield-pieces]');
+    const cookPieces = page.locator('#panel-ingredients [data-yield-pieces]');
+    const count = (n: number) => `${n} ${locale === 'cs' ? 'palačinek' : 'crêpes'}`;
+    await expect(servings).toHaveText(locale === 'cs' ? '4 porce' : '4 servings');
+    await expect(pieces).toHaveText(count(12));
+    await expect(pieces.locator('..')).toContainText(locale === 'cs' ? 'cca' : 'about');
+    await page.locator('[data-scale="1"]').click();
+    await page.locator('[data-scale="1"]').click();
+    await expect(servings).toHaveText(locale === 'cs' ? '8 porcí' : '8 servings');
+    await expect(pieces).toHaveText(count(24));
+    await expect(cookPieces).toHaveText(count(24));
+    await page.reload();
+    await expect(pieces).toHaveText(count(24));
+    await expect(cookPieces).toHaveText(count(24));
+    for (let i = 0; i < 3; i++) await page.locator('[data-scale="-1"]').click();
+    await expect(servings).toHaveText(locale === 'cs' ? '2 porce' : '2 servings');
+    await expect(pieces).toHaveText(count(6));
+    // A larger batch makes more pancakes, not larger pancakes.
+    await expect(page.locator('.directions')).toContainText('65');
+    await expect(page.locator('.equipment')).toContainText('28 cm');
+  });
+}

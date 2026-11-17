@@ -1,4 +1,4 @@
-/* Home page: search, the Saved badge and the logo's eyes. Everything else on the page works without JavaScript. */
+/* Home page: search and the logo's eyes. Everything else on the page works without JavaScript. */
 import { localeOf, pluralForm, type Strings } from '../lib/i18n';
 import { matches } from '../lib/search';
 
@@ -67,29 +67,9 @@ for (const button of [clearButton, document.querySelector<HTMLButtonElement>('[d
   });
 }
 
-/* ── Saved badge: recipes saved on this device (the recipe page's Save button) ── */
-function readSaved(): string[] {
-  try {
-    const saved: unknown = JSON.parse(localStorage.getItem('soowee:saved') ?? '[]');
-    return Array.isArray(saved) ? saved.filter((s): s is string => typeof s === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function markSaved() {
-  const saved = new Set(readSaved());
-  for (const { item } of items) item.querySelector<HTMLElement>('[data-saved]')!.hidden = !saved.has(item.dataset.slug!);
-}
-
-// Now, and on every pageshow: it fires after the browser restores a typed query on a normal back navigation,
-// and when the page comes back from the back/forward cache with a stale Saved state.
-function sync() {
-  filter();
-  markSaved();
-}
-sync();
-addEventListener('pageshow', sync);
+// Reapply the query after the browser restores the field on back navigation.
+filter();
+addEventListener('pageshow', filter);
 
 /* ── Logo: the eyes follow the mouse, eased so they trail a little; on hover the onion leans toward it ── */
 const logo = document.querySelector<SVGSVGElement>('.home__logo')!;

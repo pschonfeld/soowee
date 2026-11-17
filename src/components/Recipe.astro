@@ -37,8 +37,11 @@ const pageStyle = [
 
 const SourceTag = r.source?.url ? 'a' : 'div';
 
-const yieldUnit: Forms = r.yield.unit ? { one: r.yield.unit, ...r.yield.plural } : t.servings;
-const yieldText = formatYield(r.yield.min, r.yield.max, yieldUnit, locale);
+const yieldUnit = t.servings;
+const yieldText = formatYield(r.yield.servings, yieldUnit, locale);
+const pieces = r.yield.pieces;
+const pieceForms: Forms | undefined = pieces && { one: pieces.unit, ...pieces.plural };
+const pieceText = pieces && formatYield(pieces.qty, pieceForms!, locale);
 // The hero shows the cooking time, then the wait ("30 min" / "+ 8 hr chilling"); the Directions header says how
 // they break down in one generated sentence (lib/time.ts).
 // content.config.ts guarantees the hands-off time leaves a positive amount of work.
@@ -129,7 +132,6 @@ const jsonLd = {
 
 const icons = {
   cook: 'M3.6 8.200h10.800v4.300a2.700 2.700 0 0 1-2.700 2.700H6.300a2.700 2.700 0 0 1-2.700-2.700V8.200ZM1.800 8.200h14.400M6.200 5.400h5.600M9 5.400V3.200',
-  save: 'M5 2.8h8a.8.8 0 0 1 .8.8v11.600L9 12.200l-4.800 3V3.600a.8.8 0 0 1 .8-.8Z',
   share: 'M9 11V2.400M6 5l3-3 3 3M5.600 8H4.400a.9.9 0 0 0-.9.900v5.700c0 .5.400.9.900.9h9.200c.5 0 .9-.4.900-.9V8.900a.9.9 0 0 0-.9-.9h-1.200',
   chevron: 'm7 3.500 5 5.500-5 5.500',
   // Spans x 6.25–11.75, centred in the 18 box (drawn at 5.5–11 it sat 0.75 left of centre in the round button).
@@ -159,8 +161,9 @@ const icons = {
     <main>
       <article
         data-recipe={entry.id}
-        data-yield-min={r.yield.min}
-        data-yield-max={r.yield.max}
+        data-yield-servings={r.yield.servings}
+        data-piece-qty={pieces?.qty}
+        data-piece-forms={pieceForms && JSON.stringify(pieceForms)}
         data-yield-forms={JSON.stringify(yieldUnit)}
       >
         <header class="hero">
@@ -230,10 +233,6 @@ const icons = {
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.cook} /></svg>
                 {t.cook}
               </button>
-              <button type="button" class="btn btn--capsule btn--glass action" data-save>
-                <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.save} /></svg>
-                <span data-save-label>{t.save}</span>
-              </button>
               <button type="button" class="btn btn--capsule btn--glass action" data-share>
                 <svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d={icons.share} /></svg>
                 {t.share}
@@ -251,6 +250,7 @@ const icons = {
                 <div>
                   <h2 class="section-title" id="ingredients-title">{t.ingredients}</h2>
                   <p class="section-sub">{t.yields} <span data-yield>{yieldText}</span></p>
+                  {pieces && <p class="section-sub">{t.about} <span data-yield-pieces>{pieceText}</span></p>}
                 </div>
                 <div class="scale" role="group" aria-label={t.scaleRecipe}>
                   <button type="button" class="btn btn--round btn--plain" data-scale="-1" aria-label={t.scaleDown}>
@@ -432,6 +432,7 @@ const icons = {
         <div class="cook__inner">
         <p class="cook__yield">
           {t.yields} <span data-yield>{yieldText}</span>
+          {pieces && <><br />{t.about} <span data-yield-pieces>{pieceText}</span></>}
         </p>
         {
           r.ingredients.map((group) => (
@@ -502,11 +503,10 @@ const icons = {
 
     <div class="hud">
       <p class="toast" role="status" data-toast></p>
-      <div class="timers" role="region" aria-label={t.timers} data-timers></div>
     </div>
 
-    {/* The strings recipe.ts writes (announcements, timer labels), as data: one script serves both languages. */}
-    <script type="application/json" id="strings" set:html={JSON.stringify({ ...t.client, save: t.save, saved: t.saved })} />
+    {/* The strings recipe.ts writes (announcements), as data: one script serves both languages. */}
+    <script type="application/json" id="strings" set:html={JSON.stringify(t.client)} />
     <script>
       import '../scripts/recipe.ts';
     </script>

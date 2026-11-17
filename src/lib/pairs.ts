@@ -12,7 +12,7 @@ export interface PairedRecipe {
   tint?: string;
   imageCredit?: { url: string };
   source?: { url?: string };
-  yield: { min: number; max?: number; unit?: string };
+  yield: { servings: number; pieces?: { qty: number; unit: string } };
   time: { total: number };
   ingredients: {
     group?: string;
@@ -57,7 +57,8 @@ function shape(r: PairedRecipe): string[] {
     `tint: ${r.tint ?? ''}`,
     `imageCredit.url: ${r.imageCredit?.url ?? ''}`,
     `source.url: ${r.source?.url ?? ''}`,
-    `yield: ${r.yield.min}–${r.yield.max ?? ''} ${r.yield.unit === undefined ? 'servings' : 'own unit'}`,
+    `yield.servings: ${r.yield.servings}`,
+    `yield.pieces: ${r.yield.pieces?.qty ?? 'none'}`,
     `time.total: ${r.time.total}`,
     `equipment: ${r.equipment.length} items`,
     ...r.equipment.map((item, i) => `equipment.${i}: ${facts(typeof item === 'string' ? item : `${item.name} ${item.note}`)}`),

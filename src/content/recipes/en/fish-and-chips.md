@@ -14,7 +14,7 @@ source:
   title: Classic Beer Battered Fish & Mushy Peas
   url: https://www.gordonramsayrestaurants.com/recipes/classic-beer-battered-fish-and-mushy-peas/
 yield:
-  min: 4
+  servings: 4
 time:
   total: 45
 ingredients:

@@ -421,18 +421,6 @@
   margin-left: 0.3em;
 }
 
-.item__saved {
-  display: inline-flex;
-  margin-left: var(--s-2);
-  color: var(--text);
-}
-
-.item__saved svg {
-  width: 0.8125rem;
-  height: 0.8125rem;
-  fill: currentColor;
-}
-
 .item__lede {
   display: -webkit-box;
   -webkit-box-orient: vertical;

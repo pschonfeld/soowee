@@ -14,7 +14,7 @@ source:
   title: "Vincenzo’s Plate: Authentic Bolognese Sauce"
   url: https://youtu.be/Gyz7s3cFjZU
 yield:
-  min: 6
+  servings: 6
 time:
   total: 255
 ingredients:
@@ -74,15 +74,15 @@ directions:
       - About 20 minutes before the ragù is ready, bring {5 L water} to a boil in the large pot with {50 g coarse salt}.
       - Cook the {500 g egg tagliatelle} for 1–2 minutes less than the packet says.
       - Scoop out {250 ml} of the pasta water and drain.
-      - Return the pasta to the empty large pot with about half of the ragù and a splash of pasta water. Toss over low heat for {timer:1-2m}, adding more water if needed, until every strand is coated and glossy.
+      - Return the pasta to the empty large pot with the ragù and a splash of pasta water. Toss over low heat for {timer:1-2m}, adding more water if needed, until every strand is coated and glossy.
       - tip: The pasta finishes cooking in the sauce and its starch binds the two, so the ragù clings instead of sitting on top.
-      - Serve in warm bowls with a spoonful more ragù on top and the {Parmigiano Reggiano} at the table. The rest of the ragù is for another meal.
+      - Serve in warm bowls with the {Parmigiano Reggiano} at the table.
 ---
 
 ## Chef’s Notes
 
 - **Make ahead:** The ragù tastes better on day two, so it can be made a day or two before. Toss it with freshly cooked pasta on the day.
-- **Store:** The ragù makes more than six bowls of pasta need. Cool it in shallow containers within 2 hours; it keeps 3 days in the fridge or 3 months in the freezer. Reheat it gently with a splash of water until it bubbles.
+- **Store:** Cool the ragù in shallow containers within 2 hours; it keeps 3 days in the fridge or 3 months in the freezer. Reheat it gently with a splash of water until it bubbles.
 - **Swap:** If ground veal is hard to find, use 500 g ground beef instead of the beef and veal. For the version registered in Bologna, melt 150 g chopped fresh pancetta in the oil before the vegetables, use only beef and pork (veal is not allowed there) and far less tomato: about 200 g passata and 1 tablespoon of tomato paste per 400 g meat. White wine is the older choice; red is allowed.
 - **Serve:** Pair with a medium-bodied red such as Sangiovese di Romagna or Chianti Classico.
 

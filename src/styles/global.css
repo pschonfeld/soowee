@@ -45,7 +45,7 @@
   --gutter: var(--s-4);
   /* Control sizes (see Buttons below). Visual sizes; the hit area is never under --tap-min. */
   --tap: 3rem; /* 48: default button */
-  --tap-sm: 2.25rem; /* 36: dense chrome (timer chip, segmented items, search clear) */
+  --tap-sm: 2.25rem; /* 36: dense chrome (segmented items, search clear) */
   --tap-min: 2.75rem; /* 44: smallest hit area, any control */
   --segment-inset: 3px; /* track around the selected segment, as UISegmentedControl draws it */
   --disabled-opacity: 0.35;
@@ -56,8 +56,8 @@
   --text: #1c1c1e;
   --text-secondary: #5f5f64;
   --separator: rgb(60 60 67 / 0.18);
-  --timer-fg: #9a4a00;
-  --timer-bg: #ffe9c7;
+  --duration-fg: #9a4a00;
+  --duration-bg: #ffe9c7;
   --focus: #0a63d8;
   /* Hairline drawn inside photos, so a white plate keeps its edge on a light page (as iOS does). */
   --image-edge: rgb(0 0 0 / 0.08);
@@ -105,9 +105,6 @@
   /* Pressed: a step past hover, so a press reads as a press and not as the hover it starts from. */
   --fill-active: color-mix(in srgb, var(--text) 22%, transparent);
 
-  /* Timer HUD: always dark, whatever the theme. */
-  --timer-accent: #ffb340;
-  --timer-done: #b25000;
   --hud-solid: #1c1c1e; /* the HUD without transparency (Reduce Transparency) */
 }
 
@@ -129,8 +126,8 @@
     --text: light-dark(#1c1c1e, #ffffff);
     --text-secondary: light-dark(#5f5f64, #aeaeb2);
     --separator: light-dark(rgb(60 60 67 / 0.18), rgb(84 84 88 / 0.6));
-    --timer-fg: light-dark(#9a4a00, #ffb340);
-    --timer-bg: light-dark(#ffe9c7, rgb(255 159 10 / 0.2));
+    --duration-fg: light-dark(#9a4a00, #ffb340);
+    --duration-bg: light-dark(#ffe9c7, rgb(255 159 10 / 0.2));
     --focus: light-dark(#0a63d8, #6cb0ff);
     --image-edge: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.1));
     --bar-fill: light-dark(rgb(255 255 255 / 0.8), rgb(44 44 46 / 0.8));
@@ -147,8 +144,8 @@
       --text: #ffffff;
       --text-secondary: #aeaeb2;
       --separator: rgb(84 84 88 / 0.6);
-      --timer-fg: #ffb340;
-      --timer-bg: rgb(255 159 10 / 0.2);
+      --duration-fg: #ffb340;
+      --duration-bg: rgb(255 159 10 / 0.2);
       --focus: #6cb0ff;
       --image-edge: rgb(255 255 255 / 0.1);
       --bar-fill: rgb(44 44 46 / 0.8);
@@ -163,8 +160,8 @@
     --text: #ffffff;
     --text-secondary: #aeaeb2;
     --separator: rgb(84 84 88 / 0.6);
-    --timer-fg: #ffb340;
-    --timer-bg: rgb(255 159 10 / 0.2);
+    --duration-fg: #ffb340;
+    --duration-bg: rgb(255 159 10 / 0.2);
     --focus: #6cb0ff;
     --image-edge: rgb(255 255 255 / 0.1);
     --bar-fill: rgb(44 44 46 / 0.8);
@@ -252,7 +249,7 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* No double-tap zoom on controls, so quick taps (scale +/−, timers) never zoom the page. */
+/* No double-tap zoom on controls, so quick taps (scale +/−) never zoom the page. */
 a,
 button,
 label,
@@ -271,8 +268,7 @@ a {
 }
 
 .hero :focus-visible,
-.cook :focus-visible,
-.timers :focus-visible {
+.cook :focus-visible {
   outline-color: #fff;
 }
 
@@ -284,7 +280,7 @@ a {
    Every <button>, and every link that looks like one, is .btn + one shape + one surface:
      shape    .btn--round    icon only, square → circle; needs aria-label
               .btn--capsule  text, optionally with a leading .icon
-     surface  .btn--glass    over a photo, in cook mode or on the timer HUD; white content
+     surface  .btn--glass    over a photo, in cook mode; white content
               .btn--scrim    glass with a dark tint, for a button straight on an unknown photo (back)
               .btn--fill     on the page; --text content
               .btn--plain    inside a group that already draws the surface (.scale); fill on hover/press only
@@ -294,7 +290,6 @@ a {
    Components add layout only (position, margin, width, grid placement). One-off padding needs a comment saying why.
    Component rules are written .btn.name / .segmented.name, so they win by specificity, never by stylesheet order.
    A choice between options is .segmented, not buttons styled by hand.
-   The one exception: .timer, the inline timer inside step text (inline targets are exempt from WCAG 2.5.8).
    tests/buttons.spec.ts enforces the class set and the 44px hit area on every page. */
 .btn {
   position: relative;

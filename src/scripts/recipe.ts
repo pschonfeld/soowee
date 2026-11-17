@@ -1,5 +1,5 @@
-import { SCALES, formatClock, formatQty, formatScale, formatYield } from '../lib/format';
-import { fill, localeOf, pluralForm, type ClientStrings, type Forms } from '../lib/i18n';
+import { SCALES, formatQty, formatScale, formatYield } from '../lib/format';
+import { localeOf, pluralForm, type ClientStrings, type Forms } from '../lib/i18n';
 
 const $ = <T extends HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends HTMLElement>(selector: string, root: ParentNode = document) => [
@@ -8,7 +8,7 @@ const $$ = <T extends HTMLElement>(selector: string, root: ParentNode = document
 
 const article = $('article[data-recipe]')!;
 const locale = localeOf(document.documentElement.lang);
-/** This page's strings (Recipe.astro writes them); `{label}` and `{n}` are filled in with fill(). */
+/** This page's strings (Recipe.astro writes them). */
 const t: ClientStrings = JSON.parse($('#strings')!.textContent!);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -35,10 +35,13 @@ function applyScale() {
   for (const el of $$('[data-forms]')) {
     el.textContent = pluralForm(locale, Number(el.dataset.count) * factor, JSON.parse(el.dataset.forms!) as Forms);
   }
-  const { yieldMin, yieldMax, yieldForms } = article.dataset;
-  const max = yieldMax ? Number(yieldMax) : undefined;
-  const text = formatYield(Number(yieldMin), max, JSON.parse(yieldForms!) as Forms, locale, factor);
+  const { yieldServings, yieldForms, pieceQty, pieceForms } = article.dataset;
+  const text = formatYield(Number(yieldServings), JSON.parse(yieldForms!) as Forms, locale, factor);
   for (const el of $$('[data-yield]')) el.textContent = text;
+  if (pieceQty && pieceForms) {
+    const pieces = formatYield(Number(pieceQty), JSON.parse(pieceForms) as Forms, locale, factor);
+    for (const el of $$('[data-yield-pieces]')) el.textContent = pieces;
+  }
   scaleOutput.textContent = formatScale(factor);
   scaleButtons[0].disabled = scaleIndex === 0;
   scaleButtons[1].disabled = scaleIndex === SCALES.length - 1;
@@ -82,41 +85,6 @@ try {
 
 for (const input of ingredientChecks) input.addEventListener('change', saveProgress);
 
-/* ── Save (kept on this device) ── */
-const SAVED_KEY = 'soowee:saved';
-const saveButton = $('[data-save]')!;
-const saveLabel = $('[data-save-label]')!;
-
-function readSaved(): string[] {
-  try {
-    const saved: unknown = JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]');
-    return Array.isArray(saved) ? saved.filter((s): s is string => typeof s === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function renderSaved(saved: boolean) {
-  saveButton.toggleAttribute('data-saved', saved);
-  saveLabel.textContent = saved ? t.saved : t.save;
-}
-
-renderSaved(readSaved().includes(article.dataset.recipe!));
-
-saveButton.addEventListener('click', () => {
-  const id = article.dataset.recipe!;
-  const saved = readSaved();
-  const next = saved.includes(id) ? saved.filter((s) => s !== id) : [...saved, id];
-  try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(next));
-  } catch {
-    announce(t.savingUnavailable);
-    return;
-  }
-  renderSaved(next.includes(id));
-  announce(next.includes(id) ? t.recipeSaved : t.recipeUnsaved);
-});
-
 /* ── Share ── */
 $('[data-share]')!.addEventListener('click', async () => {
   const data = { title: document.title, url: location.href };
@@ -132,328 +100,6 @@ $('[data-share]')!.addEventListener('click', async () => {
   } catch {
     announce(t.sharingUnavailable);
   }
-});
-
-/* ── Timers: a floating Dynamic-Island-style capsule, one per running timer ── */
-const PAUSE_ICON = '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.500 4.5v9M11.5 4.5v9"/></svg>';
-const PLAY_ICON =
-  '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.300 4.300 13.200 9 6.300 13.700Z"/></svg>';
-const SILENCE_ICON = '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M5.500 5.500h7v7h-7Z"/></svg>';
-const DISMISS_ICON =
-  '<svg class="icon" viewBox="0 0 18 18" aria-hidden="true"><path d="m4.500 4.500 9 9m0-9-9 9"/></svg>';
-/** How often a finished-but-undismissed timer repeats its alert. */
-const ALARM_REPEAT_MS = 2500;
-/** How long a dismissed running or paused timer can still be brought back. */
-const UNDO_MS = 5000;
-
-interface Timer {
-  /** Absolute finish time; meaningful only while running (pausedRemaining === null). */
-  end: number;
-  /** Milliseconds left, frozen while paused; null means running. */
-  pausedRemaining: number | null;
-  name: string;
-  label: string;
-  chip: HTMLElement;
-  clock: HTMLElement;
-  pauseButton: HTMLButtonElement;
-  done: boolean;
-  /** setInterval id for the repeating alarm after it finishes; 0 = silent. */
-  alarm: number;
-}
-
-const tray = $('[data-timers]')!;
-const timers = new Set<Timer>();
-let ticking = 0;
-const TIMERS_KEY = `soowee:timers:${article.dataset.recipe}`;
-const originalTitle = document.title;
-
-let audio: AudioContext | undefined;
-
-/** Safari only lets audio start from a user gesture, so the context is unlocked when a timer is started. */
-function unlockAudio() {
-  try {
-    audio ??= new AudioContext();
-    void audio.resume();
-  } catch {
-    audio = undefined;
-  }
-}
-
-function beep() {
-  try {
-    const ctx = audio;
-    if (!ctx) return;
-    [0, 0.35, 0.7].forEach((offset) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.18, ctx.currentTime + offset);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.25);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime + offset);
-      osc.stop(ctx.currentTime + offset + 0.25);
-    });
-    navigator.vibrate?.([200, 100, 200]); // no-op on iOS Safari, which doesn't implement it
-  } catch {
-    /* Audio is a nicety; the visual + announced state is the contract. */
-  }
-}
-
-/** Persists only running/paused timers; a reload restores them, a done one is just gone. */
-function persistTimers() {
-  try {
-    const rows = [...timers]
-      .filter((t) => !t.done)
-      .map((t) => ({
-        end: t.pausedRemaining === null ? t.end : null,
-        remaining: t.pausedRemaining,
-        name: t.name,
-        label: t.label,
-      }));
-    localStorage.setItem(TIMERS_KEY, JSON.stringify(rows));
-  } catch {
-    /* Private mode: timers simply don't survive a reload. */
-  }
-}
-
-function msLeft(timer: Timer): number {
-  return timer.pausedRemaining !== null ? timer.pausedRemaining : timer.end - Date.now();
-}
-
-function updateClock(timer: Timer) {
-  timer.clock.textContent = formatClock(Math.max(0, msLeft(timer)) / 1000);
-}
-
-/** Soonest running timer first, then paused, then done; keeps the capsule stack in a sensible order. */
-function reorderTray() {
-  const rank = (t: Timer) => (t.done ? 2 : t.pausedRemaining !== null ? 1 : 0);
-  for (const t of [...timers].sort((a, b) => rank(a) - rank(b) || msLeft(a) - msLeft(b))) tray.append(t.chip);
-}
-
-function updateTabTitle() {
-  const soonest = [...timers].filter((t) => !t.done && t.pausedRemaining === null).sort((a, b) => a.end - b.end)[0];
-  document.title = soonest ? `⏱ ${formatClock(Math.max(0, soonest.end - Date.now()) / 1000)} · ${originalTitle}` : originalTitle;
-}
-
-/** Keep keyboard focus somewhere sensible instead of dropping it to <body>. */
-function refocusAfterChip() {
-  // Never another chip's Undo: a stray Enter there would bring back a timer the user just dismissed.
-  (tray.querySelector<HTMLButtonElement>('.timer-chip:not(.is-dismissed) button:not([hidden])') ?? (cook.open ? $('[data-cook-close]', cook) : cookOpen))?.focus();
-}
-
-function removeTimer(timer: Timer) {
-  if (timer.alarm) clearInterval(timer.alarm);
-  timers.delete(timer);
-  persistTimers();
-  updateTabTitle();
-  if (timer.done) {
-    timer.chip.remove();
-    refocusAfterChip();
-  } else {
-    offerUndo(timer);
-  }
-}
-
-/**
- * A running or paused timer is one small tap from being lost with wet hands, so dismissing it leaves the chip in
- * place for a few seconds with Undo. The timer keeps its absolute end time, so Undo loses no countdown.
- */
-function offerUndo(timer: Timer) {
-  const { chip, name, label, end, pausedRemaining } = timer;
-  chip.classList.add('is-dismissed');
-
-  const note = document.createElement('span');
-  note.className = 'timer-chip__label';
-  note.textContent = t.timerDismissed;
-  const undo = document.createElement('button');
-  undo.type = 'button';
-  undo.className = 'btn btn--capsule btn--glass btn--sm';
-  undo.textContent = t.undo;
-  undo.setAttribute('aria-label', fill(t.undoDismiss, { label }));
-  chip.replaceChildren(note, undo);
-  undo.focus();
-  announce(fill(t.timerDismissedNamed, { label }));
-
-  const expire = window.setTimeout(() => {
-    const hadFocus = chip.contains(document.activeElement);
-    chip.remove();
-    if (hadFocus) refocusAfterChip();
-  }, UNDO_MS);
-
-  undo.addEventListener('click', () => {
-    clearTimeout(expire);
-    chip.remove();
-    // Not restored as overdue: if it ran out during the undo window, the next tick finishes it with its alarm.
-    const restored = buildTimer(name, label, end, pausedRemaining, false);
-    if (pausedRemaining === null) ticking ||= window.setInterval(tick, 250);
-    reorderTray();
-    persistTimers();
-    updateTabTitle();
-    restored.pauseButton.focus();
-    announce(fill(t.timerRestored, { label }));
-  });
-}
-
-/** Stops a finished timer's repeating alarm but keeps its "Done" chip; the dismiss button still removes it. */
-function silenceTimer(timer: Timer) {
-  if (!timer.alarm) return;
-  clearInterval(timer.alarm);
-  timer.alarm = 0;
-  const hadFocus = document.activeElement === timer.pauseButton;
-  timer.pauseButton.hidden = true;
-  if (hadFocus) timer.chip.querySelector<HTMLButtonElement>('button:not([hidden])')?.focus();
-}
-
-function togglePause(timer: Timer) {
-  if (timer.done) return silenceTimer(timer);
-  if (timer.pausedRemaining !== null) {
-    timer.end = Date.now() + timer.pausedRemaining;
-    timer.pausedRemaining = null;
-    timer.pauseButton.innerHTML = PAUSE_ICON;
-    timer.pauseButton.setAttribute('aria-label', fill(t.pauseTimer, { label: timer.label }));
-    announce(fill(t.timerResumed, { label: timer.label }));
-    ticking ||= window.setInterval(tick, 250);
-  } else {
-    timer.pausedRemaining = Math.max(0, timer.end - Date.now());
-    timer.pauseButton.innerHTML = PLAY_ICON;
-    timer.pauseButton.setAttribute('aria-label', fill(t.resumeTimer, { label: timer.label }));
-    announce(fill(t.timerPaused, { label: timer.label }));
-  }
-  updateClock(timer);
-  reorderTray();
-  persistTimers();
-  updateTabTitle();
-}
-
-function finishTimer(timer: Timer, overdue: boolean) {
-  timer.done = true;
-  timer.pausedRemaining = null;
-  timer.chip.classList.add('is-done');
-  timer.pauseButton.hidden = true;
-  if (overdue) {
-    // Restored after the device was asleep or the tab was closed: state only, no replayed alarm.
-    const minutesAgo = Math.round((Date.now() - timer.end) / 60000);
-    timer.clock.textContent = minutesAgo > 0 ? fill(t.doneAgo, { n: minutesAgo }) : t.done;
-  } else {
-    timer.clock.textContent = t.done;
-    announce(fill(t.timerFinished, { label: timer.label }));
-    beep();
-    timer.alarm = window.setInterval(beep, ALARM_REPEAT_MS);
-    // While it rings, the pause slot becomes Stop: a keyboard way to silence it (tapping the chip also works).
-    timer.pauseButton.innerHTML = SILENCE_ICON;
-    timer.pauseButton.setAttribute('aria-label', fill(t.silenceTimer, { label: timer.label }));
-    timer.pauseButton.hidden = false;
-  }
-  reorderTray();
-  persistTimers();
-  updateTabTitle();
-}
-
-function tick() {
-  const now = Date.now();
-  let anyRunning = false;
-  for (const timer of timers) {
-    if (timer.done || timer.pausedRemaining !== null) continue;
-    const left = timer.end - now;
-    if (left > 0) {
-      anyRunning = true;
-      timer.clock.textContent = formatClock(left / 1000);
-    } else {
-      finishTimer(timer, false);
-    }
-  }
-  updateTabTitle();
-  if (!anyRunning) {
-    clearInterval(ticking);
-    ticking = 0;
-  }
-}
-
-/** Shared by a fresh start and a reload-restored timer. */
-function buildTimer(name: string, label: string, end: number, pausedRemaining: number | null, overdue: boolean): Timer {
-  const chip = document.createElement('div');
-  chip.className = 'timer-chip';
-  chip.setAttribute('role', 'group');
-  chip.setAttribute('aria-label', label);
-
-  const pauseButton = document.createElement('button');
-  pauseButton.type = 'button';
-  pauseButton.className = 'btn btn--round btn--glass btn--sm timer-chip__control';
-  pauseButton.innerHTML = pausedRemaining !== null ? PLAY_ICON : PAUSE_ICON;
-  pauseButton.setAttribute('aria-label', fill(pausedRemaining !== null ? t.resumeTimer : t.pauseTimer, { label }));
-
-  const body = document.createElement('div');
-  body.className = 'timer-chip__body';
-  const nameEl = document.createElement('span');
-  nameEl.className = 'timer-chip__label';
-  nameEl.textContent = name;
-  const clock = document.createElement('time');
-  body.append(nameEl, clock);
-
-  const dismiss = document.createElement('button');
-  dismiss.type = 'button';
-  dismiss.className = 'btn btn--round btn--glass btn--sm timer-chip__control';
-  dismiss.setAttribute('aria-label', fill(t.dismissTimer, { label }));
-  dismiss.innerHTML = DISMISS_ICON;
-
-  chip.append(pauseButton, body, dismiss);
-  tray.append(chip);
-
-  const timer: Timer = { end, pausedRemaining, name, label, chip, clock, pauseButton, done: false, alarm: 0 };
-  timers.add(timer);
-
-  pauseButton.addEventListener('click', () => togglePause(timer));
-  dismiss.addEventListener('click', () => removeTimer(timer));
-  // Tapping anywhere on a ringing chip silences it, as on iOS.
-  chip.addEventListener('click', () => {
-    if (timer.done) silenceTimer(timer);
-  });
-
-  if (overdue) finishTimer(timer, true);
-  else updateClock(timer);
-  return timer;
-}
-
-function startTimer(seconds: number, name: string, label: string) {
-  buildTimer(name, label, Date.now() + seconds * 1000, null, false);
-  ticking ||= window.setInterval(tick, 250);
-  announce(fill(t.timerStarted, { label }));
-  persistTimers();
-  updateTabTitle();
-}
-
-function restoreTimers() {
-  let saved: unknown;
-  try {
-    saved = JSON.parse(localStorage.getItem(TIMERS_KEY) ?? '[]');
-  } catch {
-    return;
-  }
-  if (!Array.isArray(saved)) return;
-  let anyRunning = false;
-  for (const row of saved as Record<string, unknown>[]) {
-    if (typeof row?.name !== 'string' || typeof row?.label !== 'string') continue;
-    const end = typeof row.end === 'number' ? row.end : null;
-    const remaining = typeof row.remaining === 'number' ? row.remaining : null;
-    if (end === null && remaining === null) continue;
-    const overdue = end !== null && end <= Date.now();
-    buildTimer(row.name, row.label, end ?? Date.now(), remaining, overdue);
-    if (!overdue && remaining === null) anyRunning = true;
-  }
-  if (anyRunning) ticking ||= window.setInterval(tick, 250);
-  updateTabTitle();
-}
-
-restoreTimers();
-
-document.addEventListener('click', (event) => {
-  const button = (event.target as Element).closest<HTMLElement>('.timer');
-  if (!button) return;
-  // Named by its section ("Make the béchamel, 5 minutes"), so the tray tells running timers apart.
-  const section = button.closest<HTMLElement>('[data-section]')?.dataset.section;
-  const text = button.textContent!.trim();
-  unlockAudio();
-  startTimer(Number(button.dataset.timer), text, section ? `${section}, ${text}` : text);
 });
 
 /* ── Cook mode ── */
@@ -615,8 +261,7 @@ function cookKeys(event: KeyboardEvent) {
 for (const tab of tabs) tab.addEventListener('click', () => selectTab(tab));
 
 steps.forEach((step, index) => {
-  step.addEventListener('click', (event) => {
-    if ((event.target as Element).closest('.timer')) return;
+  step.addEventListener('click', () => {
     setActive(index);
   });
 });

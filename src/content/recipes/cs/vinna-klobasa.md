@@ -7,8 +7,7 @@ byline: Upraveno podle Romana Vaňka
 image: ../../../assets/recipes/vinna-klobasa.webp
 imageAlt: Opečená vinná klobása stočená do šneka na bílém talíři s krajíci chleba a hořčicí, který drží člověk v černé zástěře
 yield:
-  min: 4
-  max: 6
+  servings: 6
 time:
   total: 135
 ingredients:

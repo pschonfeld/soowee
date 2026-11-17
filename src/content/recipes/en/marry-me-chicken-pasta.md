@@ -9,8 +9,7 @@ imageCredit:
   license: Unsplash License
   url: https://unsplash.com/photos/pasta-dish-on-white-ceramic-bowl-wTBGTwHlf0c
 yield:
-  min: 3
-  max: 4
+  servings: 4
 time:
   total: 40
 ingredients:

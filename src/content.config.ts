@@ -12,17 +12,17 @@ import { checkMentions } from './lib/mentions';
  * in the Markdown body. docs/recipe-model.md explains every field.
  *
  * Inline markup allowed in `heat`, steps and tips:
- *   **bold**                      – ingredient mentions
- *   {timer:20m} {timer:5-10m}     – tappable timer; the label ("5–10 minutes") is generated so wording
- *                                   stays consistent, and a range rings at its lower bound (time to check)
- *   {simmer:1h} {bake:30m} …      – hands-off time while cooking: a timer too, part of time.total but subtracted
+ *   **bold**                      – emphasis other than ingredient mentions
+ *   {timer:20m} {timer:5-10m}     – highlighted duration; the label ("5–10 minutes") is generated so wording
+ *                                   stays consistent; ranges retain both bounds in their label
+ *   {simmer:1h} {bake:30m} …      – hands-off time while cooking: highlighted too, part of time.total but subtracted
  *                                   from it to get the work time (list: HANDS_OFF in lib/inline.ts)
- *   {rest:1h} {rise:2h} …         – a wait the cook can walk away from: a timer, NOT part of time.total, shown
+ *   {rest:1h} {rise:2h} …         – a wait the cook can walk away from: highlighted, NOT part of time.total, shown
  *                                   after it in the hero ("+ 1 hr resting") (list: WAITS in lib/inline.ts)
- *   {chill:6h} {freeze:4h}        – a wait in the fridge/freezer, at least this long; plain text, not a timer,
+ *   {chill:6h} {freeze:4h}        – a wait in the fridge/freezer, at least this long; plain text, without highlighting,
  *                                   NOT part of time.total
  *   {25 g} or {2}                 – an amount used in this step, not linked to an ingredient; scales with the recipe
- *   {750 g mascarpone} {6 eggs}   – an ingredient measured out here: the amount scales, the name is bold
+ *   {750 g mascarpone} {6 eggs}   – an ingredient measured out here: the amount scales; amount, unit and name are bold
  *   {cocoa powder}                – an ingredient used here, without an amount
  * Mentions must name an ingredient, every ingredient must be mentioned, and measured amounts must add up to the
  * list (lib/mentions.ts).
@@ -104,12 +104,13 @@ const recipes = (locale: Locale) =>
             })
             .optional(),
           yield: z.strictObject({
-            min: z.number().positive(),
-            max: z.number().positive().optional(),
-            /** What is counted, in the form for 1 ("crêpe", "palačinka"); servings when left out. */
-            unit: z.string().optional(),
-            /** The unit's forms for other numbers; required with `unit`. */
-            plural: plural.optional(),
+            servings: z.number().int().positive(),
+            /** Optional approximate batch output, separate from the number of people served. */
+            pieces: z.strictObject({
+              qty: z.number().int().positive(),
+              unit: z.string().min(1),
+              plural,
+            }).optional(),
           }),
           /** Cooking time in minutes: includes hands-off time ({simmer:…}), excludes waits ({rest:…}, {chill:…} …). */
           time: z.strictObject({
@@ -163,7 +164,7 @@ const recipes = (locale: Locale) =>
               }
             }
           });
-          // Section titles name the timers ("Make the béchamel, 5 minutes"), so two equal ones could not be told apart.
+          // Section titles must identify distinct parts of the method.
           const titles = new Set<string>();
           r.directions.forEach((section, i) => {
             if (titles.has(section.title)) {
@@ -216,7 +217,7 @@ const recipes = (locale: Locale) =>
               ),
             ),
           );
-          checkForms(r.yield.plural, r.yield.unit !== undefined, ['yield'], 'The yield unit');
+          if (r.yield.pieces) checkForms(r.yield.pieces.plural, true, ['yield', 'pieces'], 'The piece unit');
           if (!valid) return;
           for (const issue of checkMentions(r)) ctx.addIssue({ code: 'custom', ...issue });
           const { handsOff } = directionTimes(r.directions);

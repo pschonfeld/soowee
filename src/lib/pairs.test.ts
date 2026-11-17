@@ -4,7 +4,7 @@ import { comparePair, missingTranslations, type PairedRecipe } from './pairs';
 const recipe = (changes: Partial<PairedRecipe> = {}): PairedRecipe => ({
   featured: false,
   image: { src: '/crepes.jpg' },
-  yield: { min: 12, max: 14 },
+  yield: { servings: 4, pieces: { qty: 12, unit: 'crêpe' } },
   time: { total: 50 },
   ingredients: [{ items: [{ qty: 35, unit: 'g' }, { qty: 3, about: { qty: 165, max: 180, unit: 'g' } }] }],
   equipment: ['Sieve'],
@@ -19,6 +19,17 @@ describe('comparePair', () => {
       directions: [{ steps: ['Rozpusťte {35 g másla} a nechte {timer:3-4m} pěnit.', { tip: 'Hlídejte ho.' }, 'Rozšlehejte {3 vejce}.'] }],
     });
     expect(comparePair(recipe(), cs)).toEqual([]);
+  });
+
+  it('compares servings and optional piece output independently of translated units', () => {
+    expect(comparePair(recipe(), recipe({ yield: { servings: 4, pieces: { qty: 12, unit: 'palačinka' } } }))).toEqual([]);
+    expect(comparePair(recipe(), recipe({ yield: { servings: 6, pieces: { qty: 12, unit: 'crêpe' } } }))).toEqual([
+      'yield.servings: 4  ≠  yield.servings: 6',
+    ]);
+    expect(comparePair(recipe(), recipe({ yield: { servings: 4, pieces: { qty: 14, unit: 'crêpe' } } }))).toEqual([
+      'yield.pieces: 12  ≠  yield.pieces: 14',
+    ]);
+    expect(comparePair(recipe(), recipe({ yield: { servings: 4 } }))).toEqual(['yield.pieces: 12  ≠  yield.pieces: none']);
   });
 
   it('names the place where the numbers differ', () => {

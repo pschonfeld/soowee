@@ -117,17 +117,6 @@ test('the search is re-applied when coming back to the page', async ({ page }) =
   await expect.poll(() => visibleTitles(page)).toEqual(query ? ['Tiramisu'] : LISTED);
 });
 
-test('recipes saved on this device show a badge', async ({ page }) => {
-  const badge = page.locator('.item[data-slug="tiramisu"] [data-saved]');
-  await expect(badge).toBeHidden();
-  await page.goto('/en/tiramisu/');
-  await page.locator('[data-save]').click();
-  await page.goto('/en/');
-  await expect(badge).toBeVisible();
-  await expect(page.locator('.item[data-slug="tiramisu"] a')).toContainText('Saved');
-  await expect(page.locator('[data-saved]:visible')).toHaveCount(1);
-});
-
 test('the browser bar colour follows the appearance switch, not only the system', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/en/');

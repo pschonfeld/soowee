@@ -36,7 +36,7 @@ flowchart LR
   page --> cook["Cook mode<br/>one step at a time"]
   page --> ld["JSON-LD<br/>schema.org Recipe"]
   page --> pic["Photo in AVIF/WebP,<br/>hero tint and backdrop"]
-  html --> js["recipe.ts in the browser<br/>scaling, timers, checklist"]
+  html --> js["recipe.ts in the browser<br/>scaling, checklist"]
   cook --> js
 ```
 
@@ -71,10 +71,13 @@ classDiagram
     url URL
   }
   class Yield {
-    min* number
-    max number
-    unit string = servings
-    plural Plural
+    servings* integer
+    pieces Pieces
+  }
+  class Pieces {
+    qty* integer
+    unit* string
+    plural* Plural
   }
   class Plural {
     few string
@@ -117,7 +120,8 @@ classDiagram
   Recipe --> "0..1" ImageCredit : imageCredit
   Recipe --> "0..1" Source : source
   Recipe --> "1" Yield : yield
-  Yield --> "0..1" Plural : plural
+  Yield --> "0..1" Pieces : pieces
+  Pieces --> "1" Plural : plural
   Ingredient --> "0..1" Plural : plural
   Recipe --> "1" Time : time
   Recipe --> "1..*" IngredientGroup : ingredients
@@ -171,10 +175,32 @@ All three fields are required when `imageCredit` is present. Use licensed images
 
 | Field | Type | Required | Default | Rules |
 |---|---|---|---|---|
-| `min` | number | yes | | Positive |
-| `max` | number | no | | For a range: `8–10 servings` |
-| `unit` | text | no | `servings` (`porce`) | What is counted, in the form for 1: `crêpe`, `palačinka`. Leave out for servings |
-| `plural` | object | with `unit` | | The unit's other forms, see [Plural](#plural): `{ other: crêpes }` |
+| `servings` | integer | yes | | Positive; one estimated number of people served, never a range |
+| `pieces` | object | no | | Optional approximate number of finished pieces in the whole batch |
+
+Every recipe yields servings. For a dish counted in pieces, keep the approximate batch output separately:
+
+```yaml
+yield:
+  servings: 4
+  pieces:
+    qty: 12
+    unit: crêpe
+    plural: { other: crêpes }
+```
+
+Fields under `pieces`:
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| `qty` | integer | yes | Positive; the approximate batch output, not pieces per serving |
+| `unit` | text | yes | Singular name of the finished piece: `crêpe`, `palačinka` |
+| `plural` | object | yes | The unit's other forms, see [Plural](#plural) |
+
+The hero and JSON-LD show only servings. The ingredients header and cook-mode ingredients tab also show
+“about 12 crêpes” (“cca 12 palačinek”) when `pieces` is present. Both counts scale by the same factor:
+4 servings / about 12 crêpes becomes 8 servings / about 24 crêpes at 2×. Store each count only here;
+do not repeat it in prose. Per-piece quantities and pan dimensions do not scale.
 
 ### Ingredient groups
 
@@ -208,7 +234,7 @@ Rendered as `36 Savoiardi biscuits (about 300–360 g), ladyfingers, half for ea
 
 ### Plural
 
-A noun that follows a number which scales (a counted ingredient, the yield unit) needs a form for every number, or a scaled recipe would read “2 lemon”. The noun itself is the form for 1; `plural` gives the others, named by the plural categories `Intl.PluralRules` uses. Each language needs exactly its own; the build fails on a missing or a foreign one.
+A noun that follows a number which scales (a counted ingredient, the finished-piece unit) needs a form for every number, or a scaled recipe would read “2 lemon”. The noun itself is the form for 1; `plural` gives the others, named by the plural categories `Intl.PluralRules` uses. Each language needs exactly its own; the build fails on a missing or a foreign one.
 
 | Field | Type | Required | Rules | English | Czech |
 |---|---|---|---|---|---|
@@ -247,7 +273,7 @@ directions:
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `title` | text | yes | Short, imperative, naming what the section makes or does: `Make the cream`, `Fry the fish`. Unique within the recipe, since it also names the section’s timers |
+| `title` | text | yes | Short, imperative, naming what the section makes or does: `Make the cream`, `Fry the fish`. Unique within the recipe |
 | `heat` | text with inline markup | no | Oven or oil to get hot, e.g. `Preheat the **oven** to **180 °C**`. Shown first in the section with a thermometer icon and highlighted, so it is started in time. Its own stop in cook mode |
 | `steps` | list | yes | At least one. Each entry is a step, text with [inline markup](#inline-markup-in-steps), or a `tip`, written `- tip: …`. The first entry is a step, because a tip belongs to the step before it |
 
@@ -257,15 +283,15 @@ Allowed in `heat`, steps and tips. Raw HTML is escaped, not rendered.
 
 | Markup | Meaning | Rendered as | Scales | Counts towards |
 |---|---|---|---|---|
-| `{750 g mascarpone}`, `{6 eggs}` | An ingredient [measured out](#ingredient-mentions) at this point: amount, then the ingredient | `750 g` **mascarpone** | the amount | Its total in the list |
+| `{750 g mascarpone}`, `{6 eggs}` | An ingredient [measured out](#ingredient-mentions) at this point: amount, then the ingredient | **750 g mascarpone** | the amount | Its total in the list |
 | `{cocoa powder}` | An ingredient used here, without an amount | **cocoa powder** | | |
 | `{máslem\|máslo}` | A mention in a form the ingredient's `name` and `plural` don't cover (a Czech case): shown on the left, refers to the right | **máslem** | | |
 | `{300 ml}`, `{2 tbsp}`, `{6}` | An amount not linked to an ingredient: an intermediate preparation (“{300 ml} ragù”) or a portion measured out earlier | `300 ml` | yes | |
 | `**180 °C**` | Emphasis that is not an ingredient: the temperature in a `heat` line | Bold | | |
-| `{timer:20m}`, `{timer:5-10m}` | Something the cook does or checks on | Tappable timer, label `5–10 minutes`; a range rings at its lower bound | | Work |
-| `{simmer:1h}`, `{bake:30m}`, `{cool:15-20m}` … | Hands-off time while cooking: the dish works on its own, the cook stays in the process. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Tappable timer, like `{timer:}` | | Cooking time, not work |
-| `{rest:1h}`, `{rise:2h}`, `{marinate:4h}` | A wait the cook can walk away from, see [Wait verbs](#wait-verbs) | Tappable timer, like `{timer:}` | | The wait, outside the cooking time |
-| `{chill:8h}`, `{freeze:6h}` | A wait in the fridge or freezer, at least this long | Plain text `8 hours`, not a timer | | The wait, outside the cooking time |
+| `{timer:20m}`, `{timer:5-10m}` | Something the cook does or checks on | Highlighted duration, label `5–10 minutes` | | Work |
+| `{simmer:1h}`, `{bake:30m}`, `{cool:15-20m}` … | Hands-off time while cooking: the dish works on its own, the cook stays in the process. One verb per kind, see [Hands-off verbs](#hands-off-verbs) | Highlighted duration, like `{timer:}` | | Cooking time, not work |
+| `{rest:1h}`, `{rise:2h}`, `{marinate:4h}` | A wait the cook can walk away from, see [Wait verbs](#wait-verbs) | Highlighted duration, like `{timer:}` | | The wait, outside the cooking time |
+| `{chill:8h}`, `{freeze:6h}` | A wait in the fridge or freezer, at least this long | Plain text `8 hours`, without highlighting | | The wait, outside the cooking time |
 | `tip: …` | A callout after its step | Bulb icon; “Tip:” for screen readers | | |
 
 Durations are written as `45s`, `20m`, `1h`, `1h30m` or a range `5-10m`. The label is generated (“1 hour 30 minutes”), so durations read the same everywhere; write the sentence around it: “bake for {bake:10m} more”. Amount units must be from the unit list, and a token that is not in the lists (`{wait:1h}`, `{steam:5m}`) fails the build instead of being printed raw.
@@ -283,7 +309,7 @@ Steps name the ingredients of the list with `{…}`, so the build can check them
 - **Measured once.** An amount inside the braces, `{250 g ground beef}`, is taken from the list at this point. For each ingredient these amounts add up exactly to its amount in the list (lines of the same name added together; `g` and `kg`, `ml` and `L` converted, spoons and counts only with themselves). A portion measured out earlier is mentioned with the amount on its own: “Grate {80 g Pecorino Romano} and set {30 g} aside”, later “the reserved {30 g} {Pecorino Romano}”. An amount added to taste is still written in: “adjust with up to {3 g salt}”. An ingredient mentioned only without an amount is used whole at that point, “Add the {onion}”, so nothing is added up; that is also how an ingredient without `qty` (“a pinch”) is mentioned.
 - **Tips stay plain.** Tips mention ingredients in plain text, without `{…}` or bold, and their amounts (`{20 g}`) scale but do not count.
 
-The rendered page looks the same either way: the amount scales and the ingredient is bold. A counted ingredient's name follows the scale too: the form written in the step is kept at its own number, the others come from `plural`, so “Nakrájejte {1 cibuli}” reads “2 cibule” at 2×. The rules are in [`src/lib/mentions.ts`](../src/lib/mentions.ts).
+The rendered page looks the same either way: the amount scales, and the whole ingredient mention — amount, unit and name — is bold in both the recipe page and cook mode. Standalone amounts remain plain. A counted ingredient's name follows the scale too: the form written in the step is kept at its own number, the others come from `plural`, so “Nakrájejte {1 cibuli}” reads “2 cibule” at 2×. The rules are in [`src/lib/mentions.ts`](../src/lib/mentions.ts).
 
 ## Time
 
@@ -320,7 +346,7 @@ The hero shows exactly two facts on every recipe, **Time** and **Yield**. The wa
 
 ### Hands-off verbs
 
-Part of the cooking time. Each verb is a timer. The words in the second and third columns are used in the Directions sentence. To add one, add it to `HANDS_OFF` in [`src/lib/inline.ts`](../src/lib/inline.ts) and a row here (a test checks both). Czech bakes and roasts alike, so a recipe with both says “pečení” once.
+Part of the cooking time. Each verb renders a highlighted duration. The words in the second and third columns are used in the Directions sentence. To add one, add it to `HANDS_OFF` in [`src/lib/inline.ts`](../src/lib/inline.ts) and a row here (a test checks both). Czech bakes and roasts alike, so a recipe with both says “pečení” once.
 
 | Token | In the sentence | Czech | Use for |
 |---|---|---|---|
@@ -338,11 +364,11 @@ Outside the cooking time. The word in the second column is used in the hero (“
 
 | Token | In the hero | Czech | Use for |
 |---|---|---|---|
-| `{rest:}` | resting | odležení | A batter or dough left to relax: crêpes, pastry. A timer |
-| `{rise:}` | rising | kynutí | Yeast dough. A timer |
-| `{marinate:}` | marinating | marinování | In a marinade. A timer |
-| `{chill:}` | chilling | chlazení | In the fridge: setting a tiramisu or panna cotta, chilling a dough. Plain text, not a timer |
-| `{freeze:}` | freezing | mražení | In the freezer: ice cream, semifreddo. Plain text, not a timer |
+| `{rest:}` | resting | odležení | A batter or dough left to relax: crêpes, pastry. Highlighted duration |
+| `{rise:}` | rising | kynutí | Yeast dough. Highlighted duration |
+| `{marinate:}` | marinating | marinování | In a marinade. Highlighted duration |
+| `{chill:}` | chilling | chlazení | In the fridge: setting a tiramisu or panna cotta, chilling a dough. Plain text, without highlighting |
+| `{freeze:}` | freezing | mražení | In the freezer: ice cream, semifreddo. Plain text, without highlighting |
 
 The fridge and the freezer are named by their place in the Directions sentence, with “at least”, because longer is fine there:
 
@@ -404,14 +430,14 @@ Known simplification: work done *during* hands-off time (making the béchamel wh
 
 ## Scaling
 
-The reader can scale a recipe to ½×, 1×, 1½×, 2×, 3× or 4×. The choice and the ticked-off ingredients survive a reload for the visit (session storage). Running timers survive a reload too, and saved recipes and the light/dark choice are kept across visits (local storage).
+The reader can scale a recipe to ½×, 1×, 1½×, 2×, 3× or 4×. The choice and the ticked-off ingredients survive a reload for the visit (session storage). The light/dark choice is kept across visits (local storage).
 
 | Scales | Does not scale |
 |---|---|
 | Ingredient `qty` | `note` |
 | `about.qty` and `about.max` | `equipment` |
 | `{amount}` in steps, `heat` and tips | Numbers written as plain text (“1–2 seconds”, “180 °C”) |
-| `yield` | Times |
+| `yield.servings`, `yield.pieces.qty` | Times |
 | The nouns after those numbers: units and [plural](#plural) names | |
 
 Every scaled value is rounded independently:
@@ -431,10 +457,10 @@ The build fails in two places, and `pnpm test` adds one more check.
 - a required field is missing, or a value has the wrong type;
 - a key is not part of the schema, at any level: a misspelt `cusine:` or an invented `time.prep` fails instead of being dropped;
 - an ingredient or `about` `unit` is not in the unit list;
-- `qty`, `about.qty`, `about.max` or a `yield` number is zero or negative, or `about.max` is not larger than `about.qty`;
+- `qty`, `about.qty`, `about.max` or a `yield` number is zero, negative or not an integer, or `about.max` is not larger than `about.qty`;
 - `time.total` is not a positive whole number of minutes, or the hands-off verbs add up to `time.total` or more (there would be no work left);
 - any text of the method (`heat`, a step or a tip) has a malformed duration (`{chill:overnight}`), an unknown token (`{wait:1h}`) or a malformed amount (`{25gr}`); the path points to the exact line, e.g. `directions.3.steps.1`;
-- a counted ingredient or a yield `unit` has no `plural`, or one with a form its language does not have (`few` in English), or something not counted has one;
+- a counted ingredient or a `yield.pieces.unit` has no `plural`, or one with a form its language does not have (`few` in English), or something not counted has one;
 - an [ingredient mention](#ingredient-mentions) fits no ingredient or more than one (`{2 cups}` fits none), an ingredient is never mentioned, the measured amounts of an ingredient do not add up to the list, an ingredient is written in bold, or a tip uses `{…}` for an ingredient;
 - a section has no title, shares its title with another section, or its first entry is a tip;
 - `tint` is not a `#rrggbb` colour, or a URL is not a URL;
@@ -448,7 +474,6 @@ The build fails in two places, and `pnpm test` adds one more check.
 
 Not checked, so it is up to the author:
 
-- that `yield.max` is larger than `yield.min`;
 - that an amount written outside the braces, or for an intermediate preparation, is right;
 - that `time.total` matches the method.
 
@@ -622,10 +647,10 @@ The build checks that a mention names an ingredient, not the grammar around it. 
 |---|---|
 | `{timer:3-4m}`, `{timer:1m}`, `{rest:1h}`, `{simmer:2h}`, `{timer:45-60s}` | “3–4 minuty”, “1 minutu”, “1 hodinu”, “2 hodiny”, “45–60 sekund”: accusative, as in “nechte 1 hodinu odležet” |
 | `{chill:8h}` | “8 hodin”, plain text |
-| `{35 g másla}`, `{150 ml}` | “35 g **másla**”, “150 ml” |
+| `{35 g másla}`, `{150 ml}` | “**35 g másla**”, “150 ml” |
 | `{1 tbsp olivového oleje}`, `{2 tbsp …}`, `{0.5 tsp soli}` | in a step “1 lžíci”, “2 lžíce”, “½ lžičky”; the ingredient list says “1 lžíce” |
-| `{1.5 L vody}` | “1,5 l **vody**” |
-| `{6 vajec}` | “6 **vajec**”; at 1½× “9 vajec”, at ½× “3 vejce” |
+| `{1.5 L vody}` | “**1,5 l vody**” |
+| `{6 vajec}` | “**6 vajec**”; at 1½× “9 vajec”, at ½× “3 vejce” |
 | `{olivovým olejem\|olivový olej}` | “**olivovým olejem**” |
 
 - A mention matches an ingredient's `name` or one of its plural forms; any other case is written `{shown|name}`.
@@ -658,7 +683,7 @@ description: Crisp bread with butter.
 image: ../../assets/recipes/toast.jpg
 imageAlt: Two slices of buttered toast on a plate
 yield:
-  min: 1
+  servings: 1
 time:
   total: 5
 ingredients:

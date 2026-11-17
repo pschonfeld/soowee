@@ -10,10 +10,11 @@ imageCredit:
   license: Unsplash License
   url: https://unsplash.com/photos/a-plate-of-food-0MuOPAOFjrc
 yield:
-  min: 12
-  max: 14
-  unit: crêpe
-  plural: { other: crêpes }
+  servings: 4
+  pieces:
+    qty: 12
+    unit: crêpe
+    plural: { other: crêpes }
 time:
   total: 50
 ingredients:

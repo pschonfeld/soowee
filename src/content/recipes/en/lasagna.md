@@ -15,8 +15,7 @@ source:
   title: "Vincenzo’s Plate: Beef Lasagna"
   url: https://www.vincenzosplate.com/beef-lasagna-recipe/
 yield:
-  min: 8
-  max: 10
+  servings: 8
 time:
   total: 270
 ingredients:

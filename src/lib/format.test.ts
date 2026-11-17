@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  formatClock,
   formatMinutes as formatMinutesIn,
   formatQty as formatQtyIn,
   formatScale,
@@ -14,8 +13,8 @@ import type { Forms } from './i18n';
 const formatQty = (qty: number, unit?: string) => formatQtyIn(qty, unit, 'en');
 const formatMinutes = (total: number) => formatMinutesIn(total, 'en');
 const SERVINGS: Forms = { one: 'serving', other: 'servings' };
-const formatYield = (min: number, max: number | undefined, _unit: 'servings', factor?: number) =>
-  formatYieldIn(min, max, SERVINGS, 'en', factor);
+const formatYield = (qty: number, factor?: number) =>
+  formatYieldIn(qty, SERVINGS, 'en', factor);
 
 describe('formatQty', () => {
   it('rounds metric weights and volumes to practical values', () => {
@@ -51,10 +50,10 @@ describe('formatScale / formatYield', () => {
     expect(formatScale(1)).toBe('1×');
   });
 
-  it('scales single values and ranges', () => {
-    expect(formatYield(6, undefined, 'servings')).toBe('6\u00a0servings');
-    expect(formatYield(6, 8, 'servings', 0.5)).toBe('3–4\u00a0servings');
-    expect(formatYield(4, undefined, 'servings', 1.5)).toBe('6\u00a0servings');
+  it('scales a single serving count', () => {
+    expect(formatYield(6)).toBe('6\u00a0servings');
+    expect(formatYield(6, 0.5)).toBe('3\u00a0servings');
+    expect(formatYield(4, 1.5)).toBe('6\u00a0servings');
   });
 });
 
@@ -74,12 +73,6 @@ describe('durations', () => {
     expect(isoDuration(20)).toBe('PT20M');
   });
 
-  it('formats a countdown clock and never goes negative', () => {
-    expect(formatClock(605)).toBe('10:05');
-    expect(formatClock(3725)).toBe('1:02:05');
-    expect(formatClock(0.2)).toBe('00:01');
-    expect(formatClock(-5)).toBe('00:00');
-  });
 });
 
 describe('Czech', () => {
@@ -102,12 +95,12 @@ describe('Czech', () => {
     expect(formatUnit('tsp', 2, 'cs', true)).toBe('lžičky');
   });
 
-  it('makes the yield agree with the larger number', () => {
+  it('makes servings and pieces agree with the scaled count', () => {
     const porce: Forms = { one: 'porce', few: 'porce', many: 'porce', other: 'porcí' };
-    expect(formatYieldIn(4, undefined, porce, 'cs')).toBe('4\u00a0porce');
-    expect(formatYieldIn(4, 6, porce, 'cs')).toBe('4–6\u00a0porcí');
+    expect(formatYieldIn(4, porce, 'cs')).toBe('4\u00a0porce');
+    expect(formatYieldIn(4, porce, 'cs', 1.5)).toBe('6\u00a0porcí');
     const palacinka: Forms = { one: 'palačinka', few: 'palačinky', many: 'palačinky', other: 'palačinek' };
-    expect(formatYieldIn(12, 14, palacinka, 'cs', 0.25)).toBe('3–3½\u00a0palačinky');
+    expect(formatYieldIn(12, palacinka, 'cs', 0.25)).toBe('3\u00a0palačinky');
   });
 
   it('formats minutes and days', () => {

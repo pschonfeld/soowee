@@ -14,7 +14,7 @@ source:
   title: "Vincenzo’s Plate: Authentic Bolognese Sauce"
   url: https://youtu.be/Gyz7s3cFjZU
 yield:
-  min: 6
+  servings: 6
 time:
   total: 255
 ingredients:
@@ -74,15 +74,15 @@ directions:
       - Cca 20 minut před dokončením ragù přiveďte ve velkém hrnci k varu {5 L vody} a osolte ji {50 g hrubozrnné soli}.
       - Vařte {500 g vaječných tagliatelle} o 1–2 minuty kratší dobu, než je uvedeno na obalu.
       - Odlijte si {250 ml} vody z vaření a těstoviny sceďte.
-      - Vraťte těstoviny do prázdného velkého hrnce, přidejte asi polovinu ragù a trochu vody z vaření. Na mírném ohni je promíchávejte {timer:1-2m}. Podle potřeby přilévejte vodu z vaření, až bude každá stužka obalená a lesklá.
+      - Vraťte těstoviny do prázdného velkého hrnce, přidejte ragù a trochu vody z vaření. Na mírném ohni je promíchávejte {timer:1-2m}. Podle potřeby přilévejte vodu z vaření, až bude každá stužka obalená a lesklá.
       - tip: Těstoviny se dovaří v omáčce a jejich škrob obojí spojí, takže ragù na těstovinách drží, místo aby leželo navrchu.
-      - Podávejte v ohřátých hlubokých talířích s další lžící ragù navrch a {Parmigiano Reggiano} dejte na stůl. Zbytek ragù si nechte na další jídlo.
+      - Podávejte v ohřátých hlubokých talířích a {Parmigiano Reggiano} dejte na stůl.
 ---
 
 ## Poznámky šéfkuchaře
 
 - **Předem:** Ragù je druhý den chutnější, takže ho můžete uvařit den nebo dva předem. S čerstvě uvařenými těstovinami ho smíchejte až v den podávání.
-- **Skladování:** Ragù vyjde víc, než kolik spotřebuje šest porcí těstovin. Do 2 hodin ho rozložte do mělkých nádob a nechte vychladnout. V lednici vydrží 3 dny, v mrazáku 3 měsíce. Ohřívejte ho zvolna s trochou vody, až začne bublat.
+- **Skladování:** Ragù do 2 hodin rozložte do mělkých nádob a nechte vychladnout. V lednici vydrží 3 dny, v mrazáku 3 měsíce. Ohřívejte ho zvolna s trochou vody, až začne bublat.
 - **Obměny:** Pokud nesehnáte telecí maso, použijte místo hovězího a telecího 500 g hovězího mletého. Pro oficiálně zaregistrovanou boloňskou verzi nejdřív v oleji pozvolna vypečte 150 g nasekané čerstvé pancetty, teprve potom přidejte zeleninu. Použijte jen hovězí a vepřové maso (telecí se tam nepoužívá) a mnohem méně rajčat: na 400 g masa cca 200 g passaty a 1 lžíci rajčatového protlaku. Bílé víno je původnější volba, červené je ale také povolené.
 - **Podávání:** Hodí se k němu středně plné červené víno, například Sangiovese di Romagna nebo Chianti Classico.
 

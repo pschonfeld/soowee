@@ -15,8 +15,7 @@ source:
   title: "Vincenzo’s Plate: Authentic Tiramisu"
   url: https://www.vincenzosplate.com/authentic-tiramisu/
 yield:
-  min: 8
-  max: 10
+  servings: 10
 time:
   total: 30
 ingredients:
