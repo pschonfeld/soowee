@@ -37,7 +37,7 @@ equipment:
   - { name: Piston stuffer or grinder with a stuffing attachment, note: "tube for sheep casings" }
   - { name: Probe thermometer, note: thin tip }
   - { name: Wooden skewers, note: "sharp, about 15 cm long" }
-  - { name: Frying pan, note: "cast iron or heavy stainless steel, ⌀ 28 cm" }
+  - { name: Frying pan, note: "cast iron or stainless steel, ⌀ 28 cm" }
 directions:
   - title: Grind the meat
     steps:

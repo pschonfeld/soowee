@@ -37,7 +37,7 @@ equipment:
   - { name: Pístová plnička nebo mlýnek s plnicím nástavcem, note: "hubice na skopová střívka" }
   - { name: Vpichový teploměr, note: s tenkou sondou }
   - { name: Dřevěné špejle, note: "ostré, cca 15 cm dlouhé" }
-  - { name: Pánev, note: "litinová nebo silnostěnná nerezová, ⌀ 28 cm" }
+  - { name: Pánev, note: "litinová nebo nerezová, ⌀ 28 cm" }
 directions:
   - title: Umelte maso
     steps:
