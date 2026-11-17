@@ -588,7 +588,6 @@ Turns that read as translated, and what to write instead:
 | Šlehače (the beaters) | Metly |
 | Až olej začne třpytit (shimmers) | Až se hladina oleje zavlní |
 | Hnědý povlak na dně (fond) | Připečeniny |
-| Osolte {8 g soli} | Přisypte {8 g soli} |
 
 The table gives examples, not a dictionary: translate by the technique, the ingredient and the place in the recipe.
 
@@ -630,7 +629,7 @@ The build checks that a mention names an ingredient, not the grammar around it. 
 - A mention matches an ingredient's `name` or one of its plural forms; any other case is written `{shown|name}`.
 - A spoon renders in the accusative, so give it a verb that takes one (“rozehřejte {1 tbsp olivového oleje}”), not a preposition that needs another case: “s {1 tbsp …}” would read “s 1 lžíci”.
 - A scaled amount changes, so the words around it must fit every scale: “Zbývající {18 piškotů Savoiardi} namočte”, not “Zbylých”, which fits only 5 and more.
-- *Osolit* and *posypat* take the instrumental, not an amount: write “Přisypte {8 g soli}”, “nasypte do ní {30 g soli}”, or name the amount apart: “posolte je, použijte {4 g mořské soli}”.
+- Salt is added with *osolte* and *dosolte*, amount included: “Osolte {8 g soli}”, “osolte ji {30 g mořské soli}”, “podle chuti dosolte až {3 g soli}”. That is how Czech cooks say it; do not replace it with “přisypte”, whatever a grammar rule suggests.
 
 ### Czech typography
 

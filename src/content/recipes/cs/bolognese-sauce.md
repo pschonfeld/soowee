@@ -55,7 +55,7 @@ directions:
       - Zesilte ohřev na silný a přidejte {vepřové mleté|vepřového mletého}, {hovězí mleté|hovězího mletého} a {telecí mleté|telecího mletého}. Maso rozprostřete po soffritu a 2–3 minuty ho nechte nerušeně smažit. Pak ho dřevěnou vařečkou rozdrobte na drobné kousky.
       - Smažte dál {timer:15-20m} a občas promíchejte. Z masa se vyvaří všechna šťáva, začne prskat na vlastním tuku a místy lehce zhnědne. Nesmí zkřupavět.
       - tip: Nespokojte se s tím, že maso přestalo být růžové. Dokud se z něj nevyvaří voda, spíš se vaří, než smaží, a právě opečením získá ragù hloubku chuti. Že se maso začalo opékat, poznáte podle prskání tuku.
-      - Přisypte {10 g mořské soli} a opepřete {černým pepřem|černý pepř}.
+      - Osolte {10 g mořské soli} a opepřete {černým pepřem|černý pepř}.
   - title: Přidejte víno a rajčata
     steps:
       - Maso odsuňte ke stranám a doprostřed hrnce přidejte {70 g rajčatového protlaku}. Opékejte ho v tuku {timer:2m} a stále míchejte. Protlak o odstín ztmavne. Pak ho vmíchejte do masa.
@@ -68,10 +68,10 @@ directions:
       - tip: Mléko se do ragù přidává uprostřed dušení, jak předepisuje boloňský recept. Stihne se vstřebat a zjemní kyselost vína a rajčat. Přilité až v posledních minutách by omáčku většinou jen zředilo.
       - Sundejte víko a nechte ještě {simmer:1-2h} dusit. Je-li omáčka příliš hustá, podle potřeby dolijte až {500 ml vody}. Ragù je hotové, když je maso velmi měkké, omáčka hustá a lesklá a tuk vystoupí na povrch.
       - tip: Připaluje-li se omáčka ke dnu, je oheň příliš silný. Přesuňte hrnec na nejmenší hořák nebo pod něj dejte rozptylovač plamene.
-      - Lžící odeberte z povrchu část tuku, trochu ho nechte pro lesk. Ochutnejte a podle potřeby přisolte, nejvýš však {4 g mořské soli}, a dopepřete {černým pepřem|černý pepř}.
+      - Lžící odeberte z povrchu část tuku, trochu ho nechte pro lesk. Ochutnejte a podle potřeby dosolte až {4 g mořské soli} a dopepřete {černým pepřem|černý pepř}.
   - title: Uvařte těstoviny a podávejte
     steps:
-      - Cca 20 minut před dokončením ragù přiveďte ve velkém hrnci k varu {5 L vody} a nasypte do ní {50 g hrubozrnné soli}.
+      - Cca 20 minut před dokončením ragù přiveďte ve velkém hrnci k varu {5 L vody} a osolte ji {50 g hrubozrnné soli}.
       - Vařte {500 g vaječných tagliatelle} o 1–2 minuty kratší dobu, než je uvedeno na obalu.
       - Odlijte si {250 ml} vody z vaření a těstoviny sceďte.
       - Vraťte těstoviny do prázdného velkého hrnce, přidejte asi polovinu ragù a trochu vody z vaření. Na mírném ohni je promíchávejte {timer:1-2m}. Podle potřeby přilévejte vodu z vaření, až bude každá stužka obalená a lesklá.

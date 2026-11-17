@@ -68,13 +68,13 @@ directions:
       - Zesilte ohřev na nejvyšší stupeň a přidejte {500 g hovězího mletého} a {500 g vepřového mletého}. Maso rozprostřete po soffrittu a 2–3 minuty ho nemíchejte. Pak ho dřevěnou vařečkou rozmělněte na drobky.
       - Za občasného míchání opékejte ještě {timer:12-15m}. Voda, kterou maso pustilo, se odpaří, maso začne syčet na vlastním tuku a místy zhnědne.
       - tip: Nepřestávejte opékat, jakmile maso přestane být růžové. Dokud se neodpaří voda, kterou pustilo, maso se jen vaří a nehnědne, a právě z opečení má ragù hloubku chuti. Že se začalo opékat, poznáte podle syčení.
-      - Přisypte {8 g soli} a vlijte {240 ml červeného vína}. Vařte, až vyprchá vůně alkoholu a víno se téměř odpaří. Ode dna přitom seškrabávejte připečené zbytky.
+      - Osolte {8 g soli} a vlijte {240 ml červeného vína}. Vařte, až vyprchá vůně alkoholu a víno se téměř odpaří. Ode dna přitom seškrabávejte připečené zbytky.
   - title: Dusťte ragù
     steps:
       - Vmíchejte {1.4 L passaty}. Snižte ohřev na mírný až střední, hrnec přikryjte a ragù zvolna dusťte {simmer:1h}. Hladina má jen občas probublat. Čas od času promíchejte.
       - Sundejte poklici, vlijte {240 ml vody} a ragù dusťte odkryté na mírném ohni ještě {simmer:1h}. Občas promíchejte. Zhoustne-li příliš, podlijte ho trochou vody, aby zůstalo řidší a dalo se nabírat lžící.
       - tip: Čerstvé plátky těsta nasají z omáčky vlhkost. V hustém ragù by zůstaly suché a žvýkavé.
-      - Z hladiny seberte vyloučený oranžový tuk. Ochutnejte, podle chuti přisypte až {3 g soli} a dochuťte čerstvě mletým {pepřem|pepř}.
+      - Z hladiny seberte vyloučený oranžový tuk. Ochutnejte, podle chuti dosolte až {3 g soli} a dochuťte čerstvě mletým {pepřem|pepř}.
       - tip: Ragù nechte spíš méně slané. Pecorino Romano i Provolone Piccante ho ještě dosolí.
   - title: Uvařte bešamel
     heat: Předehřejte troubu na **180 °C**, horní a spodní ohřev, mřížku zasuňte do spodní třetiny. Předehřívání potrvá cca 20 minut. Horkovzduch nepoužívejte, protože vysuší povrch a okraje dřív, než se prohřeje střed.

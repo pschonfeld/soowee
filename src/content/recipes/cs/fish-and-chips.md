@@ -98,7 +98,7 @@ directions:
       - "Vypněte ohřev a hrnec s olejem nechte stát na místě, dokud úplně nevychladne."
   - title: Podávejte
     steps:
-      - "Hranolky vyndejte z trouby a posypte je, použijte {4 g vločkové mořské soli}."
+      - "Hranolky vyndejte z trouby a osolte je {4 g vločkové mořské soli}."
       - "Rybu s hranolky ihned podávejte s pyré, s měsíčky {citronu} a se {sladovým octem|sladového octa}."
 ---
 
