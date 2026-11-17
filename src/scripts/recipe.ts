@@ -520,7 +520,11 @@ function toHex(color: string): string {
   return `#${channels.map((c) => Math.round(c * unit).toString(16).padStart(2, '0')).join('')}`;
 }
 
+/** Where the page was scrolled to: cook mode shrinks the body to one screen, which would reset it. */
+let pageScroll = 0;
+
 function openCook() {
+  pageScroll = window.scrollY;
   cook.show();
   document.documentElement.classList.add('is-cooking');
   if (themeColor) themeColor.content = toHex(getComputedStyle(document.body).backgroundColor);
@@ -537,6 +541,7 @@ function openCook() {
 function closeCook() {
   cook.close();
   document.documentElement.classList.remove('is-cooking');
+  window.scrollTo({ top: pageScroll, behavior: 'instant' });
   if (themeColor && pageThemeColor) themeColor.content = pageThemeColor;
   for (const el of background) el.inert = false;
   void wakeLock?.release();
