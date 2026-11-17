@@ -490,6 +490,8 @@ Planning (“start here”, “while the ragù simmers”) goes in a step as an 
 
 ### Ingredients
 
+- Describe the ingredient as bought or already prepared before starting the recipe. Keep input properties such as ground meat, fat content or an unwaxed peel in the list. Put preparation done during the recipe, including chilling, freezing or bringing ingredients to room temperature, in the directions.
+
 - `name` comes first, qualifiers go in `note`: `onion` + `medium, finely chopped`, not `medium chopped onion`; `olive oil` + `extra virgin` (Czech `olivového oleje` + `extra panenského`).
 - An ingredient appears at most once in a group. If it is used several times within the group, write the total and say how it splits in the `note`, without a lead-in like “in total”: `1 g with the vegetables, 8 g with the meat`. If it is used by several groups, each group lists its own amount.
 - Use the measure the cook would reach for. Grams for what you weigh, `ml` or `L` for liquids, a count for eggs and other pieces. A spoon (`tsp`, `tbsp`, always level) where it is easier than the scale and precise enough: small amounts such as baking powder, spices, a little oil or lemon juice, and a ratio the cook can remember, like one tablespoon of sugar per egg. Grams where a spoon would be too rough: flour and sugar in baking, salt in a brine or a cure. Below 5 g, write a spoon or leave `qty` out and write `a pinch` in `note`, since few kitchen scales read that low.
