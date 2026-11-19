@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const RECIPES = [
   { slug: 'bolognese-sauce', title: 'Bolognese Sauce' },
+  { slug: 'kakaovy-tvarohovy-krem', title: 'Cocoa Quark Cream' },
   { slug: 'crepes', title: 'Crêpes' },
   { slug: 'vinna-klobasa', title: 'Czech Wine Sausage' },
   { slug: 'fish-and-chips', title: 'Fish & Chips' },

@@ -11,6 +11,7 @@ const RECIPES = [
   { path: '/en/bolognese-sauce/', title: 'Bolognese Sauce', ingredients: 19, sections: 5 },
   { path: '/en/crepes/', title: 'Crêpes', ingredients: 7, sections: 4 },
   { path: '/en/vinna-klobasa/', title: 'Czech Wine Sausage', ingredients: 15, sections: 4 },
+  { path: '/en/kakaovy-tvarohovy-krem/', title: 'Cocoa Quark Cream', ingredients: 5, sections: 3 },
 ];
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
